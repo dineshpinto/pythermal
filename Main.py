@@ -9,7 +9,7 @@ import SubRoutine2
 import SubRoutine3
 import Output
 
-__author__ = 'OneMinus'
+__author__ = 'OnePlusOne'
 
 '''
 CHANGELOG(02-10-2015)
