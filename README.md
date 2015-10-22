@@ -101,6 +101,7 @@ The program structure is as follows:
 
 
 Previous build(s)
+
 1. Function eigenstates() rewritten to account for missing lattice sites, site deletion controlled by [lat_del_pos]
 2. Function nos() deprecated, nos replaced with len(c) in eigenstates()
 3. Changed Hamiltonian, using if conditions to place 1's(on numpy.zeros matrix)
