@@ -1,3 +1,2 @@
-# thermalization2d
-Hello World
-\frac{2}{3}
+# PyThermal 
+Fermions on a 2D crystal lattice
