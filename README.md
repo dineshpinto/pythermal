@@ -1,4 +1,4 @@
-# PyThermal - Time evolving fermions on a 2D crystal lattice
+# PyThermal - Time evolving fermions on a two-dimensional crystal lattice
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
