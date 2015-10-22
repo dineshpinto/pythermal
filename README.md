@@ -1,7 +1,7 @@
 # PyThermal - Time evolving fermions on a 2D crystal lattice
 
 
-CHANGELOG(02-10-2015)
+CHANGELOG(02-10-2015)\\
 1. Complete program structure redesign
 2. class System created with __init__ to store variables(defined in documentation)
 3. Semi-extensive documentation added (to be completed)
