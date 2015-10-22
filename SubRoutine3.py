@@ -34,27 +34,6 @@ def von_neumann_b(psi_array, labels, nos):
 
     return entropy_b
 
-'''
-# Psi evolved as psi(t) = psi(0) * exp(i * H * t)
-def psi_t(psi_initial, hamiltonian, timestep):
-    psi = np.dot(la.expm((-1.0e-34 * 1.0j * timestep * hamiltonian)), psi_initial)
-
-    return psi
-
-
-def time_evolution(psi_initial, hamiltonian, nos):
-    s = Main.System()
-
-    delta_t = (s.t_final - s.t_initial) / s.t_steps
-    timestep_array = np.arange(s.t_initial, s.t_final, delta_t)
-    psi_array = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
-
-    for idx, t in enumerate(timestep_array):
-        psi_array[idx] = psi_t(psi_initial, hamiltonian, t)
-
-    return psi_array, timestep_array
-'''
-
 
 # Psi evolved in accordance with 1D paper psi(t) = SIGMA_(i=0)^(n) [|E_i><E_i|psi(0)>exp(-i*E_i*t / hbar)]
 def psi_t(e_vecs, e_vals, nos, psi_initial, t):
@@ -76,3 +55,25 @@ def time_evolution(eigenvectors, eigenvalues, psi_initial, nos):
         psi_array[idx] = psi_t(eigenvectors, eigenvalues, nos, psi_initial, t)
 
     return psi_array, timestep_array
+
+
+'''
+# Psi evolved as psi(t) = psi(0) * exp(i * H * t)
+def psi_t(psi_initial, hamiltonian, timestep):
+    psi = np.dot(la.expm((-1.0e-34 * 1.0j * timestep * hamiltonian)), psi_initial)
+
+    return psi
+
+
+def time_evolution(psi_initial, hamiltonian, nos):
+    s = Main.System()
+
+    delta_t = (s.t_final - s.t_initial) / s.t_steps
+    timestep_array = np.arange(s.t_initial, s.t_final, delta_t)
+    psi_array = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
+
+    for idx, t in enumerate(timestep_array):
+        psi_array[idx] = psi_t(psi_initial, hamiltonian, t)
+
+    return psi_array, timestep_array
+'''
