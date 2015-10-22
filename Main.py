@@ -7,14 +7,8 @@ import SubRoutine1
 import SubRoutine2
 import SubRoutine3
 import Output
-import tqdm 
 
 __author__ = 'SSCTP - Entanglement Group'
-
-'''
-This is me adding a docstring to the project
-'''
-
 
 
 class System:
