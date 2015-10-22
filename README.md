@@ -1,5 +1,4 @@
-# PyThermal 
-Fermions on a 2D crystal lattice
+# PyThermal - Time evolving fermions on a 2D crystal lattice
 
 
 CHANGELOG(02-10-2015)
