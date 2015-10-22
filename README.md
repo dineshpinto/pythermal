@@ -99,3 +99,27 @@ The program structure is as follows:
                 Environment:
                     Scipy -> Fortran: OpenBLAS, OpenMP
 
+
+Previous build(s)
+1. Function eigenstates() rewritten to account for missing lattice sites, site deletion controlled by [lat_del_pos]
+2. Function nos() deprecated, nos replaced with len(c) in eigenstates()
+3. Changed Hamiltonian, using if conditions to place 1's(on numpy.zeros matrix)
+4. Parallelization of hamiltonian() governed by distribution function distribute()
+5. P. carried out using Process function from multiprocessing library
+6. multiprocessing.queue to store output of each process and clear(optional, improves stability) it afterwards
+7. Replaced math.fabs() with abs()
+8. Added elif and else statements
+9. la.eig replaced with la.eigh to exploit symmetry of Hamiltonian matrix
+10. Original (la.eig)eigenvalvec() deprecated, replaced with (la.eigh)eigenvalvec()
+11. Separate timers for hamiltonian() and eigenvalvec()
+12. Sizes of all arrays printed
+13. Output printed to file("LOG.txt") using tabulate
+14. OpenBLAS(/opt/OpenBLAS) linkage of Numpy(and consequently Scipy) in virtualenv "pyenv"
+15. Program down-dated to work with Python 2.x
+16. Functions ncr(), sum_ncr(), relabel() and denmatrix() added
+17. la.eigh deprecated, la.eig reinstated to generate complex eigenvectors
+18. Hamiltonian np.zeros switched to np.float32 data type
+19. else condition(in hamiltonian_2d) now with continue statements
+20. Direct call to hamiltonian_2d deprecated
+21. Output made more verbose
+22. Function ncr() deprecated
