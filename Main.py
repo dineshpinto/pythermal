@@ -2,14 +2,13 @@ import itertools as it
 import time
 import math as mt
 import numpy as np
-# import fractions
 
 import SubRoutine1
 import SubRoutine2
 import SubRoutine3
 import Output
 
-__author__ = 'SSCTP - Entanglement Group, this is the end'
+__author__ = 'SSCTP - Entanglement Group, happy endings'
 
 class System:
     def __init__(self):
