@@ -9,7 +9,7 @@ import SubRoutine2
 import SubRoutine3
 import Output
 
-__author__ = 'SSCTP - Entanglement Group'
+__author__ = 'SSCTP - Entanglement Group, this is the end'
 
 class System:
     def __init__(self):
