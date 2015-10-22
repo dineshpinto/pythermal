@@ -14,3 +14,9 @@ This is a test of the git-pull command.
 
 Regards, 
 Dinesh
+
+
+git-pull successful
+
+Regards, 
+Dinesh
