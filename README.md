@@ -13,6 +13,8 @@ CHANGELOG(02-10-2015)
 
 The program structure is as follows:
 
+Documentation by D. Pinto
+
     - class System, function __init__()
         Parameters:
             nop: total no. of particles, int
