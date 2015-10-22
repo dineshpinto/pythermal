@@ -10,6 +10,11 @@ import Output
 
 __author__ = 'SSCTP - Entanglement Group'
 
+'''
+This is me adding a docstring to the project
+'''
+
+
 
 class System:
     def __init__(self):
