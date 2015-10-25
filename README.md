@@ -1,26 +1,27 @@
 # PyThermal - Time evolving fermions on a two-dimensional crystal lattice
 
 **Entanglement Project Group, St. Stephen's College**
+
+
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List 
 
-- [ ] Function recursion_time() overflow error if no. of inputs >= 50
-- [ ] Trace of density matrix B = 1.95 (almost constant), instead of 1.00 [only observed under 1D time evolution]
-- [ ] Von-Neumann entropy calculation to be sped up
-- [ ] Documentation to be completed
+- [ ] Recursion time calculation overflows if no. of inputs > 50
+- [ ] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
+- [ ] Von-Neumann entropy calculation to be sped up (parallel-processing)
 
 ## Changelog (25-10-2015)
 
 1. recursion_time(), gcd(), lcm(), lcm_call() added
 2. Complete program structure redesign
-2. class System created with __init__ to store variables(defined in documentation)
+2. class System created to store variables(defined in documentation)
 3. Extensive documentation added 
 
 
 
-## Program Structure
+## Program Structure 
 
 *Documentation by D. Pinto, St. Stephen's College*
 
@@ -29,19 +30,20 @@ class which is used to store initial values. The main function calls are subdivi
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
 
-### class System (function __init__())
-
-        Parameters:
-            nop: total no. of particles, int
-            nsa: shape of square lattice, int
-            nol_a: no. of sites in sub-lattice A, int
-            lat_del_pos: positions of deleted sites, int, optional
-            log_choice: export to LOG.txt, bool, optional
-        Generated automatically:
-            nol: total no. of lattice sites, int
-            nol_b: no. of sites in sub-lattice B, int
-            link_pos: site joining sub-lattices A and B, int
-            lat: lattice sites array, np.int32
+### class System 
+        
+        __init__()
+            Parameters:
+                nop: total no. of particles, int
+                nsa: shape of square lattice, int
+                nol_a: no. of sites in sub-lattice A, int
+                lat_del_pos: positions of deleted sites, int, optional
+                log_choice: export to LOG.txt, bool, optional
+            Generated automatically:
+                nol: total no. of lattice sites, int
+                nol_b: no. of sites in sub-lattice B, int
+                link_pos: site joining sub-lattices A and B, int
+                lat: lattice sites array, np.int32
 
 ### main()
 
