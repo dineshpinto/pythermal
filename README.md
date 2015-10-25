@@ -2,12 +2,16 @@
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
+## Task List 
+[] recursion_time overflow error if no. of inputs >= 50
+[] Complete documentation 
 
 ## Changelog (02-10-2015)
 
-1. Complete program structure redesign
+1. recursion_time(), gcd(), lcm(), lcm_call() added
+2. Complete program structure redesign
 2. class System created with __init__ to store variables(defined in documentation)
-3. Semi-extensive documentation added (to be completed)
+3. Extensive documentation added 
 
 
 
@@ -42,7 +46,7 @@ Documentation by D. Pinto
 
 #### - Sub-Routine 1
 
-#####        hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
+        hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
                 Parameters:
                         start: start point of interator [j], int
                         stop: end point of iterator [j], int
