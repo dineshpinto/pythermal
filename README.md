@@ -2,12 +2,19 @@
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
+## Task List 
 
-## CHANGELOG (02-10-2015)
+- [ ] Function recursion_time() overflow error if no. of inputs >= 50
+- [ ] Trace of density matrix B = 1.95 (constant), instead of 1.00 [only observed under 1D time evolution]
+- [ ] Von-Neumann entropy calculation to be sped up
+- [ ] Documentation to be completed
 
-1. Complete program structure redesign
+## Changelog (25-10-2015)
+
+1. recursion_time(), gcd(), lcm(), lcm_call() added
+2. Complete program structure redesign
 2. class System created with __init__ to store variables(defined in documentation)
-3. Semi-extensive documentation added (to be completed)
+3. Extensive documentation added 
 
 
 
@@ -15,8 +22,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 Documentation by D. Pinto
 
-### class System 
-#### function __init__()
+### class System (function __init__())
 
         Parameters:
             nop: total no. of particles, int
@@ -41,9 +47,27 @@ Documentation by D. Pinto
                     e_states: array of eigenstates, np.int32
                     len(e_states): total no. of eigenstates, int
 
+#### - Sub-Routine 1
 
-####        - Sub-Routine 1
-
+        hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
+                Parameters:
+                        start: start point of interator [j], int
+                        stop: end point of iterator [j], int
+                        nsa: shape of square lattice, int
+                        nop: total no. of particles, int
+                        eigenstates: array of eigenstates, np.int32
+                        queue: mutiprocessing queue to store each processes' output
+                        h: hamiltonian array, np.float32
+                        
+        distribute(n_items, n_processes, i)
+                Parameters:
+                        n_items: total number of items to compute, int
+                        n_processes: no. of processes to create (= no. of cores), int
+                        i: iterates over no. of processes, int
+                Returns:
+                        start: start point of interator [j], int
+                        stop: end point of iterator [j], int
+                        
         parallel_call_hamiltonian(e_states, nos, nsa, nop)
                 Parameters:
                     e_states: array of eigenstates, np.int32
@@ -55,8 +79,7 @@ Documentation by D. Pinto
                 Environment:
                     C: Numpy
                     Python: Multiprocessing
-
-
+                    
         eigenvalvec(h)
                 Parameters:
                     h: 2D hamiltonian array, np.float32
@@ -64,14 +87,12 @@ Documentation by D. Pinto
                     e_vecs: eigenvector array, complex
                     e_vals: eigenvalue array, complex
                 Environment:
-                    Scipy -> Fortran: OpenBLAS, OpenMP
+                    Fortran: OpenBLAS, OpenMP
 
-        
-####        - Sub-Routine 2
+#### - Sub-Routine 2
 
         recursion_time()[alpha] 
-
-
+        
         relabel(e_states, nol_a, nol_b, link_pos, nop)
                 Parameters:
                     e_states: array of eigenstates, np.int32
@@ -87,7 +108,7 @@ Documentation by D. Pinto
         denmatrix_a(label, e_vecs, nos, nop, nol_a)
                 nol_b replaced by nol_a
                 See denmatrix_b below
-                
+        
         denmatrix_b(label, e_vec, nos, nop, nol_b)
                 Parameters:
                     label: array containing relabelled states,
@@ -101,17 +122,20 @@ Documentation by D. Pinto
                 Environment:
                     Fortran: OpenBLAS, OpenMP
 
-####        - Sub-Routine 3
+#### - Sub-Routine 3
 
-        random_eigenvector(e_vecs, nos)
+        random_eigenvector(eigenvectors, nos)(eigenvectors, relabelled_states, nos, nos_a, nop)
                 Parameters:
-                    e_vecs: eigenvector array, complex
+                    eigenvectors: eigenvector array, np.complex
+                    relabelled_states: 
                     nos: total no. of states, int
+                    nos_a: 
+                    nop: 
                 Returns:
-                    e_vecs[rand]: randomly chosen eigenvector
+                    psi_initial: randomly chosen eigenvector used as initial state, np.complex
                 Environment:
+                    C: Numpy
                     Python
-                    
                     
         von_neumann_b(psi_array, labels, nos)
                 Parameters:
@@ -123,21 +147,28 @@ Documentation by D. Pinto
                 Environment:
                         C: Numpy
                         Fortran: OpenBLAS, OpenMP
-                    
                         
-        psi_t(e_vecs, e_vals, nos, psi_initial, t)
+        psi_t(eigenvectors, eigenvalues, nos, psi_initial, t)
                 Parameters:
-                        e_vecs:
-                        e_vals:
+                        eigenvectors: eigenvector array, np.complex
+                        eigenvalues:
                         nos:
-                        psi_initial:
-                        t:
- 
+                        psi_initial: initial state, np.complex
+                        t: time, float
+                Returns:
+                        psi: array containing psi at time t 
+                        
+        time_evolution(eigenvectors, eigenvalues, psi_initial, nos)
+                Parameters:
+                        eigenvectors: 
+                        eigenvalues: 
+                        psi_initial: 
+                        nos:
+                Returns:
+                        psi_array: array of arrays containing psi at t, t + dt ...
  
 
-       
-
-Previous build(s)
+## Previous build(s)
 
 1. Function eigenstates() rewritten to account for missing lattice sites, site deletion controlled by [lat_del_pos]
 2. Function nos() deprecated, nos replaced with len(c) in eigenstates()

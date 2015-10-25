@@ -7,21 +7,6 @@ import matplotlib.pyplot as plt
 import Main
 
 
-def plotting(x, y):
-    plt.plot(x, y, 'bo', label='Entropy')
-    plt.grid(b=True, which='major', color='k', linestyle='-')
-    plt.grid(b=True, which='minor', color='0.50', linestyle='-')
-    plt.minorticks_on()
-    plt.legend(loc='best')
-    plt.ylabel(r'Von-Neumann Entropy $\rightarrow$')
-    plt.xlabel(r'Time $\rightarrow$')
-    plt.title(r'Von-Neumann entropy vs time for a 2D sub lattice')
-    # plt.savefig('Entropy-Time.png', format='png', dpi=400)
-    plt.show()
-
-    return
-
-
 def status_output(status, time_taken=0.0):
     global h_time, e_time, r_time, evo_time
 
@@ -90,5 +75,20 @@ def printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors):
     np.savetxt('Hamiltonian_2d.csv', hamiltonian, delimiter=',', fmt='%1d')
     np.savetxt('Eigenvalues.csv', eigenvalues, delimiter=',', fmt='%0.4e')
     np.savetxt('Eigenvectors.csv', eigenvectors, delimiter=',', fmt='%0.4e')
+
+    return
+
+
+def plotting(x, y):
+    plt.plot(x, y, 'bo', label='Entropy')
+    plt.grid(b=True, which='major', color='k', linestyle='-')
+    plt.grid(b=True, which='minor', color='0.50', linestyle='-')
+    plt.minorticks_on()
+    plt.legend(loc='best')
+    plt.ylabel(r'Von-Neumann Entropy $\rightarrow$')
+    plt.xlabel(r'Time $\rightarrow$')
+    plt.title(r'Von-Neumann entropy vs time for a 2D sub lattice')
+    # plt.savefig('Entropy-Time.png', format='png', dpi=400)
+    plt.show()
 
     return

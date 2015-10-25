@@ -12,6 +12,7 @@ __author__ = 'SSCTP - Entanglement Group'
 
 
 class System:
+
     def __init__(self):
         # No of particles
         self.nop = 3
@@ -46,6 +47,7 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
         e_states = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
     else:
         e_states = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
+
     return e_states, len(e_states)
 
 
@@ -132,3 +134,4 @@ Pass psi to density matrix to get density matrix
 Find VN entropy by passing density matrix of b and log(density matrix of b)
 Create large array VN array to store the all the entropies
 '''
+    

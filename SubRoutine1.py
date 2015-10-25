@@ -5,14 +5,14 @@ import scipy.linalg as la
 
 
 # Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture ...
-def hamiltonian_2d(start, stop, nos, nsa, nop, e_states, queue, h):
+def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     for j in xrange(start, stop):  # Start/Stop defined by distribute()
         for k in xrange(nos):  # k iterates over all possibilities
-            c = np.intersect1d(e_states[j], e_states[k], assume_unique=True)
+            c = np.intersect1d(eigenstates[j], eigenstates[k], assume_unique=True)
             c_sum = np.sum(c, dtype=np.int32)  # Sum of common elements
             c_size = np.size(c)  # No. of common elements
-            j_sum = np.sum(e_states[j], dtype=np.int32)  # Sum of elements of m[j]
-            k_sum = np.sum(e_states[k], dtype=np.int32)  # Sum of elements of m[k]
+            j_sum = np.sum(eigenstates[j], dtype=np.int32)  # Sum of elements of m[j]
+            k_sum = np.sum(eigenstates[k], dtype=np.int32)  # Sum of elements of m[k]
 
             if c_size == nop - 1:  # Only one element differs
                 if abs(j_sum - k_sum) == nsa:  # Element differs by dimension
