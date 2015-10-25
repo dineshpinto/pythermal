@@ -9,7 +9,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 - [ ] Von-Neumann entropy calculation to be sped up
 - [ ] Documentation to be completed
 
-## Changelog (02-10-2015)
+## Changelog (25-10-2015)
 
 1. recursion_time(), gcd(), lcm(), lcm_call() added
 2. Complete program structure redesign
