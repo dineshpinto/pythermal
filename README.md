@@ -12,7 +12,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 - [ ] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
 - [ ] Von-Neumann entropy calculation to be sped up (parallel-processing)
 
-## Changelog (25-10-2015)
+## Changelog (October 25, 2015)
 
 1. recursion_time(), gcd(), lcm(), lcm_call() added
 2. Complete program structure redesign
