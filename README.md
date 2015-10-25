@@ -182,7 +182,7 @@ The code can easily be rewritten for Python 3.x.
 ### - Output/Plotting 
 
     status_output()
-        Returns program status along with run times (requires [humanize](https://github.com/HubSpot/humanize) 
+        Returns program status along with run times (requires [humanize](https://www.github.com/HubSpot/humanize) 
         header files)
     
     printout()
