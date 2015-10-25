@@ -216,3 +216,6 @@ The code can easily be rewritten for Python 3.x.
 20. Direct call to hamiltonian_2d deprecated
 21. Output made more verbose
 22. Function ncr() deprecated
+
+
+***
