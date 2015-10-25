@@ -20,7 +20,9 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 ## Program Structure
 
-Documentation by D. Pinto
+*Documentation by D. Pinto*
+---------------------------
+
 The code is centered around the main function, a class is used to store initial value. The main function is divided 
 into 3 subroutines and an output/plotting function 
 
