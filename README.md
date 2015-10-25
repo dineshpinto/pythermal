@@ -20,10 +20,12 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 ## Program Structure
 
-*Documentation by D. Pinto*
+*Documentation by D. Pinto, St. Stephen's College*
 
-The code is centered around the main function, a class is used to store initial value. The main function is divided 
-into 3 subroutines and an output/plotting function 
+The code is centered around the main function, from which the entire program can be controlled. It derives data from a 
+class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
+*Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
+
 
 ### class System (function __init__())
 
