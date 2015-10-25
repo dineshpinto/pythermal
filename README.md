@@ -29,7 +29,8 @@ The code is centered around the main function, from which the entire program can
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
-**Note:** The code will not work with Python versions older than Python 2.7. It can, however, be rewritten for Python 3.   
+**Note:** The code was designed on Python 2.7 and will not work with versions older than Python 2.6. 
+The code can easily be rewritten for Python 3.x.   
 
 ### class System 
         
@@ -183,13 +184,13 @@ class which is used to store initial values. The main function calls are subdivi
         Returns program status along with run times (requires humanize header files)
     
     printout()
-        Extensive output function, class option to export certain output to LOG.txt (requires tabulate header files)
+        Extensive output function, class option to export certain output to LOG.txt 
+        (requires tabulate header files)
         
     plotting()
         Generalized plotting for 2D graphs, uses MatPlotLib
         
     
-Generates an output plot (using MatPlotLib) of the variation of Von-Neumann entropy with time 
 
 ## Previous build(s)
 
