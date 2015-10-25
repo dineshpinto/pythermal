@@ -4,8 +4,8 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 ## Task List 
 
-[ ] recursion_time overflow error if no. of inputs >= 50
-[ ] Complete documentation 
+-[ ] recursion_time overflow error if no. of inputs >= 50
+-[ ] Complete documentation 
 
 ## Changelog (02-10-2015)
 
