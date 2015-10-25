@@ -15,7 +15,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 Documentation by D. Pinto
 
-###    - class System, function __init__()
+### class System, function __init__()
         Parameters:
             nop: total no. of particles, int
             nsa: shape of square lattice, int
@@ -28,8 +28,8 @@ Documentation by D. Pinto
             link_pos: site joining sub-lattices A and B, int
             lat: lattice sites array, np.int32
 
-###    - main()
-        - Sub-Routine 1
+### main()
+####        - Sub-Routine 1
             eigenstates_lat(lat, nop, lat_del_pos)
                 Parameters:
                     lat: lattice sites array, np.int32
@@ -39,7 +39,7 @@ Documentation by D. Pinto
                     e_states: array of eigenstates, np.int32
                     len(e_states): total no. of eigenstates, int
 
-        - Sub-Routine 2
+####        - Sub-Routine 2
             parallel_call_hamiltonian(e_states, nos, nsa, nop)
                 Parameters:
                     e_states: array of eigenstates, np.int32
