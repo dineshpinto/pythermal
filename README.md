@@ -12,7 +12,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 - [ ] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
 - [ ] Von-Neumann entropy calculation to be sped up (parallel-processing)
 
-## Changelog ###(October 25, 2015)
+## Changelog (25-10-2015)
 
 1. recursion_time(), gcd(), lcm(), lcm_call() added
 2. Complete program structure redesign
@@ -29,6 +29,7 @@ The code is centered around the main function, from which the entire program can
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
+**Note:** The code will not work with Python versions older than Python 2.7. It can, however, be rewritten for Python 3.   
 
 ### class System 
         
@@ -100,7 +101,7 @@ class which is used to store initial values. The main function calls are subdivi
 
 #### - Sub-Routine 2 (Relabelling, Density Matrices and Recursion Time)
 
-        recursion_time()[alpha] 
+        recursion_time()[in development] 
         
         relabel(e_states, nol_a, nol_b, link_pos, nop)
                 Parameters:
@@ -177,7 +178,18 @@ class which is used to store initial values. The main function calls are subdivi
                         psi_array: array of arrays containing psi at t, t + dt ...
  
 ### - Output/Plotting 
-Generates a plot of the variation of Von-Neumann entropy with time 
+
+    status_output()
+        Returns program status along with run times (requires humanize header files)
+    
+    printout()
+        Extensive output function, class option to export certain output to LOG.txt (requires tabulate header files)
+        
+    plotting()
+        Generalized plotting for 2D graphs, uses MatPlotLib
+        
+    
+Generates an output plot (using MatPlotLib) of the variation of Von-Neumann entropy with time 
 
 ## Previous build(s)
 
