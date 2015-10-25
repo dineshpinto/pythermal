@@ -56,7 +56,6 @@ def von_neumann_b(psi_array, relabelled_states, nos):
 
     return entropy_b
 
-
 '''
 # Psi evolved as psi(t) = psi(0) * exp(i * H * t)
 def psi_t(psi_initial, hamiltonian, timestep):

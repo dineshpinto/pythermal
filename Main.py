@@ -26,7 +26,7 @@ class System:
         self.lat_del_pos_a = np.array([3, 4, 9, 13, 7, 8, 10, 11, 12, 14, 15, 16])
         # Time Evolution
         self.t_initial = 0.0
-        self.t_final = 200
+        self.t_final = 50
         self.t_steps = 100
 
         # No of  lattice sites eg. nsa = 3 => nol = 9
@@ -78,11 +78,15 @@ def main():
     e_time2 = time.time()
     Output.status_output(3, e_time2 - e_time1)
 
+    # Sorting the eigenvalues and eigenvectors in order of increasing eigenvalues
+    idx = eigenvalues_a.argsort()
+    eigenvalues_a = eigenvalues_a[idx]
+    eigenvectors_a = eigenvectors_a[:, idx]
+
     # --Sub-Routine 2--
 
     # Recursion Time
-    print SubRoutine2.recursion_time(1, eigenvalues)
-    exit()
+    # print SubRoutine2.recursion_time(1, eigenvalues)
 
     # Relabelling
     r_time1 = time.time()
@@ -115,7 +119,7 @@ def main():
 
     # Output.printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors)
     Output.plotting(timestep_array, np.real(vn_entropy_b))
-    Output.plotting(np.arange(0, len(eigenvalues)), np.real(eigenvalues))
+    # Output.plotting(np.arange(0, len(eigenvalues)), np.real(eigenvalues))
 
     # --Terminate--
     raise SystemExit
@@ -134,4 +138,3 @@ Pass psi to density matrix to get density matrix
 Find VN entropy by passing density matrix of b and log(density matrix of b)
 Create large array VN array to store the all the entropies
 '''
-    
