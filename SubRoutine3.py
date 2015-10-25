@@ -36,10 +36,10 @@ def von_neumann_b(psi_array, labels, nos):
 
 
 # Psi evolved in accordance with 1D paper psi(t) = SIGMA_(i=0)^(n) [|E_i><E_i|psi(0)>exp(-i*E_i*t / hbar)]
-def psi_t(e_vecs, e_vals, nos, psi_initial, t):
+def psi_t(eigenvectors, eigenvalues, nos, psi_initial, t):
     psi = np.zeros(nos, dtype=np.complex)
     for i in xrange(nos):
-        psi += np.exp(-1.0j * e_vals[i] * t) * e_vecs[:, i] * np.vdot(e_vecs[:, i], psi_initial)
+        psi += np.exp(-1.0j * eigenvalues[i] * t) * eigenvectors[:, i] * np.vdot(eigenvectors[:, i], psi_initial)
 
     return psi
 

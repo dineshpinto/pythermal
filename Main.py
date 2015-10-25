@@ -85,7 +85,7 @@ def main():
     # Relabelling
     r_time1 = time.time()
 
-    labels = SubRoutine2.relabel(eigenstates, s.nol_b, s.link_pos, s.nop)
+    relabelled_states = SubRoutine2.relabel(eigenstates, s.nol_b, s.link_pos, s.nop)
 
     r_time2 = time.time()
     Output.status_output(4, r_time2 - r_time1)
@@ -94,8 +94,8 @@ def main():
 
     # Time Evolution
     evo_time1 = time.time()
-    # psi_initial = SubRoutine3.random_eigenvector(eigenvectors, labels, nos, nos_a, s.nop)
-    psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, labels, nos, nos_a, s.nop)
+    # psi_initial = SubRoutine3.random_eigenvector(eigenvectors, relabelled_states, nos, nos_a, s.nop)
+    psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, relabelled_states, nos, nos_a, s.nop)
 
     # 1. Using psi(t) = psi(0)*exp(-i*H*t)
     # psi_array, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
@@ -107,7 +107,7 @@ def main():
     Output.status_output(5, evo_time2 - evo_time1)
 
     # Von-Neumann Entropy
-    vn_entropy_b = SubRoutine3.von_neumann_b(psi_array, labels, nos)
+    vn_entropy_b = SubRoutine3.von_neumann_b(psi_array, relabelled_states, nos)
 
     # --Output--
 
