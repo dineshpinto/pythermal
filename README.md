@@ -6,11 +6,13 @@
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
+
 ## Task List 
 
 - [ ] Recursion time calculation overflows if no. of inputs > 50
 - [ ] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
 - [ ] Von-Neumann entropy calculation to be sped up (parallel-processing)
+
 
 ## Changelog (25-10-2015)
 
@@ -18,7 +20,6 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 2. Complete program structure redesign
 2. class System created to store variables(defined in documentation)
 3. Extensive documentation added 
-
 
 
 ## Program Structure 
@@ -35,17 +36,17 @@ The code can easily be rewritten for Python 3.x.
 ### class System 
         
     __init__()
-        Parameters:
-            nop: total no. of particles, int
-            nsa: shape of square lattice, int
-            nol_a: no. of sites in sub-lattice A, int
-            lat_del_pos: positions of deleted sites, int, optional
-            log_choice: export to LOG.txt, bool, optional
-        Generated automatically:
-            nol: total no. of lattice sites, int
-            nol_b: no. of sites in sub-lattice B, int
-            link_pos: site joining sub-lattices A and B, int
-            lat: lattice sites array, np.int32
+            Parameters:
+                nop: total no. of particles, int
+                nsa: shape of square lattice, int
+                nol_a: no. of sites in sub-lattice A, int
+                lat_del_pos: positions of deleted sites, int, optional
+                log_choice: export to LOG.txt, bool, optional
+            Generated automatically:
+                nol: total no. of lattice sites, int
+                nol_b: no. of sites in sub-lattice B, int
+                link_pos: site joining sub-lattices A and B, int
+                lat: lattice sites array, np.int32
 
 ### main()
 
@@ -181,7 +182,8 @@ The code can easily be rewritten for Python 3.x.
 ### - Output/Plotting 
 
     status_output()
-        Returns program status along with run times (requires humanize header files)
+        Returns program status along with run times (requires [humanize](https://github.com/HubSpot/humanize) 
+        header files)
     
     printout()
         Extensive output function, class option to export certain output to LOG.txt 
@@ -218,4 +220,3 @@ The code can easily be rewritten for Python 3.x.
 22. Function ncr() deprecated
 
 
-***
