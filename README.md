@@ -21,6 +21,8 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 ## Program Structure
 
 Documentation by D. Pinto
+The code is centered around the main function, a class is used to store initial value. The main function is divided 
+into 3 subroutines and an output/plotting function 
 
 ### class System (function __init__())
 
@@ -47,7 +49,7 @@ Documentation by D. Pinto
                     e_states: array of eigenstates, np.int32
                     len(e_states): total no. of eigenstates, int
 
-#### - Sub-Routine 1
+#### - Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)
 
         hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
                 Parameters:
@@ -89,7 +91,7 @@ Documentation by D. Pinto
                 Environment:
                     Fortran: OpenBLAS, OpenMP
 
-#### - Sub-Routine 2
+#### - Sub-Routine 2 (Relabelling, Density Matrices and Recursion Time)
 
         recursion_time()[alpha] 
         
@@ -122,7 +124,7 @@ Documentation by D. Pinto
                 Environment:
                     Fortran: OpenBLAS, OpenMP
 
-#### - Sub-Routine 3
+#### - Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)
 
         random_eigenvector(eigenvectors, nos)(eigenvectors, relabelled_states, nos, nos_a, nop)
                 Parameters:
@@ -167,6 +169,8 @@ Documentation by D. Pinto
                 Returns:
                         psi_array: array of arrays containing psi at t, t + dt ...
  
+### - Output/Plotting 
+Generates a plot of the variation of Von-Neumann entropy with time 
 
 ## Previous build(s)
 
