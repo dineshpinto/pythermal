@@ -4,7 +4,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 ## Task List 
 
-- [ ] Function recursion_time() overflow error if no. of inputs >= 50
+- [x] Function recursion_time() overflow error if no. of inputs >= 50
 - [ ] Trace of density matrix B = 1.95 (constant), instead of 1.00 [only observed under 1D time evolution]
 - [ ] Documentation to be completed
 - [ ] Von-Neumann entropy calculation to be sped up
