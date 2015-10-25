@@ -181,7 +181,6 @@ The code can easily be rewritten for Python 3.x.
  
 ### - Output/Plotting 
 
-'''
     status_output()
         Returns program status along with run times, requires header files from humanize
 
@@ -191,7 +190,6 @@ The code can easily be rewritten for Python 3.x.
                 
     plotting()
         Generalized plotting for 2D graphs, uses MatPlotLib
-'''     
     
 
 ## Previous build(s)
