@@ -42,7 +42,7 @@ Documentation by D. Pinto
 
 #### - Sub-Routine 1
 
-        hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
+#####        hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
                 Parameters:
                         start: start point of interator [j], int
                         stop: end point of iterator [j], int
