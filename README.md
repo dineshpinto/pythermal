@@ -34,149 +34,149 @@ The code can easily be rewritten for Python 3.x.
 
 ### class System 
         
-        __init__()
-            Parameters:
-                nop: total no. of particles, int
-                nsa: shape of square lattice, int
-                nol_a: no. of sites in sub-lattice A, int
-                lat_del_pos: positions of deleted sites, int, optional
-                log_choice: export to LOG.txt, bool, optional
-            Generated automatically:
-                nol: total no. of lattice sites, int
-                nol_b: no. of sites in sub-lattice B, int
-                link_pos: site joining sub-lattices A and B, int
-                lat: lattice sites array, np.int32
+    __init__()
+        Parameters:
+            nop: total no. of particles, int
+            nsa: shape of square lattice, int
+            nol_a: no. of sites in sub-lattice A, int
+            lat_del_pos: positions of deleted sites, int, optional
+            log_choice: export to LOG.txt, bool, optional
+        Generated automatically:
+            nol: total no. of lattice sites, int
+            nol_b: no. of sites in sub-lattice B, int
+            link_pos: site joining sub-lattices A and B, int
+            lat: lattice sites array, np.int32
 
 ### main()
 
-        eigenstates_lat(lat, nop, lat_del_pos)
-                Parameters:
-                    lat: lattice sites array, np.int32
-                    nop: no. of particles, int
-                    lat_del_pos: array of positions to delete, np.int32, optional
-                Returns:
-                    e_states: array of eigenstates, np.int32
-                    len(e_states): total no. of eigenstates, int
+    eigenstates_lat(lat, nop, lat_del_pos)
+            Parameters:
+                lat: lattice sites array, np.int32
+                nop: no. of particles, int
+                lat_del_pos: array of positions to delete, np.int32, optional
+            Returns:
+                e_states: array of eigenstates, np.int32
+                len(e_states): total no. of eigenstates, int
 
 #### - Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)
 
-        hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
-                Parameters:
-                        start: start point of interator [j], int
-                        stop: end point of iterator [j], int
-                        nsa: shape of square lattice, int
-                        nop: total no. of particles, int
-                        eigenstates: array of eigenstates, np.int32
-                        queue: mutiprocessing queue to store each processes' output
-                        h: hamiltonian array, np.float32
-                        
-        distribute(n_items, n_processes, i)
-                Parameters:
-                        n_items: total number of items to compute, int
-                        n_processes: no. of processes to create (= no. of cores), int
-                        i: iterates over no. of processes, int
-                Returns:
-                        start: start point of interator [j], int
-                        stop: end point of iterator [j], int
-                        
-        parallel_call_hamiltonian(e_states, nos, nsa, nop)
-                Parameters:
-                    e_states: array of eigenstates, np.int32
-                    nos: total no. of states, int
-                    nsa: shape of 2D lattice, int
+    hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
+            Parameters:
+                    start: start point of interator [j], int
+                    stop: end point of iterator [j], int
+                    nsa: shape of square lattice, int
                     nop: total no. of particles, int
-                Returns:
-                    h: 2D hamiltonian array, np.float32
-                Environment:
-                    C: Numpy
-                    Python: Multiprocessing
+                    eigenstates: array of eigenstates, np.int32
+                    queue: mutiprocessing queue to store each processes' output
+                    h: hamiltonian array, np.float32
                     
-        eigenvalvec(h)
-                Parameters:
-                    h: 2D hamiltonian array, np.float32
-                Returns:
-                    e_vecs: eigenvector array, complex
-                    e_vals: eigenvalue array, complex
-                Environment:
-                    Fortran: OpenBLAS, OpenMP
+    distribute(n_items, n_processes, i)
+            Parameters:
+                    n_items: total number of items to compute, int
+                    n_processes: no. of processes to create (= no. of cores), int
+                    i: iterates over no. of processes, int
+            Returns:
+                    start: start point of interator [j], int
+                    stop: end point of iterator [j], int
+                    
+    parallel_call_hamiltonian(e_states, nos, nsa, nop)
+            Parameters:
+                e_states: array of eigenstates, np.int32
+                nos: total no. of states, int
+                nsa: shape of 2D lattice, int
+                nop: total no. of particles, int
+            Returns:
+                h: 2D hamiltonian array, np.float32
+            Environment:
+                C: Numpy
+                Python: Multiprocessing
+                
+    eigenvalvec(h)
+            Parameters:
+                h: 2D hamiltonian array, np.float32
+            Returns:
+                e_vecs: eigenvector array, complex
+                e_vals: eigenvalue array, complex
+            Environment:
+                Fortran: OpenBLAS, OpenMP
 
 #### - Sub-Routine 2 (Relabelling, Density Matrices and Recursion Time)
 
-        recursion_time()[in development] 
-        
-        relabel(e_states, nol_a, nol_b, link_pos, nop)
-                Parameters:
-                    e_states: array of eigenstates, np.int32
-                    nol_a: no. of sites in sub-lattice A, int
-                    nol_b: no. of particles in sub-lattice B, int
-                    link_pos: site joining sub-lattices A and B, int
-                    nop: total no. of particles, int
-                Returns:
-                    np.array(y): array containing relabelled states, np.float64
-                Environment:
-                    Python
-                    
-        denmatrix_a(label, e_vecs, nos, nop, nol_a)
-                nol_b replaced by nol_a
-                See denmatrix_b below
-        
-        denmatrix_b(label, e_vec, nos, nop, nol_b)
-                Parameters:
-                    label: array containing relabelled states,
-                    e_vecs: eigenvector array, complex
-                    nop: total no. of particles, int
-                    nol_b: no. of particles in sub-lattice B, int
-                Returns:
-                    density_mat: 2D density matrix for sub-lattice B, complex
-                    den_trace: Sum of diagonal, complex
-                    den_trace2: Sum of diagonal of product of DM with its conjugate, complex
-                Environment:
-                    Fortran: OpenBLAS, OpenMP
+    recursion_time()[in development] 
+    
+    relabel(e_states, nol_a, nol_b, link_pos, nop)
+            Parameters:
+                e_states: array of eigenstates, np.int32
+                nol_a: no. of sites in sub-lattice A, int
+                nol_b: no. of particles in sub-lattice B, int
+                link_pos: site joining sub-lattices A and B, int
+                nop: total no. of particles, int
+            Returns:
+                np.array(y): array containing relabelled states, np.float64
+            Environment:
+                Python
+                
+    denmatrix_a(label, e_vecs, nos, nop, nol_a)
+            nol_b replaced by nol_a
+            See denmatrix_b below
+    
+    denmatrix_b(label, e_vec, nos, nop, nol_b)
+            Parameters:
+                label: array containing relabelled states,
+                e_vecs: eigenvector array, complex
+                nop: total no. of particles, int
+                nol_b: no. of particles in sub-lattice B, int
+            Returns:
+                density_mat: 2D density matrix for sub-lattice B, complex
+                den_trace: Sum of diagonal, complex
+                den_trace2: Sum of diagonal of product of DM with its conjugate, complex
+            Environment:
+                Fortran: OpenBLAS, OpenMP
 
 #### - Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)
 
-        random_eigenvector(eigenvectors, nos)(eigenvectors, relabelled_states, nos, nos_a, nop)
-                Parameters:
-                    eigenvectors: eigenvector array, np.complex
-                    relabelled_states: 
-                    nos: total no. of states, int
-                    nos_a: 
-                    nop: 
-                Returns:
-                    psi_initial: randomly chosen eigenvector used as initial state, np.complex
-                Environment:
+    random_eigenvector(eigenvectors, nos)(eigenvectors, relabelled_states, nos, nos_a, nop)
+            Parameters:
+                eigenvectors: eigenvector array, np.complex
+                relabelled_states: 
+                nos: total no. of states, int
+                nos_a: 
+                nop: 
+            Returns:
+                psi_initial: randomly chosen eigenvector used as initial state, np.complex
+            Environment:
+                C: Numpy
+                Python
+                
+    von_neumann_b(psi_array, labels, nos)
+            Parameters:
+                    psi_array: 
+                    labels: array containing relabelled states, np.float64
+                    nos:
+            Returns:
+                    entropy_b: array containing Von-Neumann entropies, np.complex
+            Environment:
                     C: Numpy
-                    Python
+                    Fortran: OpenBLAS, OpenMP
                     
-        von_neumann_b(psi_array, labels, nos)
-                Parameters:
-                        psi_array: 
-                        labels: array containing relabelled states, np.float64
-                        nos:
-                Returns:
-                        entropy_b: array containing Von-Neumann entropies, np.complex
-                Environment:
-                        C: Numpy
-                        Fortran: OpenBLAS, OpenMP
-                        
-        psi_t(eigenvectors, eigenvalues, nos, psi_initial, t)
-                Parameters:
-                        eigenvectors: eigenvector array, np.complex
-                        eigenvalues:
-                        nos:
-                        psi_initial: initial state, np.complex
-                        t: time, float
-                Returns:
-                        psi: array containing psi at time t 
-                        
-        time_evolution(eigenvectors, eigenvalues, psi_initial, nos)
-                Parameters:
-                        eigenvectors: 
-                        eigenvalues: 
-                        psi_initial: 
-                        nos:
-                Returns:
-                        psi_array: array of arrays containing psi at t, t + dt ...
+    psi_t(eigenvectors, eigenvalues, nos, psi_initial, t)
+            Parameters:
+                    eigenvectors: eigenvector array, np.complex
+                    eigenvalues:
+                    nos:
+                    psi_initial: initial state, np.complex
+                    t: time, float
+            Returns:
+                    psi: array containing psi at time t 
+                    
+    time_evolution(eigenvectors, eigenvalues, psi_initial, nos)
+            Parameters:
+                    eigenvectors: 
+                    eigenvalues: 
+                    psi_initial: 
+                    nos:
+            Returns:
+                    psi_array: array of arrays containing psi at t, t + dt ...
  
 ### - Output/Plotting 
 
