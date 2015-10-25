@@ -3,7 +3,7 @@ Program to simulate n-particles on a 2 dimensional lattice, which is divided int
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
 
-## CHANGELOG(02-10-2015)
+## CHANGELOG (02-10-2015)
 
 1. Complete program structure redesign
 2. class System created with __init__ to store variables(defined in documentation)
@@ -11,11 +11,11 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 
 
-The program structure is as follows:
+## Program Structure
 
 Documentation by D. Pinto
 
-    - class System, function __init__()
+###    - class System, function __init__()
         Parameters:
             nop: total no. of particles, int
             nsa: shape of square lattice, int
@@ -28,7 +28,7 @@ Documentation by D. Pinto
             link_pos: site joining sub-lattices A and B, int
             lat: lattice sites array, np.int32
 
-    - main()
+###    - main()
         - Sub-Routine 1
             eigenstates_lat(lat, nop, lat_del_pos)
                 Parameters:
