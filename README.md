@@ -15,7 +15,8 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 Documentation by D. Pinto
 
-### class System, function __init__()
+### class System 
+#### function __init__()
         Parameters:
             nop: total no. of particles, int
             nsa: shape of square lattice, int
@@ -29,8 +30,8 @@ Documentation by D. Pinto
             lat: lattice sites array, np.int32
 
 ### main()
-####        - Sub-Routine 1
-            eigenstates_lat(lat, nop, lat_del_pos)
+
+        eigenstates_lat(lat, nop, lat_del_pos)
                 Parameters:
                     lat: lattice sites array, np.int32
                     nop: no. of particles, int
@@ -39,20 +40,22 @@ Documentation by D. Pinto
                     e_states: array of eigenstates, np.int32
                     len(e_states): total no. of eigenstates, int
 
-####        - Sub-Routine 2
-            parallel_call_hamiltonian(e_states, nos, nsa, nop)
-                Parameters:
-                    e_states: array of eigenstates, np.int32
-                    nos: total no. of states, int
-                    nsa: shape of 2D lattice, int
-                    nop: total no. of particles, int
-                Returns:
-                    h: 2D hamiltonian array, np.float32
-                Environment:
-                    C: Numpy
-                    Python: Multiprocessing
 
-        - Sub-Routine 3
+####        - Sub-Routine 1
+
+        parallel_call_hamiltonian(e_states, nos, nsa, nop)
+        Parameters:
+            e_states: array of eigenstates, np.int32
+            nos: total no. of states, int
+            nsa: shape of 2D lattice, int
+            nop: total no. of particles, int
+        Returns:
+            h: 2D hamiltonian array, np.float32
+        Environment:
+            C: Numpy
+            Python: Multiprocessing
+
+
             eigenvalvec(h)
                 Parameters:
                     h: 2D hamiltonian array, np.float32
@@ -62,15 +65,10 @@ Documentation by D. Pinto
                 Environment:
                     Scipy -> Fortran: OpenBLAS, OpenMP
 
-        - Sub-Routine 4
-            random_eigenvector(e_vecs, nos)
-                Parameters:
-                    e_vecs: eigenvector array, complex
-                    nos: total no. of states, int
-                Returns:
-                    e_vecs[rand]: randomly chosen eigenvector
-                Environment:
-                    Python
+            
+####        - Sub-Routine 2
+
+        recursion_time()[alpha] 
 
             relabel(e_states, nol_a, nol_b, link_pos, nop)
                 Parameters:
@@ -83,6 +81,20 @@ Documentation by D. Pinto
                     np.array(y): array containing relabelled states,
                 Environment:
                     Python
+
+
+####        - Sub-Routine 3
+
+####        - Sub-Routine 4
+            random_eigenvector(e_vecs, nos)
+                Parameters:
+                    e_vecs: eigenvector array, complex
+                    nos: total no. of states, int
+                Returns:
+                    e_vecs[rand]: randomly chosen eigenvector
+                Environment:
+                    Python
+
 
             denmatrix_a(label, e_vecs, nos, nop, nol_a)
                 nol_b replaced by nol_a
