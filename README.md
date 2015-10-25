@@ -3,7 +3,7 @@ Program to simulate n-particles on a 2 dimensional lattice, which is divided int
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
 
-CHANGELOG(02-10-2015)
+## CHANGELOG(02-10-2015)
 
 1. Complete program structure redesign
 2. class System created with __init__ to store variables(defined in documentation)
