@@ -10,16 +10,18 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 ## Task List 
 
 - [ ] Recursion time calculation using least common multiples overflows if no. of inputs > 50
+- [ ] Parallel processing of Von-Neumann entropy calculation and time-evolution (multiple processes using distribution 
+function)
 - [x] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
-- [ ] Parallel processing of Von-Neumann entropy calculation and time-evolution (multiprocessing)
 
 
 ## Changelog (25-10-2015)
 
-1. recursion_time(), gcd(), lcm(), lcm_call() added
-2. Complete program structure redesign
-2. class System created to store variables(defined in documentation)
-3. Extensive documentation added 
+
++ recursion_time(), gcd(), lcm(), lcm_call() added
++ Complete program structure redesign
++ class System created to store variables(defined in documentation)
++ Extensive documentation added 
 
 
 ## Program Structure 
