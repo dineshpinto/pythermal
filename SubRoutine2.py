@@ -93,14 +93,9 @@ def denmatrix_b(label, e_vec, nos):
 
 
 def recursion_time(eigenvalues):
-    e_vals = np.zeros_like(eigenvalues, dtype=np.float32)
+    min_time = np.amin(np.absolute(eigenvalues))
 
-    for idx, val in enumerate(eigenvalues):
-        e_vals[idx] = mt.fabs(val)
-
-    e_vals = e_vals[e_vals.argsort()]
-
-    return 1.0 / e_vals[0]
+    return 1.0 / min_time
 
 
 '''

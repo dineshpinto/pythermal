@@ -9,9 +9,9 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 ## Task List 
 
-- [ ] Recursion time calculation overflows if no. of inputs > 50
-- [ ] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
-- [ ] Von-Neumann entropy calculation to be sped up (parallel-processing)
+- [ ] Recursion time calculation using least common multiples overflows if no. of inputs > 50
+- [x] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
+- [ ] Parallel processing of Von-Neumann entropy calculation and time-evolution (multiprocessing)
 
 
 ## Changelog (25-10-2015)

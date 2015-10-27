@@ -26,7 +26,7 @@ class System:
         self.lat_del_pos_a = np.array([3, 4, 9, 13, 7, 8, 10, 11, 12, 14, 15, 16])
         # Time Evolution
         self.t_initial = 0.0
-        self.t_final = 200000.0
+        self.t_final = 10.0
         self.t_steps = 100
 
         # No of  lattice sites eg. nsa = 3 => nol = 9
