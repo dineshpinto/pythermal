@@ -8,7 +8,7 @@ import SubRoutine2
 import SubRoutine3
 import Output
 
-__author__ = 'SSCTP - Entanglement Group'
+__author__ = 'Entanglement Project Group, St. Stephens College'
 
 
 class System:
@@ -26,7 +26,7 @@ class System:
         self.lat_del_pos_a = np.array([3, 4, 9, 13, 7, 8, 10, 11, 12, 14, 15, 16])
         # Time Evolution
         self.t_initial = 0.0
-        self.t_final = 50
+        self.t_final = 200000.0
         self.t_steps = 100
 
         # No of  lattice sites eg. nsa = 3 => nol = 9
@@ -44,11 +44,11 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
     if np.size(lat_del_pos) != 0:
         lat_del = np.delete(lat, lat_del_pos - 1)
         print 'lattice sites(after deletion)=', lat_del
-        e_states = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
+        eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
     else:
-        e_states = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
+        eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
 
-    return e_states, len(e_states)
+    return eigenstates, len(eigenstates)
 
 
 def main():
@@ -75,18 +75,16 @@ def main():
     eigenvalues, eigenvectors = SubRoutine1.eigenvalvec(hamiltonian)
     eigenvalues_a, eigenvectors_a = SubRoutine1.eigenvalvec(hamiltonian_a)
 
+    eigenvalues *= 1.0e8
     e_time2 = time.time()
     Output.status_output(3, e_time2 - e_time1)
-
-    # Sorting the eigenvalues and eigenvectors in order of increasing eigenvalues
-    idx = eigenvalues_a.argsort()
-    eigenvalues_a = eigenvalues_a[idx]
-    eigenvectors_a = eigenvectors_a[:, idx]
 
     # --Sub-Routine 2--
 
     # Recursion Time
-    # print SubRoutine2.recursion_time(1, eigenvalues)
+
+    recur_time = SubRoutine2.recursion_time(eigenvalues)
+    Output.status_output(4, recur_time)
 
     # Relabelling
     r_time1 = time.time()
@@ -94,23 +92,18 @@ def main():
     relabelled_states = SubRoutine2.relabel(eigenstates, s.nol_b, s.link_pos, s.nop)
 
     r_time2 = time.time()
-    Output.status_output(4, r_time2 - r_time1)
+    Output.status_output(5, r_time2 - r_time1)
 
     # --Sub-Routine 3--
 
     # Time Evolution
     evo_time1 = time.time()
-    # psi_initial = SubRoutine3.random_eigenvector(eigenvectors, relabelled_states, nos, nos_a, s.nop)
+
     psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, relabelled_states, nos, nos_a, s.nop)
-
-    # 1. Using psi(t) = psi(0)*exp(-i*H*t)
-    # psi_array, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
-
-    # 2. Using psi(t) = SIGMA[|E_i><E_i|psi(0)>exp(-i*E_i*t / hbar)]
-    psi_array, timestep_array = SubRoutine3.time_evolution(eigenvectors, eigenvalues, psi_initial, nos)
+    psi_array, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
 
     evo_time2 = time.time()
-    Output.status_output(5, evo_time2 - evo_time1)
+    Output.status_output(6, evo_time2 - evo_time1)
 
     # Von-Neumann Entropy
     vn_entropy_b = SubRoutine3.von_neumann_b(psi_array, relabelled_states, nos)
@@ -136,5 +129,5 @@ Divide into n processes each with a start, stop
 Pass eigenvector, hamiltonian, start, stop to time evolution function -> get psi
 Pass psi to density matrix to get density matrix
 Find VN entropy by passing density matrix of b and log(density matrix of b)
-Create large array VN array to store the all the entropies
+Create large array VN array to store the all the entropies :) :D :P :*
 '''

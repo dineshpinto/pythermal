@@ -24,11 +24,15 @@ def status_output(status, time_taken=0.0):
         print "\n\tSub-Routine 2\nRelabelling.....Initiated"
 
     elif status == 4:
+        print "\nMinimum recursion time =", time_taken, "seconds or ", time_taken / 86400, "days"
+        # time.strftime("%T", time.gmtime(time_taken))
+
+    elif status == 5:
         r_time = time.strftime("%T", time.gmtime(time_taken))
         print "\nRelabelling....Complete!\tExecution time = ", r_time
         print "\n\tSub-Routine 3\nTime Evolution.....Initiated"
 
-    elif status == 5:
+    elif status == 6:
         evo_time = time.strftime("%T", time.gmtime(time_taken))
         print "\nTime Evolution....Complete!\tExecution time = ", evo_time
         print "\nVon-Neumannn Entropy.....Initiated"
@@ -80,7 +84,7 @@ def printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors):
 
 
 def plotting(x, y):
-    plt.plot(x, y, 'bo', label='Entropy')
+    plt.plot(x, y, 'b-', label='Entropy')
     plt.grid(b=True, which='major', color='k', linestyle='-')
     plt.grid(b=True, which='minor', color='0.50', linestyle='-')
     plt.minorticks_on()
@@ -88,7 +92,7 @@ def plotting(x, y):
     plt.ylabel(r'Von-Neumann Entropy $\rightarrow$')
     plt.xlabel(r'Time $\rightarrow$')
     plt.title(r'Von-Neumann entropy vs time for a 2D sub lattice')
-    # plt.savefig('Entropy-Time.png', format='png', dpi=400)
+    plt.savefig('Entropy-Time.png', format='png', dpi=600)
     plt.show()
 
     return

@@ -86,13 +86,24 @@ def denmatrix_b(label, e_vec, nos):
                 density_mat_b[m][n] += np.vdot(e_vec[j], e_vec[i])
 
     den_trace_b = np.trace(density_mat_b)
-    print "Trace b =", den_trace_b
     den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
-    print "Trace b^2 =", den_trace_b2
+    print "Trace b =", den_trace_b, "\t Trace b squared =", den_trace_b2
 
     return density_mat_b  # , den_trace_b, den_trace_b2
 
 
+def recursion_time(eigenvalues):
+    e_vals = np.zeros_like(eigenvalues, dtype=np.float32)
+
+    for idx, val in enumerate(eigenvalues):
+        e_vals[idx] = mt.fabs(val)
+
+    e_vals = e_vals[e_vals.argsort()]
+
+    return 1.0 / e_vals[0]
+
+
+'''
 def gcd(a, b):
     while b:
         a, b = b, a % b
@@ -101,10 +112,8 @@ def gcd(a, b):
 
 
 def lcm(a, b):
-    gcd1 = gcd(a, b)
-    if gcd1 != 0:
 
-        return a * b // gcd(a, b)
+    return a * b / gcd(a, b)
 
 
 def lcm_call(*args):
@@ -118,3 +127,4 @@ def recursion_time(rnd_off, eigenvalues):
         e_vals[idx] = np.round(val, rnd_off)
 
     return lcm_call(*e_vals)
+'''
