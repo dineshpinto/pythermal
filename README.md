@@ -10,8 +10,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 ## Task List 
 
 - [ ] Recursion time calculation using least common multiples [currently overflows if no. of inputs > 50]
-- [ ] Parallel processing of Von-Neumann entropy calculation and time-evolution (multiple processes using distribution 
-function)
+- [x] Parallel processing of Von-Neumann entropy calculation and time-evolution (using OpenBLAS linkage with OpenMP for multiple threads sidesteps Python GIL)
 - [x] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
 
 
