@@ -1,6 +1,6 @@
 # PyThermal - Time evolving fermions on a two-dimensional crystal lattice
 
-**Entanglement Project Group, St. Stephen's College**
+**Thermalization and Quantum Entanglement Project Group, St. Stephen's College**
 
 
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
