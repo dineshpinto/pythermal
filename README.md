@@ -9,7 +9,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 ## Task List 
 
-- [ ] Internal overflow error in scipy.linalg.expm(- j * H * t) for time evolution greater than 5 million seconds
+- [ ] Internal overflow error in scipy.linalg.expm(- j * H * t) for time evolution greater than 5 million units
 - [ ] Recursion time calculation using least common multiples of the inverse of energy eigenvalues [currently overflows if no. of inputs > 50]
 - [x] Parallel processing of Von-Neumann entropy calculation and time-evolution (using OpenBLAS linkage with OpenMP for multiple threads sidesteps Python GIL)
 - [x] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
