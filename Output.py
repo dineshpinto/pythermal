@@ -1,5 +1,6 @@
-import humanize as hu
 import time
+
+import humanize as hu
 import tabulate
 import numpy as np
 import matplotlib.pyplot as plt
@@ -84,7 +85,7 @@ def printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors):
 
 
 def plotting(x, y):
-    plt.plot(x, y, 'b-', label='Entropy')
+    plt.plot(x, y, 'bo', label='Entropy')
     plt.grid(b=True, which='major', color='k', linestyle='-')
     plt.grid(b=True, which='minor', color='0.50', linestyle='-')
     plt.minorticks_on()

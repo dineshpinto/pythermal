@@ -1,5 +1,6 @@
-import numpy as np
 import math as mt
+
+import numpy as np
 
 from Main import System
 
@@ -64,9 +65,9 @@ def denmatrix_a(label, e_vec, nos):
                 density_mat_a[m][n] += np.vdot(e_vec[j], e_vec[i])
 
     den_trace_a = np.trace(density_mat_a)
-    print "Trace a =", den_trace_a
+    # print "Trace a =", den_trace_a
     den_trace_a2 = np.trace(np.linalg.matrix_power(density_mat_a, 2))
-    print "Trace a^2 =", den_trace_a2
+    # print "Trace a^2 =", den_trace_a2
 
     return density_mat_a  # , den_trace_a, den_trace_a2
 
@@ -87,7 +88,7 @@ def denmatrix_b(label, e_vec, nos):
 
     den_trace_b = np.trace(density_mat_b)
     den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
-    print "Trace b =", den_trace_b, "\t Trace b squared =", den_trace_b2
+    # print "Trace b =", den_trace_b, "\t Trace b squared =", den_trace_b2
 
     return density_mat_b  # , den_trace_b, den_trace_b2
 

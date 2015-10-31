@@ -15,7 +15,7 @@ def random_eigenvector(eigenvectors, relabelled_states, nos, nos_a, nop):
             psi_initial[i] = eigenvectors[rand][j]
             j += 1
 
-    print "\nEigenvector", rand, "chosen randomly for time evolution"
+    # print "\nEigenvector", rand, "chosen randomly for time evolution"
     a = la.norm(psi_initial)
     psi_initial /= a
 
@@ -55,6 +55,7 @@ def time_evolution(psi_initial, hamiltonian, nos):
 
 '''
 # Psi evolved in accordance with 1D paper psi(t) = SIGMA_(i=0)^(n) [|E_i><E_i|psi(0)>exp(-i*E_i*t / hbar)]
+
 def psi_t(eigenvectors, eigenvalues, nos, psi_initial, t):
     psi = np.zeros(nos, dtype=np.complex)
     for i in xrange(nos):

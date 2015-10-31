@@ -1,6 +1,7 @@
 import itertools as it
 import time
 import math as mt
+
 import numpy as np
 
 import SubRoutine1
@@ -8,7 +9,7 @@ import SubRoutine2
 import SubRoutine3
 import Output
 
-__author__ = 'Entanglement Project Group, St. Stephens College'
+__author__ = "Entanglement Project Group, St. Stephen's College"
 
 
 class System:
@@ -40,10 +41,10 @@ class System:
 
 
 def eigenstates_lattice(lat, nop, lat_del_pos):
-    print 'lattice sites=', lat
+    # print 'lattice sites=', lat
     if np.size(lat_del_pos) != 0:
         lat_del = np.delete(lat, lat_del_pos - 1)
-        print 'lattice sites(after deletion)=', lat_del
+        # print 'lattice sites(after deletion)=', lat_del
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
     else:
         eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
@@ -58,7 +59,7 @@ def main():
     eigenstates_a, nos_a = eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
     Output.status_output(1)
 
-    # --Sub-Routine 1--
+    # --Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)--
 
     # Hamiltonian
     h_time1 = time.time()
@@ -79,7 +80,7 @@ def main():
     e_time2 = time.time()
     Output.status_output(3, e_time2 - e_time1)
 
-    # --Sub-Routine 2--
+    # --Sub-Routine 2 (Relabelling, Density Matrices and Recursion Time)--
 
     # Recursion Time
 
@@ -94,7 +95,7 @@ def main():
     r_time2 = time.time()
     Output.status_output(5, r_time2 - r_time1)
 
-    # --Sub-Routine 3--
+    # --Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)--
 
     # Time Evolution
     evo_time1 = time.time()

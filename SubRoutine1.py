@@ -1,7 +1,7 @@
 import multiprocessing as mp
+
 import numpy as np
 import scipy.linalg as la
-# import tqdm
 
 
 # Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture ...
@@ -56,7 +56,7 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
         process = mp.Process(target=hamiltonian_2d, args=args)
         process_list.append(process)  # Create list of processes
         process.start()
-        print '(start, stop) = (', start, ',', stop, ') -- process ', i + 1, '-- PID', process.pid
+        # print '(start, stop) = (', start, ',', stop, ') -- process ', i + 1, '-- PID', process.pid
 
     for i in xrange(n_processes):  # Retrieves output from queue
         h += queue.get()
