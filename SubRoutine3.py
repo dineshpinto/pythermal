@@ -24,8 +24,7 @@ def random_eigenvector(eigenvectors, relabelled_states, nos, nos_a, nop):
 
 # Calculates Von-Neumann entropy as entropy = - rho * ln(rho)
 def von_neumann_b(psi_array, relabelled_states, nos):
-    num_states = len(psi_array)
-    entropy_b = np.zeros(num_states, dtype=np.complex)
+    entropy_b = np.zeros(len(psi_array), dtype=np.complex)
 
     for idx, psi_val in enumerate(psi_array):
         d_matrix_b = SubRoutine2.denmatrix_b(relabelled_states, psi_val, nos)
@@ -35,21 +34,15 @@ def von_neumann_b(psi_array, relabelled_states, nos):
 
 
 # Psi evolved as psi(t) = psi(0) * exp(i * H * t)
-def psi_t(psi_initial, hamiltonian, timestep):
-
-    return np.dot(la.expm(-1.0j * timestep * hamiltonian), psi_initial)
-
-
 def time_evolution(psi_initial, hamiltonian, nos):
     s = Main.System()
 
-    delta_t = (s.t_final - s.t_initial) / s.t_steps
-    timestep_array = np.arange(s.t_initial, s.t_final, delta_t)
+    timestep_array = np.arange(s.t_initial, s.t_final, s.delta_t)
     psi_array = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
 
     for idx, t in enumerate(timestep_array):
-        psi_array[idx] = psi_t(psi_initial, hamiltonian, t)
-
+        psi_array[idx] = np.dot(la.expm(-1.0j * hamiltonian * timestep), psi_initial)
+        
     return psi_array, timestep_array
 
 
