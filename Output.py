@@ -8,9 +8,10 @@ import matplotlib.pyplot as plt
 import Main
 
 
-def status_output(status, time_taken=0.0):
+def status_output(time_taken=0.0):
     global h_time, e_time, r_time, evo_time
-
+    status = 1
+    
     if status == 1:
         print "\n\tInitialization\nEigenstates........Complete!\n\tSub-Routine 1\nHamiltonian........Initiated\n"
 
@@ -40,7 +41,8 @@ def status_output(status, time_taken=0.0):
 
     else:
         exit()
-
+        
+    status += 1
     return
 
 
