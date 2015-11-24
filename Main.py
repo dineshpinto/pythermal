@@ -9,7 +9,7 @@ import SubRoutine2
 import SubRoutine3
 import Output
 
-__author__ = "Entanglement Project Group, St. Stephen's College"
+__author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics"
 
 
 class System:
@@ -121,14 +121,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-'''
-NOTE:
-Split runtime into n parts with (start, stop)
-Divide into n processes each with a start, stop
-Pass eigenvector, hamiltonian, start, stop to time evolution function -> get psi
-Pass psi to density matrix to get density matrix
-Find VN entropy by passing density matrix of b and log(density matrix of b)
-Create large array VN array to store the all the entropies :) :D :P :*
-'''
