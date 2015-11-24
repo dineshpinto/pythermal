@@ -8,9 +8,8 @@ import matplotlib.pyplot as plt
 import Main
 
 
-def status_output(time_taken=0.0):
+def status(status, time_taken=0.0):
     global h_time, e_time, r_time, evo_time
-    status = 1
     
     if status == 1:
         print "\n\tInitialization\nEigenstates........Complete!\n\tSub-Routine 1\nHamiltonian........Initiated\n"
@@ -42,7 +41,6 @@ def status_output(time_taken=0.0):
     else:
         exit()
         
-    status += 1
     return
 
 
@@ -87,15 +85,15 @@ def printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors):
 
 
 def plotting(x, y):
-    plt.plot(x, y, 'bo', label='Entropy')
+    plt.plot(x, y, 'bo', markersize=5, label=r'$S_{VN} = - \rho \ln(\rho)$')
     plt.grid(b=True, which='major', color='k', linestyle='-')
     plt.grid(b=True, which='minor', color='0.50', linestyle='-')
     plt.minorticks_on()
-    plt.legend(loc='best')
     plt.ylabel(r'Von-Neumann Entropy $\rightarrow$')
     plt.xlabel(r'Time $\rightarrow$')
-    plt.title(r'Von-Neumann entropy vs time for a 2D sub lattice')
-    plt.savefig('Entropy-Time.png', format='png', dpi=600)
+    plt.title(r'Von-Neumann entropy vs time for a 2D sub-lattice')
+    plt.legend(loc='best')
+    plt.savefig('Entropy.png', format='png', dpi=600)
     plt.show()
 
     return
