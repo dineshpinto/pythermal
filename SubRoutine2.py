@@ -22,16 +22,17 @@ def sum_ncr(n, k):
 
 
 # Relabels states according to ..
-def relabel(e_states, nol_b, link_pos, nop):
-    x = np.zeros(shape=(2, nop + 1), dtype=np.int32)
+def relabel(e_states):
+    s = System()
+    
+    x = np.zeros(shape=(2, s.nop + 1), dtype=np.int32)
     y, dump = [], []
-
     for state in e_states:
         comm, temp = [], []
         n = 0
 
         for j in state:
-            if j <= link_pos:
+            if j <= s.link_pos:
                 comm.append(j)
                 n += 1
 
@@ -44,7 +45,7 @@ def relabel(e_states, nol_b, link_pos, nop):
         temp += [x[0][n], n, x[1][n]]
         y.append(temp)
 
-        if x[1][n] == ncr(nol_b, nop - n):
+        if x[1][n] == ncr(s.nol_b, s.nop - n):
             x[1][n] = 0
 
     return np.array(y)
