@@ -2,6 +2,9 @@
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's College**
 
+Project Leader: Dr. A. Gupta 
+
+Students: A. Kumar, D. Pinto and M. Ghosh
 
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
