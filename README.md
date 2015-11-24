@@ -2,24 +2,21 @@
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's College**
 
-Project Leader: Dr. A. Gupta 
-
-Students: A. Kumar, D. Pinto and M. Ghosh
+*Project Leader: Dr. A. Gupta*   
+*Students: A. Kumar, D. Pinto and M. Ghosh*
 
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
-
 
 ## Task List 
 
 - [ ] Internal overflow error in scipy.linalg.expm(- j * H * t) for time evolution greater than 5 million units
 - [ ] Recursion time calculation using least common multiples of the inverse of energy eigenvalues [currently overflows if no. of inputs > 50]
-- [x] Parallel processing of Von-Neumann entropy calculation and time-evolution (using OpenBLAS linkage with OpenMP for multiple threads sidesteps Python GIL)
-- [x] Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
 
 
 ## Changelog (25-10-2015)
-
++ Parallel processing of Von-Neumann entropy calculation and time-evolution (using OpenBLAS linkage with OpenMP for multiple threads sidesteps Python GIL)
++ Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
 + Recursion time temporary fix using inverse of |least eigenvalue|
 + recursion_time(), gcd(), lcm(), lcm_call() added
 + Complete program structure redesign
@@ -29,7 +26,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 ## Program Structure 
 
-*Documentation by D. Pinto, St. Stephen's College*
+*Documentation by D. Pinto*
 
 The code is centered around the main function, from which the entire program can be controlled. It derives data from a 
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
