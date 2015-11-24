@@ -25,7 +25,7 @@ class System:
         self.nol_a = 4
         # Lattice A sites
         self.lat_del_pos_a = np.array([3, 4, 9, 13, 7, 8, 10, 11, 12, 14, 15, 16])
-        # Time Evolution
+        # Time Evolution - starting time, ending time and no. of time steps; time in seconds
         self.t_initial = 0.0
         self.t_final = 10.0
         self.t_steps = 100
@@ -38,14 +38,16 @@ class System:
         self.link_pos = mt.sqrt(self.nol_a) * self.nsa - (self.nsa - mt.sqrt(self.nol_a))
         # Lattice after deleting sites
         self.lat = np.arange(1, self.nol + 1, dtype=np.int32)
+        # Time gap between sucessive steps
+        self.delta_t = (self.t_final - self.t_initial) / self.t_steps
 
 
 def eigenstates_lattice(lat, nop, lat_del_pos):
     # print 'lattice sites=', lat
     if np.size(lat_del_pos) != 0:
         lat_del = np.delete(lat, lat_del_pos - 1)
-        # print 'lattice sites(after deletion)=', lat_del
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
+        # print 'lattice sites(after deletion)=', lat_del
     else:
         eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
 
@@ -57,54 +59,45 @@ def main():
 
     eigenstates, nos = eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
     eigenstates_a, nos_a = eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
-    Output.status_output(1)
+    Output.status(1)
 
     # --Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)--
 
     # Hamiltonian
     h_time1 = time.time()
-
     hamiltonian = SubRoutine1.parallel_call_hamiltonian(eigenstates, nos, s.nsa, s.nop)
     hamiltonian_a = SubRoutine1.parallel_call_hamiltonian(eigenstates_a, nos_a, s.nsa, s.nop)
-
     h_time2 = time.time()
-    Output.status_output(2, h_time2 - h_time1)
+    Output.status(2, h_time2 - h_time1)
 
     # Eigenvalues and Eigenvectors
     e_time1 = time.time()
-
     eigenvalues, eigenvectors = SubRoutine1.eigenvalvec(hamiltonian)
     eigenvalues_a, eigenvectors_a = SubRoutine1.eigenvalvec(hamiltonian_a)
-
-    eigenvalues *= 1.0e8
     e_time2 = time.time()
-    Output.status_output(3, e_time2 - e_time1)
+    Output.status(3, e_time2 - e_time1)
 
-    # --Sub-Routine 2 (Relabelling, Density Matrices and Recursion Time)--
+    # --Sub-Routine 2 (Recursion Time and State Relabelling)--
 
     # Recursion Time
-
+    eigenvalues *= 1.0e8
     recur_time = SubRoutine2.recursion_time(eigenvalues)
-    Output.status_output(4, recur_time)
+    Output.status(4, recur_time)
 
     # Relabelling
     r_time1 = time.time()
-
-    relabelled_states = SubRoutine2.relabel(eigenstates, s.nol_b, s.link_pos, s.nop)
-
+    relabelled_states = SubRoutine2.relabel(eigenstates)
     r_time2 = time.time()
-    Output.status_output(5, r_time2 - r_time1)
+    Output.status(5, r_time2 - r_time1)
 
     # --Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)--
 
     # Time Evolution
     evo_time1 = time.time()
-
     psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, relabelled_states, nos, nos_a, s.nop)
     psi_array, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
-
     evo_time2 = time.time()
-    Output.status_output(6, evo_time2 - evo_time1)
+    Output.status(6, evo_time2 - evo_time1)
 
     # Von-Neumann Entropy
     vn_entropy_b = SubRoutine3.von_neumann_b(psi_array, relabelled_states, nos)
