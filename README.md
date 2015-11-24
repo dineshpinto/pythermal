@@ -1,9 +1,9 @@
 # PyThermal - Time evolving fermions on a two-dimensional crystal lattice
 
-**Thermalization and Quantum Entanglement Project Group, St. Stephen's College**
+**Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
 *Project Leader: Dr. A. Gupta*   
-*Students: A. Kumar, D. Pinto and M. Ghosh*
+*Project Students: A. Kumar, D. Pinto and M. Ghosh*
 
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
@@ -14,7 +14,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 - [ ] Recursion time calculation using least common multiples of the inverse of energy eigenvalues [currently overflows if no. of inputs > 50]
 
 
-## Changelog (25-10-2015)
+## Changelog (24-11-2015)
 + Parallel processing of Von-Neumann entropy calculation and time-evolution (using OpenBLAS linkage with OpenMP for multiple threads sidesteps Python GIL)
 + Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
 + Recursion time temporary fix using inverse of |least eigenvalue|
@@ -32,8 +32,7 @@ The code is centered around the main function, from which the entire program can
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
-**Note:** The code was designed on Python 2.7 and will not work with versions older than Python 2.6. 
-The code can easily be rewritten for Python 3.x.   
+**Note:** The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It can easily be rewritten for Python 3.x.   
 
 ### class System 
         
