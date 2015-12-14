@@ -40,7 +40,7 @@ def time_evolution(psi_initial, hamiltonian, nos):
     psi_array = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
 
     for idx, t in enumerate(timestep_array):
-        psi_array[idx] = np.dot(psi_initial, la.expm(-0.61 * 10**(-38) * hamiltonian * t))
+        psi_array[idx] = np.dot(psi_initial, la.expm(-1.0j * 0.61 * 10**(-38) * hamiltonian * t))
 
     return psi_array, timestep_array
 
