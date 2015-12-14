@@ -18,7 +18,6 @@ def random_eigenvector(eigenvectors, relabelled_states, nos, nos_a, nop):
     # print "\nEigenvector", rand, "chosen randomly for time evolution"
     a = la.norm(psi_initial)
     psi_initial /= a
-
     return psi_initial
 
 
@@ -41,9 +40,31 @@ def time_evolution(psi_initial, hamiltonian, nos):
     psi_array = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
 
     for idx, t in enumerate(timestep_array):
-        psi_array[idx] = np.dot(la.expm(-1.0j * hamiltonian * timestep), psi_initial)
-        
+        psi_array[idx] = np.dot(psi_initial, la.expm(-0.61 * 10**(-38) * hamiltonian * t))
+
     return psi_array, timestep_array
+
+
+'''
+def time_evolution(psi_initial, hamiltonian, nos):
+    s = Main.System()
+
+    timestep_array = np.arange(s.t_initial, s.t_final, s.delta_t)
+    psi_array = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
+    a = np.zeros_like(hamiltonian)
+
+    for idx, t in enumerate(timestep_array):
+        for i in range(len(hamiltonian)):
+            for j in range(len(hamiltonian)):
+                a[i][j] = np.exp(-1.0j * hamiltonian[i][j] * t)
+
+        psi_array[idx] = np.dot(psi_initial, a)
+
+    return psi_array, timestep_array
+'''
+
+
+
 
 
 '''

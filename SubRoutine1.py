@@ -4,7 +4,7 @@ import numpy as np
 import scipy.linalg as la
 
 
-# Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture ...
+# Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     for j in xrange(start, stop):  # Start/Stop defined by distribute()
         for k in xrange(nos):  # k iterates over all possibilities
@@ -73,5 +73,4 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
 # Calculates eigenvectors and eigenvalues using the Node algorithm(..link..)
 def eigenvalvec(h):
     e_val, e_vec = la.eig(h)
-
     return e_val.real, e_vec

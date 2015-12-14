@@ -8,8 +8,7 @@ from Main import System
 # Calculates nCr (total no. of combinations)
 def ncr(n, r):
     f = mt.factorial
-
-    return int(f(n) / (f(r) * f(n-r)))
+    return int(f(n) / (f(r) * f(n - r)))
 
 
 # Calculates nC0 + nC1 + ... + nCk
@@ -17,7 +16,6 @@ def sum_ncr(n, k):
     s = 0
     for r in xrange(k):
         s += int(ncr(n, r))
-
     return s
 
 
@@ -47,7 +45,6 @@ def relabel(e_states):
 
         if x[1][n] == ncr(s.nol_b, s.nop - n):
             x[1][n] = 0
-
     return np.array(y)
 
 
@@ -69,7 +66,6 @@ def denmatrix_a(label, e_vec, nos):
     # print "Trace a =", den_trace_a
     den_trace_a2 = np.trace(np.linalg.matrix_power(density_mat_a, 2))
     # print "Trace a^2 =", den_trace_a2
-
     return density_mat_a  # , den_trace_a, den_trace_a2
 
 
@@ -90,7 +86,6 @@ def denmatrix_b(label, e_vec, nos):
     den_trace_b = np.trace(density_mat_b)
     den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
     # print "Trace b =", den_trace_b, "\t Trace b squared =", den_trace_b2
-
     return density_mat_b  # , den_trace_b, den_trace_b2
 
 

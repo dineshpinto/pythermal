@@ -27,7 +27,7 @@ class System:
         self.lat_del_pos_a = np.array([3, 4, 9, 13, 7, 8, 10, 11, 12, 14, 15, 16])
         # Time Evolution - starting time, ending time and no. of time steps; time in seconds
         self.t_initial = 0.0
-        self.t_final = 10.0
+        self.t_final = 1.0
         self.t_steps = 100
 
         # No of  lattice sites eg. nsa = 3 => nol = 9
@@ -98,13 +98,11 @@ def main():
     psi_array, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
     evo_time2 = time.time()
     Output.status(6, evo_time2 - evo_time1)
-
     # Von-Neumann Entropy
     vn_entropy_b = SubRoutine3.von_neumann_b(psi_array, relabelled_states, nos)
 
     # --Output--
-
-    # Output.printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors)
+    Output.printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors)
     Output.plotting(timestep_array, np.real(vn_entropy_b))
     # Output.plotting(np.arange(0, len(eigenvalues)), np.real(eigenvalues))
 
