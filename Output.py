@@ -43,6 +43,20 @@ def status(status_num, time_taken=0.0):
     return
 
 
+def plotting(x, y):
+    plt.plot(x, y, 'bo', markersize=5, label=r'$S_{VN} = - \rho \ln(\rho)$')
+    plt.grid(b=True, which='major', color='k', linestyle='-')
+    plt.grid(b=True, which='minor', color='0.50', linestyle='-')
+    plt.minorticks_on()
+    plt.ylabel(r'Von-Neumann Entropy $[S_{VN} = - \rho \ln(\rho)] \rightarrow$')
+    plt.xlabel(r'Time $[t]\rightarrow$')
+    plt.title(r'Von-Neumann entropy vs time for a 2D sub-lattice')
+    # plt.legend(loc='best')
+    plt.savefig('Output/Entropy.png', format='png', dpi=400)
+    plt.show()
+    return
+
+
 def printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors):
     print 'nos =', len(eigenstates), '\neigenstates shape =', eigenstates.shape, ' eigenstates size =', \
         eigenstates.size, '\n\neigenstates=\n', eigenstates, '\n'
@@ -79,18 +93,4 @@ def printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors):
     # np.savetxt('Output/Hamiltonian_2d.csv', hamiltonian, delimiter=',', fmt='%1d')
     # np.savetxt('Output/Eigenvalues.csv', eigenvalues, delimiter=',', fmt='%0.4e')
     # np.savetxt('Output/Eigenvectors.csv', eigenvectors, delimiter=',', fmt='%0.4e')
-    return
-
-
-def plotting(x, y):
-    plt.plot(x, y, 'bo', markersize=5, label=r'$S_{VN} = - \rho \ln(\rho)$')
-    plt.grid(b=True, which='major', color='k', linestyle='-')
-    plt.grid(b=True, which='minor', color='0.50', linestyle='-')
-    plt.minorticks_on()
-    plt.ylabel(r'Von-Neumann Entropy $[S_{VN} = - \rho \ln(\rho)] \rightarrow$')
-    plt.xlabel(r'Time $[t]\rightarrow$')
-    plt.title(r'Von-Neumann entropy vs time for a 2D sub-lattice')
-    # plt.legend(loc='best')
-    plt.savefig('Output/Entropy.png', format='png', dpi=400)
-    plt.show()
     return

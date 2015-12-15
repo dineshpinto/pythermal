@@ -9,20 +9,15 @@ Program to simulate n-particles on a 2 dimensional lattice, which is divided int
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List 
+- [ ] Evolve with a few eigenstates (estimate recurrence using ~4 decimal places)
+- [ ] *SubRoutine2.recursion_time()* Recursion time calculation using least common multiples of the inverse of energy 
+eigenvalues [currently overflows if no. of inputs > 50]
 
-- [ ] Internal overflow error in scipy.linalg.expm(- j * H * t) for time evolution greater than 5 million units
-- [ ] Recursion time calculation using least common multiples of the inverse of energy eigenvalues [currently overflows if no. of inputs > 50]
 
-
-## Changelog (24-11-2015)
-+ Parallel processing of Von-Neumann entropy calculation and time-evolution (using OpenBLAS linkage with OpenMP for multiple threads sidesteps Python GIL)
-+ Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
-+ Recursion time temporary fix using inverse of |least eigenvalue|
-+ recursion_time(), gcd(), lcm(), lcm_call() added
-+ Complete program structure redesign
-+ class System created to store variables(defined in documentation)
-+ Extensive documentation added 
-
+## Changelog (15-12-2015)
++ Error checking for trace of density matrix (Permitted error = 1.0e-4) 
++ Write output to disk (.csv) during program run
++ Large eigenvalue problem fixed (within Main.py)
 
 ## Program Structure 
 
@@ -217,5 +212,13 @@ class which is used to store initial values. The main function calls are subdivi
 20. Direct call to hamiltonian_2d deprecated
 21. Output made more verbose
 22. Function ncr() deprecated
+23. Parallel processing of Von-Neumann entropy calculation and time-evolution (using OpenBLAS linkage with OpenMP for multiple threads sidesteps Python GIL)
+24. Trace of density matrix B = 1.95 (almost constant, only observed under 1D time evolution), instead of 1.00
+25. Recursion time temporary fix using inverse of |least eigenvalue|
+26. recursion_time(), gcd(), lcm(), lcm_call() added
+27. Complete program structure redesign
+28. class System created to store variables(defined in documentation)
+29. Extensive documentation added 
+
 
 

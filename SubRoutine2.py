@@ -19,7 +19,7 @@ def sum_ncr(n, k):
     return s
 
 
-# Relabels states according to ..
+# Relabels states
 def relabel(e_states):
     s = System()
     
@@ -62,11 +62,16 @@ def denmatrix_a(label, e_vec, nos):
                 n = int(label[j][0] + sum_ncr(s.nol_a, label[j][1]) - 1)
                 density_mat_a[m][n] += np.vdot(e_vec[j], e_vec[i])
 
-    den_trace_a = np.trace(density_mat_a)
-    # print "Trace a =", den_trace_a
-    den_trace_a2 = np.trace(np.linalg.matrix_power(density_mat_a, 2))
-    # print "Trace a^2 =", den_trace_a2
-    return density_mat_a  # , den_trace_a, den_trace_a2
+    den_trace_a = np.trace(density_mat_a.real)
+    # den_trace_a2 = np.trace(np.linalg.matrix_power(density_mat_a, 2))
+    # print "Trace a =", den_trace_a, "Trace a^2 =", den_trace_a2
+
+    # Error checking to make sure trace of DM remains ~1.0
+    if mt.fabs(den_trace_a - 1.0) > 1.0e-4:
+        print "Trace of density matrix a is not 1"
+        exit(1)
+
+    return density_mat_a
 
 
 # Calculates the density matrix, its trace and the trace of the square of the density matrix for sub-lattice B
@@ -83,10 +88,16 @@ def denmatrix_b(label, e_vec, nos):
                 n = int(label[j][2] + sum_ncr(s.nol_b, (s.nop - label[j][1])) - 1)
                 density_mat_b[m][n] += np.vdot(e_vec[j], e_vec[i])
 
-    den_trace_b = np.trace(density_mat_b)
-    den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
+    den_trace_b = np.trace(density_mat_b.real)
+    # den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
     # print "Trace b =", den_trace_b, "\t Trace b squared =", den_trace_b2
-    return density_mat_b  # , den_trace_b, den_trace_b2
+
+    # Error checking to make sure trace of DM remains ~1.0
+    if mt.fabs(den_trace_b - 1.0) > 1.0e-4:
+        print "Trace of density matrix b is not 1"
+        exit(1)
+
+    return density_mat_b
 
 
 def recursion_time(eigenvalues):
