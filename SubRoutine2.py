@@ -69,7 +69,6 @@ def denmatrix_a(label, e_vec, nos):
     # Error checking to make sure trace of DM remains ~1.0
     if mt.fabs(den_trace_a - 1.0) > 1.0e-4:
         print "Trace of density matrix a is not 1"
-        exit(1)
 
     return density_mat_a
 
@@ -94,8 +93,7 @@ def denmatrix_b(label, e_vec, nos):
 
     # Error checking to make sure trace of DM remains ~1.0
     if mt.fabs(den_trace_b - 1.0) > 1.0e-4:
-        print "Trace of density matrix b is not 1"
-        exit(1)
+        print "Trace of density matrix B is not 1"
 
     return density_mat_b
 

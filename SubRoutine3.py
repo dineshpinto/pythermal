@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.linalg as la
+import tqdm
 
 import SubRoutine2
 import Main
@@ -25,10 +26,11 @@ def random_eigenvector(eigenvectors, relabelled_states, nos, nos_a, nop):
 def von_neumann_b(psi_array, relabelled_states, nos):
     entropy_b = np.zeros(len(psi_array), dtype=np.complex)
 
-    for idx, psi_val in enumerate(psi_array):
+    for idx, psi_val in tqdm.tqdm(enumerate(psi_array)):
         d_matrix_b = SubRoutine2.denmatrix_b(relabelled_states, psi_val, nos)
         entropy_b[idx] = -1.0 * np.trace(np.dot(d_matrix_b, la.logm(d_matrix_b)))
 
+    print
     return entropy_b
 
 
@@ -39,7 +41,7 @@ def time_evolution(psi_initial, hamiltonian, nos):
     timestep_array = np.arange(s.t_initial, s.t_final, s.delta_t)
     psi_t = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
 
-    for idx, t in enumerate(timestep_array):
+    for idx, t in tqdm.tqdm(enumerate(timestep_array)):
         psi_t[idx] = np.dot(la.expm(-1.0j * hamiltonian * t), psi_initial)
 
     return psi_t, timestep_array

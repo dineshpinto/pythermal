@@ -1,19 +1,19 @@
 import itertools as it
-import time
 import math as mt
+import time
 
 import numpy as np
+import scipy.linalg as la
 
+import Output
 import SubRoutine1
 import SubRoutine2
 import SubRoutine3
-import Output
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics"
 
 
 class System:
-
     def __init__(self):
         # No of particles
         self.nop = 3
@@ -25,10 +25,10 @@ class System:
         self.nol_a = 4
         # Lattice A sites
         self.lat_del_pos_a = np.array([3, 4, 9, 13, 7, 8, 10, 11, 12, 14, 15, 16])
-        # Time Evolution - starting time, ending time and no. of time steps; time in seconds
+        # Time Evolution - starting time, ending time and no. of time steps
         self.t_initial = 0.0
         self.t_final = 1.0
-        self.t_steps = 10
+        self.t_steps = 100
 
         # No of  lattice sites eg. nsa = 3 => nol = 9
         self.nol = self.nsa ** 2
@@ -69,6 +69,7 @@ def main():
     hamiltonian = SubRoutine1.parallel_call_hamiltonian(eigenstates, nos, s.nsa, s.nop)
     hamiltonian_a = SubRoutine1.parallel_call_hamiltonian(eigenstates_a, nos_a, s.nsa, s.nop)
     h_time2 = time.time()
+    Output.write()
     np.savetxt('Output/Hamiltonian.csv', hamiltonian, delimiter=',', fmt='%1d')
     Output.status(2, h_time2 - h_time1)
 
@@ -77,6 +78,7 @@ def main():
     eigenvalues, eigenvectors = SubRoutine1.eigenvalvec(hamiltonian)
     eigenvalues_a, eigenvectors_a = SubRoutine1.eigenvalvec(hamiltonian_a)
     e_time2 = time.time()
+    Output.write()
     np.savetxt('Output/Eigenvalues.csv', eigenvalues, delimiter=',')
     np.savetxt('Output/Eigenvectors.csv', eigenvectors, delimiter=',')
     Output.status(3, e_time2 - e_time1)
@@ -97,14 +99,17 @@ def main():
 
     # Time Evolution
     evo_time1 = time.time()
-    psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, relabelled_states, nos, nos_a, s.nop)
+    # psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, relabelled_states, nos, nos_a, s.nop)
+    psi_initial = eigenvectors[0] / la.norm(eigenvectors[0])
     psi_t, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
     evo_time2 = time.time()
+    Output.write()
     np.savetxt('Output/Psi.csv', psi_t, delimiter=',')
     Output.status(6, evo_time2 - evo_time1)
 
     # Von-Neumann Entropy
     vn_entropy_b = SubRoutine3.von_neumann_b(psi_t, relabelled_states, nos)
+    Output.write()
     np.savetxt('Output/Entropy_B.csv', vn_entropy_b, delimiter=',')
 
     # -----Output-----
@@ -113,6 +118,7 @@ def main():
     # Output.plotting(np.arange(0, len(eigenvalues)), np.real(eigenvalues))
 
     # -----Terminate-----
+    print "\nComplete!"
     raise SystemExit
 
 
