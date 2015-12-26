@@ -14,6 +14,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 
 
 ## Changelog (16-12-2015) 
++ *eigenstates()* function shifted to *SubRoutine1*
 + Recursion time calculation added [Beta]
 + Full compatibility with both Python 2 and 3
 + Error checking now outputs to stderr
@@ -28,14 +29,14 @@ class which is used to store initial values. The main function calls are subdivi
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
 ### Note
-+ The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It is fully compatible 
+The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It is fully compatible 
 with Python 3.x (no modifications necessary).   
 
-+ This code requires the following header files:
-    1. Numpy/Scipy: Build against Fortran OpenBLAS for parallel processing using OpenMP
-    2. MatPlotLib 
-    3. Multiprocessing
-    4. Tqdm: Optional, mild performance hit 
+This code requires the following header files:
+1. Numpy/Scipy: Build against Fortran OpenBLAS for parallel processing using OpenMP
+2. MatPlotLib 
+3. Multiprocessing
+4. Tqdm (optional)
 
 
 ### class System 
