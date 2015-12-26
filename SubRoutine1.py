@@ -1,5 +1,8 @@
+from __future__ import division
+
 import itertools as it
 import multiprocessing as mp
+from __builtin__ import range
 
 import numpy as np
 import scipy.linalg as la
@@ -20,8 +23,8 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
 
 # Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
-    for j in xrange(start, stop):  # Start/Stop defined by distribute()
-        for k in xrange(nos):  # k iterates over all possibilities
+    for j in range(start, stop):  # Start/Stop defined by distribute()
+        for k in range(nos):  # k iterates over all possibilities
             c = np.intersect1d(eigenstates[j], eigenstates[k], assume_unique=True)
             c_sum = np.sum(c, dtype=np.int32)  # Sum of common elements
             c_size = np.size(c)  # No. of common elements
@@ -64,7 +67,7 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
     h = np.zeros(shape=(nos, nos), dtype=np.float32)
     n_processes = mp.cpu_count()  # No. of processes to create for parallel processing of Hamiltonian
 
-    for i in xrange(n_processes):  # Iterate over the no. of processes
+    for i in range(n_processes):  # Iterate over the no. of processes
         start, stop = distribute(nos, n_processes, i)  # Start, stop points from distribution function
         args = (start, stop, nos, nsa, nop, e_states, queue, h)
         process = mp.Process(target=hamiltonian_2d, args=args)
@@ -72,7 +75,7 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
         process.start()
         # print '(start, stop) = (', start, ',', stop, ') -- process ', i + 1, '-- PID', process.pid
 
-    for i in xrange(n_processes):  # Retrieves output from queue
+    for i in range(n_processes):  # Retrieves output from queue
         h += queue.get()
 
     while not queue.empty():  # Clear queue(optional)

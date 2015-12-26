@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 def status(status_num, time_taken=0.0):
-    global h_time, e_time, r_time, evo_time
+    # global h_time, e_time, r_time, evo_time
     
     if status_num == 1:
         print("\n\tSub-Routine 1\nEigenstates........Complete!")
@@ -35,11 +35,15 @@ def status(status_num, time_taken=0.0):
 
     elif status_num == 6:
         evo_time = time.strftime("%T", time.gmtime(time_taken))
-        print("Time Evolution....Complete!\tExecution time = ", evo_time)
+        print("\nTime Evolution....Complete!\tExecution time = ", evo_time)
         print("\nVon-Neumannn Entropy.....Initiated")
 
     elif status_num == 7:
-        print("\nComplete!")
+        vn_time = time.strftime("%T", time.gmtime(time_taken))
+        print("\nVon-Neumannn Entropy....Complete!\tExecution time = ", vn_time)
+
+    elif status_num == 8:
+        print("Complete!")
 
     else:
         exit('Invalid status')

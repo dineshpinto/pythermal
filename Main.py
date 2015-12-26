@@ -49,7 +49,7 @@ def main():
 
     # Eigenstates
     eigenstates, nos = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
-    eigenstates_a, nos_a = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
+    # eigenstates_a, nos_a = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
     np.savetxt('Output/Eigenstates.csv', eigenstates, delimiter=',', fmt='%1d')
     Output.status(1)
 
@@ -97,7 +97,10 @@ def main():
     np.savetxt('Output/Psi.csv', psi_t, delimiter=',')
 
     # Von-Neumann Entropy
+    vn_time1 = time.time()
     vn_entropy_b = SubRoutine3.von_neumann_b(psi_t, relabelled_states, nos)
+    vn_time2 = time.time()
+    Output.status(7, vn_time2 - vn_time1)
     Output.write()
     np.savetxt('Output/Entropy_B.csv', vn_entropy_b, delimiter=',')
 
@@ -106,7 +109,7 @@ def main():
     # Output.printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors)
 
     # -----Terminate-----
-    Output.status(7)
+    Output.status(8)
     sys.exit()
 
 if __name__ == '__main__':

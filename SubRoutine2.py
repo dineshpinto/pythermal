@@ -1,4 +1,7 @@
+from __future__ import division
+
 import math as mt
+from __builtin__ import range
 
 import numpy as np
 
@@ -15,7 +18,7 @@ def ncr(n, r):
 # Calculates nC0 + nC1 + ... + nCk
 def sum_ncr(n, k):
     s = 0
-    for r in xrange(k):
+    for r in range(k):
         s += int(ncr(n, r))
     return s
 
@@ -56,8 +59,8 @@ def denmatrix_a(label, e_vec, nos):
     dim_a = int(sum_ncr(s.nol_a, s.nop + 1))
     density_mat_a = np.zeros(shape=(dim_a, dim_a), dtype=complex)
 
-    for i in xrange(nos):
-        for j in xrange(nos):
+    for i in range(nos):
+        for j in range(nos):
             if label[i][1] == label[j][1] and label[i][2] == label[j][2]:
                 m = int(label[i][0] + sum_ncr(s.nol_a, label[i][1]) - 1)
                 n = int(label[j][0] + sum_ncr(s.nol_a, label[j][1]) - 1)
@@ -82,15 +85,15 @@ def denmatrix_b(label, e_vec, nos):
     dim_b = sum_ncr(s.nol_b, s.nop + 1)
     density_mat_b = np.zeros(shape=(dim_b, dim_b), dtype=complex)
 
-    for i in xrange(nos):
-        for j in xrange(nos):
+    for i in range(nos):
+        for j in range(nos):
             if label[i][1] == label[j][1] and label[i][0] == label[j][0]:
                 m = int(label[i][2] + sum_ncr(s.nol_b, (s.nop - label[i][1])) - 1)
                 n = int(label[j][2] + sum_ncr(s.nol_b, (s.nop - label[j][1])) - 1)
                 density_mat_b[m][n] += np.vdot(e_vec[j], e_vec[i])
 
     den_trace_b = np.trace(density_mat_b.real)
-    den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
+    # den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
     # print "Trace b =", den_trace_b, "\t Trace b squared =", den_trace_b2
 
     # Error checking to make sure trace of DM remains ~1.0
@@ -110,7 +113,7 @@ def gcd(a, b):
 
 def lcm(a, b):
     # print(a, b, gcd(a, b))
-    return (a / gcd(a, b)) * b
+    return (a // gcd(a, b)) * b
 
 
 def lcm_call(*args):
@@ -119,7 +122,7 @@ def lcm_call(*args):
 
 def recursion_time(eigenvalues=np.genfromtxt('Output/Eigenvalues.csv', dtype=np.float32)):
     Output.warning('Recursion time is currently in beta')
-    tau = 1.0 / np.absolute(eigenvalues)
+    tau = 1 / np.absolute(eigenvalues)
     tau = sorted(tau)
     # print tau
     tau_min = np.amin(tau)
