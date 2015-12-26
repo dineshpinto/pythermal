@@ -1,7 +1,21 @@
+import itertools as it
 import multiprocessing as mp
 
 import numpy as np
 import scipy.linalg as la
+
+
+# Returns eigenstates for the given lattice sites and particles
+def eigenstates_lattice(lat, nop, lat_del_pos):
+    # print 'lattice sites=', lat
+    if np.size(lat_del_pos) != 0:
+        lat_del = np.delete(lat, lat_del_pos - 1)
+        eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
+        # print 'lattice sites(after deletion)=', lat_del
+    else:
+        eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
+
+    return eigenstates, len(eigenstates)
 
 
 # Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture
@@ -43,7 +57,7 @@ def distribute(n_items, n_processes, i):
     return start, stop
 
 
-# Uses parallel processes to call the Hamiltonian function, automatically reads no. of cores and extends itself
+# Uses parallel processes to call the Hamiltonian function, automatically reads no. of cores
 def parallel_call_hamiltonian(e_states, nos, nsa, nop):
     process_list = []
     queue = mp.Queue()  # Setting up queue to store each processes' output
@@ -70,7 +84,7 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
     return h
 
 
-# Calculates eigenvectors and eigenvalues using the Node algorithm(..link..)
+# Calculates eigenvectors and eigenvalues (linked to OpenBLAS Fortran libraries)
 def eigenvalvec(h):
     e_val, e_vec = la.eig(h)
     return e_val.real, e_vec

@@ -1,5 +1,5 @@
-import itertools as it
 import math as mt
+import sys
 import time
 
 import numpy as np
@@ -42,52 +42,41 @@ class System:
         self.delta_t = (self.t_final - self.t_initial) / self.t_steps
 
 
-def eigenstates_lattice(lat, nop, lat_del_pos):
-    # print 'lattice sites=', lat
-    if np.size(lat_del_pos) != 0:
-        lat_del = np.delete(lat, lat_del_pos - 1)
-        eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
-        # print 'lattice sites(after deletion)=', lat_del
-    else:
-        eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
-
-    return eigenstates, len(eigenstates)
-
-
 def main():
     s = System()
 
-    eigenstates, nos = eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
-    eigenstates_a, nos_a = eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
+    # -----Sub-Routine 1 (Eigenstates, Hamiltonian, Eigenvalues and Eigenvectors)-----
+
+    # Eigenstates
+    eigenstates, nos = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
+    eigenstates_a, nos_a = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
     np.savetxt('Output/Eigenstates.csv', eigenstates, delimiter=',', fmt='%1d')
     Output.status(1)
-
-    # -----Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)-----
 
     # Hamiltonian
     h_time1 = time.time()
     hamiltonian = SubRoutine1.parallel_call_hamiltonian(eigenstates, nos, s.nsa, s.nop)
-    hamiltonian_a = SubRoutine1.parallel_call_hamiltonian(eigenstates_a, nos_a, s.nsa, s.nop)
+    # hamiltonian_a = SubRoutine1.parallel_call_hamiltonian(eigenstates_a, nos_a, s.nsa, s.nop)
     h_time2 = time.time()
+    Output.status(2, h_time2 - h_time1)
     Output.write()
     np.savetxt('Output/Hamiltonian.csv', hamiltonian, delimiter=',', fmt='%1d')
-    Output.status(2, h_time2 - h_time1)
 
     # Eigenvalues and Eigenvectors
     e_time1 = time.time()
     eigenvalues, eigenvectors = SubRoutine1.eigenvalvec(hamiltonian)
-    eigenvalues_a, eigenvectors_a = SubRoutine1.eigenvalvec(hamiltonian_a)
+    # eigenvalues_a, eigenvectors_a = SubRoutine1.eigenvalvec(hamiltonian_a)
     e_time2 = time.time()
+    Output.status(3, e_time2 - e_time1)
     Output.write()
     np.savetxt('Output/Eigenvalues.csv', eigenvalues, delimiter=',')
     np.savetxt('Output/Eigenvectors.csv', eigenvectors, delimiter=',')
-    Output.status(3, e_time2 - e_time1)
 
     # ------Sub-Routine 2 (Recursion Time and State Relabelling)-----
 
     # Recursion Time
-    # recur_time = SubRoutine2.recursion_time(eigenvalues)
-    # Output.status(4, recur_time)
+    recur_time = SubRoutine2.recursion_time(eigenvalues)
+    Output.status(4, recur_time)
 
     # Relabelling
     r_time1 = time.time()
@@ -103,9 +92,9 @@ def main():
     psi_initial = eigenvectors[0] / la.norm(eigenvectors[0])
     psi_t, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
     evo_time2 = time.time()
+    Output.status(6, evo_time2 - evo_time1)
     Output.write()
     np.savetxt('Output/Psi.csv', psi_t, delimiter=',')
-    Output.status(6, evo_time2 - evo_time1)
 
     # Von-Neumann Entropy
     vn_entropy_b = SubRoutine3.von_neumann_b(psi_t, relabelled_states, nos)
@@ -115,12 +104,10 @@ def main():
     # -----Output-----
     Output.plotting(timestep_array, np.real(vn_entropy_b))
     # Output.printout(nos, eigenstates, hamiltonian, eigenvalues, eigenvectors)
-    # Output.plotting(np.arange(0, len(eigenvalues)), np.real(eigenvalues))
 
     # -----Terminate-----
-    print "\nComplete!"
-    raise SystemExit
-
+    Output.status(7)
+    sys.exit()
 
 if __name__ == '__main__':
     main()

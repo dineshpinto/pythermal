@@ -2,23 +2,21 @@
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
-*Project Leader: Dr. A. Gupta*   
+*Project Mentor: Dr. A. Gupta*   
 *Project Students: A. Kumar, D. Pinto and M. Ghosh*
 
 Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List 
-- [ ] Entropy with initial state chosen as an eigenstate of the hamiltonian [entropy not constant]
 - [ ] Evolve with a few eigenstates (estimate recurrence using ~4 decimal places)
-- [ ] *SubRoutine2.recursion_time()* Recursion time calculation using least common multiples of the inverse of energy 
-eigenvalues [currently overflows if no. of inputs > 50]
+- [ ] *SubRoutine2.recursion_time()* Recursion time calculation using LCM of the inverse of energy eigenvalues [Beta]
 
 
-## Changelog (16-12-2015)
-+ tqdm reinstated for psychological reasons [loop counter tqdm.tqdm]
-+ Error checking for trace of density matrix made non-fatal [program execution uninterrupted]
-+ Verbose output to disk
+## Changelog (16-12-2015) 
++ Recursion time calculation added [Beta]
++ Full compatibility with both Python 2 and 3
++ Error checking now outputs to stderr
 
 
 ## Program Structure 
@@ -29,7 +27,16 @@ The code is centered around the main function, from which the entire program can
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
-**Note:** The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It can easily be rewritten for Python 3.x.   
+### Note
++ The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It is fully compatible 
+with Python 3.x (no modifications necessary).   
+
++ This code requires the following header files:
+    1. Numpy/Scipy: Build against Fortran OpenBLAS for parallel processing using OpenMP
+    2. MatPlotLib 
+    3. Multiprocessing
+    4. Tqdm: Optional, mild performance hit 
+
 
 ### class System 
         
@@ -258,3 +265,8 @@ class which is used to store initial values. The main function calls are subdivi
 30. Error checking for trace of density matrix (Permitted error = 1.0e-4) 
 31. Write output to disk (.csv) during program run
 32. Large eigenvalue problem fixed (within Main.py)
+
+### Changelog (16/12/2015)
+33. tqdm reinstated for measuring progress of time-evolution and entropy [loop counter tqdm.tqdm]
+34. Error checking for trace of density matrix made non-fatal [program execution uninterrupted]
+35. Verbose output to disk
