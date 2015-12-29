@@ -52,8 +52,8 @@ def relabel(e_states):
     return np.array(y)
 
 
-# Calculates the density matrix, its trace and the trace of the square of the density matrix for sub-lattice A
-def denmatrix_a(label, e_vec, nos):
+# Calculates the density matrix for sub-lattice A
+def density_matrix_a(label, e_vec, nos):
     s = Main.System()
 
     dim_a = int(sum_ncr(s.nol_a, s.nop + 1))
@@ -66,20 +66,20 @@ def denmatrix_a(label, e_vec, nos):
                 n = int(label[j][0] + sum_ncr(s.nol_a, label[j][1]) - 1)
                 density_mat_a[m][n] += np.vdot(e_vec[j], e_vec[i])
 
+    # Calculates trace of density matrix A
     den_trace_a = np.trace(density_mat_a.real)
+    # Calculate trace of square of density matrix A
     # den_trace_a2 = np.trace(np.linalg.matrix_power(density_mat_a, 2))
-    # print "Trace a =", den_trace_a, "Trace a^2 =", den_trace_a2
 
     # Error checking to make sure trace of DM remains ~1.0
     if mt.fabs(den_trace_a - 1.0) > 1.0e-5:
         Output.warning('Trace of density matrix A is not 1, Trace=', den_trace_a)
-        # print "Trace of density matrix A is not 1, Trace = ", den_trace_a
 
     return density_mat_a
 
 
 # Calculates the density matrix, its trace and the trace of the square of the density matrix for sub-lattice B
-def denmatrix_b(label, e_vec, nos):
+def density_matrix_b(label, e_vec, nos):
     s = Main.System()
 
     dim_b = sum_ncr(s.nol_b, s.nop + 1)
@@ -92,15 +92,14 @@ def denmatrix_b(label, e_vec, nos):
                 n = int(label[j][2] + sum_ncr(s.nol_b, (s.nop - label[j][1])) - 1)
                 density_mat_b[m][n] += np.vdot(e_vec[j], e_vec[i])
 
+    # Calculate trace of density matrix B
     den_trace_b = np.trace(density_mat_b.real)
+    # Calculate trace of square of density matrix B
     # den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
-    # print "Trace b =", den_trace_b, "\t Trace b squared =", den_trace_b2
 
     # Error checking to make sure trace of DM remains ~1.0
     if mt.fabs(den_trace_b - 1.0) > 1.0e-5:
         Output.warning('Trace of density matrix B is not 1, Trace=', den_trace_b)
-        # sys.stderr.write('\nError: Trace of density matrix B is not 1')
-        # print "Trace of density matrix B is not 1, Trace = ", den_trace_b
 
     return density_mat_b
 
@@ -120,7 +119,7 @@ def lcm_call(*args):
     return reduce(lcm, args)
 
 
-def recursion_time(eigenvalues=np.genfromtxt('Output/Eigenvalues.csv', dtype=np.float32)):
+def recursion_time(eigenvalues):
     Output.warning('Recursion time is currently in beta')
     tau = 1 / np.absolute(eigenvalues)
     tau = sorted(tau)

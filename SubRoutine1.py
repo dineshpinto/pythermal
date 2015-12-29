@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 
 import itertools as it
 import multiprocessing as mp
@@ -7,17 +7,21 @@ from __builtin__ import range
 import numpy as np
 import scipy.linalg as la
 
+import Main
+
 
 # Returns eigenstates for the given lattice sites and particles
 def eigenstates_lattice(lat, nop, lat_del_pos):
-    # print 'lattice sites=', lat
+    s = Main.System()
     if np.size(lat_del_pos) != 0:
         lat_del = np.delete(lat, lat_del_pos - 1)
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
-        # print 'lattice sites(after deletion)=', lat_del
+        if len(lat_del_pos) == len(s.lat_del_pos):
+            print('Lattice sites(total) =', lat_del)
+        if len(lat_del_pos) == len(s.lat_del_pos_a):
+            print('Lattice sites(A) =', lat_del)
     else:
         eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
-
     return eigenstates, len(eigenstates)
 
 
@@ -25,7 +29,7 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     for j in range(start, stop):  # Start/Stop defined by distribute()
         for k in range(nos):  # k iterates over all possibilities
-            c = np.intersect1d(eigenstates[j], eigenstates[k], assume_unique=True)
+            c = np.intersect1d(eigenstates[j], eigenstates[k])
             c_sum = np.sum(c, dtype=np.int32)  # Sum of common elements
             c_size = np.size(c)  # No. of common elements
             j_sum = np.sum(eigenstates[j], dtype=np.int32)  # Sum of elements of m[j]
@@ -42,17 +46,18 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
                     continue
             else:
                 continue
-
     queue.put(h)
     return
 
 
 # Distribution function used to distribute processes among processors
 def distribute(n_items, n_processes, i):
-    nitems_per_process = int(n_items / n_processes)  # Defines no. of [j] per process
-    start = i * nitems_per_process  # Start adjusted depending on the process
+    # Defines no. of items ([j] index in Hamiltonian) per process and starting point
+    nitems_per_process = int(n_items / n_processes)
+    start = i * nitems_per_process
 
-    if i == n_processes - 1:  # For last process, appends remaining items to last core
+    # For last process, appends remaining items to last core
+    if i == n_processes - 1:
         stop = n_items
     else:
         stop = nitems_per_process * (i + 1)
@@ -89,5 +94,5 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
 
 # Calculates eigenvectors and eigenvalues (linked to OpenBLAS Fortran libraries)
 def eigenvalvec(h):
-    e_val, e_vec = la.eig(h)
-    return e_val.real, e_vec
+    eigenvalues, eigenvectors = la.eig(h)
+    return eigenvalues.real, eigenvectors

@@ -31,16 +31,15 @@ def random_eigenvector(e_vecs, relabelled_states, nos, nos_a, nop):
 def von_neumann_b(psi_array, relabelled_states, nos):
     entropy_b = np.zeros(len(psi_array), dtype=np.complex)
 
-    # Replaces default warning
+    # Replaces default warning [CAUTION] ignores future warnings
     Output.warning('The logm input matrix may be nearly singular')
     warnings.filterwarnings('ignore')
 
     for idx, psi_val in tqdm.tqdm(enumerate(psi_array)):
-        d_matrix_b = SubRoutine2.denmatrix_b(relabelled_states, psi_val, nos)
+        d_matrix_b = SubRoutine2.density_matrix_b(relabelled_states, psi_val, nos)
         entropy_b[idx] = -1.0 * np.trace(np.dot(d_matrix_b, la.logm(d_matrix_b)))
 
-    print
-    return entropy_b
+    return entropy_b.real
 
 
 # Psi evolved as |psi(t)> = exp(-i * H * t)|psi(0)>
