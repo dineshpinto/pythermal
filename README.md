@@ -28,7 +28,7 @@ deletion of sites. The variation of the Von-Neumann entropy of these sub-lattice
 ## Changelog (16-12-2015) 
 + **eigenstates()** function shifted to SubRoutine1
 + Recursion time calculation added *[Beta]*
-+ Full forward compatibility with both Python 3
++ Full forward compatibility with Python 3
 + Error checking now outputs to **stderr**
 
 
