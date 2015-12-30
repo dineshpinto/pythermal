@@ -40,15 +40,20 @@ def status(status_num, time_taken=0.0):
         warning('Invalid status')
 
 
-# Warning handling
+# Handles non-fatal warnings
 def warning(*objects):
     print("WARNING:", *objects, file=sys.stderr)
 
 
-# Writing to hard disk
-def write_file(filename, data, delimiter=',', fmt='%.18e'):
+# Writes output to hard disk
+def write_file(filename, data, fmt='%.18e'):
     print("Writing to {}".format(filename))
-    np.savetxt(filename, data, delimiter=delimiter, fmt=fmt)
+    np.savetxt(filename, data, delimiter=',', fmt=fmt)
+
+
+# Reads from hard disk
+def read_file(filename, dtype=np.float64):
+    return np.genfromtxt(filename, delimiter=',', dtype=dtype)
 
 
 def plotting(x, y):

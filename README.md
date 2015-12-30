@@ -9,30 +9,23 @@ Program to simulate n-particles on a 2 dimensional lattice, which is divided int
 deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List 
-- [ ] Symmetry to be broken
-- [ ] Replacement of lat_del_pos_a by np.concatenate + np.arange [Unlikely]
-- [ ] Issue: No. of lattice sites in B? self.nol - (self.nol_a + len(self.lat_del_pos)) + 1 or self.nol - (self.nol_a + len(self.lat_del_pos)) 
+- [ ] **SubRoutine2.recursion_time()** Recursion time calculation using LCM of the inverse of energy eigenvalues [Beta]
+- [ ] Break symmetry using lat_del_pos [Currently throws up warning] 
+- [ ] No. of lattice sites in B? ''self.nol - (self.nol_a + len(self.lat_del_pos)) + 1 or self.nol - (self.nol_a + len(self.lat_del_pos))''
 - [ ] Evolve with a few eigenstates (estimate recurrence using ~4 decimal places)
-- [ ] SubRoutine2.recursion_time() Recursion time calculation using LCM of the inverse of energy eigenvalues [Beta]
 - [ ] Observe Poincare Recurrence [Larger case]
+- [ ] Replacement of lat_del_pos_a by np.concatenate + np.arange [Unlikely]
 
 
 ## Changelog (30-12-2015)
 + Lattice site deletion automated
 + Error checking for particles in sub lattice A
 + Von Neumann entropy output returned as 'real'
-+ Front **write_file()** for saving to disk
++ Function **write_file()** for saving to disk
 + Writing output made more verbose
 
 
-## Changelog (16-12-2015) 
-+ **eigenstates()** function shifted to SubRoutine1
-+ Recursion time calculation added *[Beta]*
-+ Full forward compatibility with both Python 3
-+ Error checking now outputs to **stderr**
-
-
-## Program Structure 
+## Programmers Notes 
 
 *Documentation by D. Pinto*
 
@@ -40,17 +33,22 @@ The code is centered around the main function, from which the entire program can
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
-### Note
 The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It is fully compatible 
 with Python 3.x (no modifications necessary).   
 
 This code requires:
 
-1. Numpy/Scipy (Build against Fortran OpenBLAS libraries for parallel processing using OpenMP)
-2. MatPlotLib 
+1. Numpy/Scipy (Recommended build against Fortran OpenBLAS libraries for parallel processing)
+2. Matplotlib 
 3. Multiprocessing
 4. tqdm
 
+To control the threads used by OpenBLAS, call OpenMP when running the program
+
+    OMP_NUM_THREADS=16 python Main.py 
+    
+
+## Program Structure
 
 ### class System 
         
@@ -59,35 +57,40 @@ This code requires:
                 nop: total no. of particles, int
                 nsa: shape of square lattice, int
                 nol_a: no. of sites in sub-lattice A, int
-                lat_del_pos: positions of deleted sites, int, optional
-                log_choice: export to LOG.txt, bool, optional
+                t_initial: initial time, float 
+                t_final final time, float
+                t_steps: no.of time steps, int
             Generated automatically:
+                lat_del_pos: array of positions of deleted sites, np array
+                lat_del_pos_a: positions of deleted sites for sub-lattice A, np array
                 nol: total no. of lattice sites, int
                 nol_b: no. of sites in sub-lattice B, int
                 link_pos: site joining sub-lattices A and B, int
                 lat: lattice sites array, np.int32
+                delta_t: time interval between two time steps, float
 
 ### main()
 
-    eigenstates_lat(lat, nop, lat_del_pos)
+#### - Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)
+
+    eigenstates_lattice(lat, nop, lat_del_pos)
             Parameters:
                 lat: lattice sites array, np.int32
                 nop: no. of particles, int
-                lat_del_pos: array of positions to delete, np.int32, optional
+                lat_del_pos: array of positions of deleted sites, np array
             Returns:
                 e_states: array of eigenstates, np.int32
                 len(e_states): total no. of eigenstates, int
 
-#### - Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)
 
     hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
             Parameters:
-                    start: start point of interator [j], int
+                    start: start point of iterator [j], int
                     stop: end point of iterator [j], int
                     nsa: shape of square lattice, int
                     nop: total no. of particles, int
                     eigenstates: array of eigenstates, np.int32
-                    queue: mutiprocessing queue to store each processes' output
+                    queue: multiprocessing queue to store each processes' output
                     h: hamiltonian array, np.float32
                     
     distribute(n_items, n_processes, i)
@@ -96,7 +99,7 @@ This code requires:
                     n_processes: no. of processes to create (= no. of cores), int
                     i: iterates over no. of processes, int
             Returns:
-                    start: start point of interator [j], int
+                    start: start point of iterator [j], int
                     stop: end point of iterator [j], int
                     
     parallel_call_hamiltonian(e_states, nos, nsa, nop)
@@ -174,7 +177,7 @@ This code requires:
                     labels: array containing relabelled states, np.float64
                     nos:
             Returns:
-                    entropy_b: array containing Von-Neumann entropies, np.complex
+                    entropy_b: array containing Von-Neumann entropy of sub-system B, (np.complex).real
             Environment:
                     C: Numpy
                     Fortran: OpenBLAS, OpenMP
@@ -201,11 +204,17 @@ This code requires:
 ### - Output/Plotting 
 
     status_output()
-        Returns program status along with run times, requires header files from humanize
+        Returns program status along with run times
 
-    printout() 
+    printout() **[Deprecated]**
         Extensive output function, class option to export certain output to LOG.txt, requires 
         tabulate header files
+        
+    warning()
+        Function to pass non-fatal warning to. Outputs to stderr
+        
+    write_file()
+        Wrapper for np.savetxt, writes output to disk
                 
     plotting()
         Generalized plotting for 2D graphs, uses MatPlotLib
@@ -221,7 +230,7 @@ This code requires:
 
 ### Changelog (15/2/2015)
 
-4. Parallelization of hamiltonian() governed by distribution function distribute()
+4. Parallel processing of hamiltonian() governed by distribution function distribute()
 5. Parallel processing carried out using Process function from multiprocessing library
 6. multiprocessing.queue to store output of each process and clear(optional, improves stability) it afterwards
 
@@ -284,3 +293,10 @@ This code requires:
 33. tqdm reinstated for measuring progress of time-evolution and entropy [loop counter tqdm.tqdm]
 34. Error checking for trace of density matrix made non-fatal [program execution uninterrupted]
 35. Verbose output to disk
+
+
+### Changelog (16-12-2015) 
+36. **eigenstates()** function shifted to SubRoutine1
+37. Recursion time calculation added *[Beta]*
+38. Full forward compatibility with both Python 3
+39. Error checking now outputs to **stderr**

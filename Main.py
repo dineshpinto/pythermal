@@ -15,7 +15,7 @@ __author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen
 class System:
     def __init__(self):
         # No of particles
-        self.nop = 3
+        self.nop = 9
         # Shape of square 2D array i.e. nsa = 2(2x2), 3(3x3)
         self.nsa = 4
         # No. of sites in sub-lattice A
@@ -27,10 +27,9 @@ class System:
 
         # Check for number of particles in A
         if self.nop > self.nol_a:
-            exit('Possibly too many particles [{}] for sub-lattice A [{}]'.format(self.nop, self.nol_a))
+            exit('Too many particles [{}] for sub-lattice A [{}]'.format(self.nop, self.nol_a))
 
         # Lattice sites to delete
-        Output.warning('Symmetry may still be present in lattice')
         if self.nsa == 4 and self.nol_a == 4:
             self.lat_del_pos = np.array([3, 4, 9, 13])
             self.lat_del_pos_a = np.array([3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
@@ -64,6 +63,8 @@ class System:
 
 def main():
     s = System()
+
+    Output.warning('Symmetry may still be present in lattice')
 
     # -----Sub-Routine 1 (Eigenstates, Hamiltonian, Eigenvalues and Eigenvectors)-----
 
