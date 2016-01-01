@@ -1,12 +1,13 @@
-# PyThermal - Time evolving fermions on a two-dimensional crystal lattice
+PyThermal - Time evolving fermions on a 2D crystal lattice
+-----------------------------------------------------------------------
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
 *Project Mentor: Dr. A. Gupta*   
 *Project Students: A. Kumar, D. Pinto and M. Ghosh*
 
-Program to simulate n-particles on a 2 dimensional lattice, which is divided into sub-lattices A and B after
-deletion of sites. The variation of the Von-Neumann entropy of these sub-lattices is then studied.
+Program to simulate n-particles on a 2D lattice, which is divided into sub-lattices A and B after
+deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List 
 - [ ] **SubRoutine2.recursion_time()** Recursion time calculation using LCM of the inverse of energy eigenvalues [Beta]
@@ -34,11 +35,11 @@ class which is used to store initial values. The main function calls are subdivi
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
 The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It is fully compatible 
-with Python 3.x (no modifications necessary).   
+with Python 3.x (no modifications necessary). [PEP 0008](https://www.python.org/dev/peps/pep-0008/) styling guidelines have been followed throughout the code.  
 
 This code requires:
 
-1. Numpy/Scipy (Recommended build against Fortran OpenBLAS libraries for parallel processing)
+1. Numpy & Scipy (Recommended build against Fortran OpenBLAS libraries for parallel processing)
 2. Matplotlib 
 3. Multiprocessing
 4. tqdm
