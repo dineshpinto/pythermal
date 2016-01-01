@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import os
 import sys
 import time
 
@@ -47,13 +48,20 @@ def warning(*objects):
 
 # Writes output to hard disk
 def write_file(filename, data, fmt='%.18e'):
-    print("Writing to {}".format(filename))
-    np.savetxt(filename, data, delimiter=',', fmt=fmt)
+    # Check if Output directory exists
+    if not os.path.exists('Output'):
+        try:
+            os.makedirs('Output')
+        except OSError:
+            pass
+
+    print("Writing to {0}".format(filename))
+    np.savetxt('Output/' + filename, data, delimiter=',', fmt=fmt)
 
 
 # Reads from hard disk
 def read_file(filename, dtype=np.float64):
-    return np.genfromtxt(filename, delimiter=',', dtype=dtype)
+    np.genfromtxt(filename, delimiter=',', dtype=dtype)
 
 
 def plotting(x, y):

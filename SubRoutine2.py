@@ -1,5 +1,6 @@
 from __future__ import division
 
+import fractions
 import math as mt
 from __builtin__ import range
 
@@ -66,9 +67,8 @@ def density_matrix_a(label, e_vec, nos):
                 n = int(label[j][0] + sum_ncr(s.nol_a, label[j][1]) - 1)
                 density_mat_a[m][n] += np.vdot(e_vec[j], e_vec[i])
 
-    # Calculates trace of density matrix A
+    # Calculates trace & trace of square of density matrix A
     den_trace_a = np.trace(density_mat_a.real)
-    # Calculate trace of square of density matrix A
     # den_trace_a2 = np.trace(np.linalg.matrix_power(density_mat_a, 2))
 
     # Error checking to make sure trace of DM remains ~1.0
@@ -92,9 +92,8 @@ def density_matrix_b(label, e_vec, nos):
                 n = int(label[j][2] + sum_ncr(s.nol_b, (s.nop - label[j][1])) - 1)
                 density_mat_b[m][n] += np.vdot(e_vec[j], e_vec[i])
 
-    # Calculate trace of density matrix B
+    # Calculate trace & trace square of density matrix B
     den_trace_b = np.trace(density_mat_b.real)
-    # Calculate trace of square of density matrix B
     # den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
 
     # Error checking to make sure trace of DM remains ~1.0
@@ -104,15 +103,16 @@ def density_matrix_b(label, e_vec, nos):
     return density_mat_b
 
 
+# GCD using Euclid's Algorithm
 def gcd(a, b):
-    while b:
+    while b != 0:
         a, b = b, a % b
     return a
 
 
 def lcm(a, b):
     # print(a, b, gcd(a, b))
-    return (a // gcd(a, b)) * b
+    return (a // fractions.gcd(a, b)) * b
 
 
 def lcm_call(*args):

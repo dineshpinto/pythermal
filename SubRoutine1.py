@@ -16,6 +16,8 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
     if np.size(lat_del_pos) != 0:
         lat_del = np.delete(lat, lat_del_pos - 1)
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
+
+        # Output when deletion array matches standard deletion array in class System
         if len(lat_del_pos) == len(s.lat_del_pos):
             print('Lattice sites(total) =', lat_del)
         if len(lat_del_pos) == len(s.lat_del_pos_a):
@@ -53,14 +55,14 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
 # Distribution function used to distribute processes among processors
 def distribute(n_items, n_processes, i):
     # Defines no. of items ([j] index in Hamiltonian) per process and starting point
-    nitems_per_process = int(n_items / n_processes)
-    start = i * nitems_per_process
+    items_per_process = n_items // n_processes  # Integer division
+    start = i * items_per_process
 
     # For last process, appends remaining items to last core
     if i == n_processes - 1:
         stop = n_items
     else:
-        stop = nitems_per_process * (i + 1)
+        stop = items_per_process * (i + 1)
 
     return start, stop
 
@@ -78,12 +80,12 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
         process = mp.Process(target=hamiltonian_2d, args=args)
         process_list.append(process)  # Create list of processes
         process.start()
-        # print '(start, stop) = (', start, ',', stop, ') -- process ', i + 1, '-- PID', process.pid
+        # print(start, stop, process, process.pid)
 
     for i in range(n_processes):  # Retrieves output from queue
         h += queue.get()
 
-    while not queue.empty():  # Clear queue(optional)
+    while not queue.empty():  # Clear queue
         h += queue.get()
 
     for jobs in process_list:  # Joins processes together
