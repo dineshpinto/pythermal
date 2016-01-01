@@ -15,21 +15,37 @@ __author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen
 class System:
     def __init__(self):
         # No of particles
-        self.nop = 9
+        self.nop = 3
         # Shape of square 2D array i.e. nsa = 2(2x2), 3(3x3)
         self.nsa = 4
         # No. of sites in sub-lattice A
         self.nol_a = 4
         # Time Evolution - starting time, ending time and no. of time steps
-        self.t_initial = 0.0
+        self.t_initial = 0.1
         self.t_final = 1.0
         self.t_steps = 10
 
+        # Defined in sub-initialization self.sub_init()
+        self.nol = None
+        self.nol_b = None
+        self.lat_del_pos = None
+        self.lat_del_pos_a = None
+        self.link_pos = None
+        self.lat = None
+        self.delta_t = None
+        # Call to sub-initialization
+        self.sub_init()
+
+    def sub_init(self):
         # Check for number of particles in A
         if self.nop > self.nol_a:
             exit('Too many particles [{}] for sub-lattice A [{}]'.format(self.nop, self.nol_a))
 
-        # Lattice sites to delete
+        # Check initial time
+        if self.t_initial != 0.0:
+            exit('Initial time has to be 0')
+
+        # Lattice sites to delete for particular values of nsa & nol_a
         if self.nsa == 4 and self.nol_a == 4:
             self.lat_del_pos = np.array([3, 4, 9, 13])
             self.lat_del_pos_a = np.array([3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
