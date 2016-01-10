@@ -147,7 +147,3 @@ def main():
     # -----Terminate-----
     Output.status(8)
     sys.exit()
-
-
-if __name__ == '__main__':
-    main()
