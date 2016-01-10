@@ -1,35 +1,44 @@
-from __future__ import division
+from __future__ import division, print_function
 
 import fractions
 import math as mt
-from __builtin__ import range
 
 import numpy as np
+cimport numpy as np
+cimport cython
 
 import Main
 import Output
 
 
 # Calculates nCr (total no. of combinations)
-def ncr(n, r):
+@cython.boundscheck(False)
+cdef int ncr(int n, int r):
     f = mt.factorial
     return int(f(n) / (f(r) * f(n - r)))
 
 
 # Calculates nC0 + nC1 + ... + nCk
-def sum_ncr(n, k):
-    s = 0
+@cython.boundscheck(False)
+cdef int sum_ncr(int n, int k):
+    cdef int s = 0
+    cdef int r
+    # s = 0
     for r in range(k):
         s += int(ncr(n, r))
     return s
 
 
 # Relabels states
-def relabel(e_states):
+@cython.boundscheck(False)
+def relabel(np.ndarray e_states):
     s = Main.System()
     
     x = np.zeros(shape=(2, s.nop + 1), dtype=np.int32)
     y, dump = [], []
+    
+    cdef int n
+    
     for state in e_states:
         comm, temp = [], []
         n = 0
@@ -54,11 +63,14 @@ def relabel(e_states):
 
 
 # Calculates the density matrix for sub-lattice A
-def density_matrix_a(label, e_vec, nos):
+@cython.boundscheck(False)
+def density_matrix_a(np.ndarray label, np.ndarray e_vec, int nos):
     s = Main.System()
 
     dim_a = int(sum_ncr(s.nol_a, s.nop + 1))
     density_mat_a = np.zeros(shape=(dim_a, dim_a), dtype=complex)
+    
+    cdef unsigned int i, j, m, n
 
     for i in range(nos):
         for j in range(nos):
@@ -75,15 +87,19 @@ def density_matrix_a(label, e_vec, nos):
     if mt.fabs(den_trace_a - 1.0) > 1.0e-5:
         Output.warning('Trace of density matrix A is not 1, Trace=', den_trace_a)
 
+    # print(density_mat_a)
     return density_mat_a
 
 
 # Calculates the density matrix, its trace and the trace of the square of the density matrix for sub-lattice B
-def density_matrix_b(label, e_vec, nos):
+@cython.boundscheck(False)
+def density_matrix_b(np.ndarray label, np.ndarray e_vec, int nos):
     s = Main.System()
 
     dim_b = sum_ncr(s.nol_b, s.nop + 1)
     density_mat_b = np.zeros(shape=(dim_b, dim_b), dtype=complex)
+    
+    cdef unsigned int i, j, m, n
 
     for i in range(nos):
         for j in range(nos):
@@ -94,11 +110,14 @@ def density_matrix_b(label, e_vec, nos):
 
     # Calculate trace & trace square of density matrix B
     den_trace_b = np.trace(density_mat_b.real)
-    # den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
+    den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
+    # print(den_trace_b2)
 
     # Error checking to make sure trace of DM remains ~1.0
-    if mt.fabs(den_trace_b - 1.0) > 1.0e-5:
+    if mt.fabs(den_trace_b - 1.0) > 1.0e-4:
         Output.warning('Trace of density matrix B is not 1, Trace=', den_trace_b)
+
+    # print('matrix=\n', density_mat_b)
 
     return density_mat_b
 
