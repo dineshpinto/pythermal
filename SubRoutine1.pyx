@@ -2,10 +2,12 @@ from __future__ import division, print_function
 
 import itertools as it
 import multiprocessing as mp
-from __builtin__ import range
 
 import numpy as np
 import scipy.linalg as la
+
+cimport cython
+cimport numpy as np
 
 import Main
 
@@ -28,7 +30,8 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
 
 
 # Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture
-def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
+def hamiltonian_2d(int start, int stop, int nos, int nsa, int nop, np.ndarray eigenstates, queue, np.ndarray h):
+    cdef int j, k
     for j in range(start, stop):  # Start/Stop defined by distribute()
         for k in range(nos):  # k iterates over all possibilities
             c = np.intersect1d(eigenstates[j], eigenstates[k])
@@ -95,6 +98,7 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
 
 
 # Calculates eigenvectors and eigenvalues (linked to OpenBLAS Fortran libraries)
-def eigenvalvec(h):
+@cython.boundscheck(False)
+def eigenvalvec(np.ndarray h):
     eigenvalues, eigenvectors = la.eig(h)
     return eigenvalues.real, eigenvectors
