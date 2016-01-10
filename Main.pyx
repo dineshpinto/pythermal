@@ -5,6 +5,7 @@ import sys
 import time
 
 import numpy as np
+import scipy.linalg as la
 
 import Output
 import SubRoutine1
@@ -16,6 +17,9 @@ __author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen
 
 class System:
     def __init__(self):
+        cdef unsigned int nop, nsa, nol_a, t_steps, nol, nol_b, link_pos
+        cdef double t_initial, t_final, delta_t
+    
         # No of particles
         self.nop = 3
         # Shape of square 2D array i.e. nsa = 2(2x2), 3(3x3)
@@ -24,21 +28,10 @@ class System:
         self.nol_a = 4
         # Time Evolution - starting time, ending time and no. of time steps
         self.t_initial = 0.0
-        self.t_final = 1.0
-        self.t_steps = 10
+        self.t_final = 10.0
+        self.t_steps = 50
 
-        # Defined in sub-initialization self.sub_init()
-        self.nol = None
-        self.nol_b = None
-        self.lat_del_pos = None
-        self.lat_del_pos_a = None
-        self.link_pos = None
-        self.lat = None
-        self.delta_t = None
-        # Call to sub-initialization
-        self.sub_init()
-
-    def sub_init(self):
+        # -----Automated-----
         # Check for number of particles in A
         if self.nop > self.nol_a:
             exit('Too many particles [{}] for sub-lattice A [{}]'.format(self.nop, self.nol_a))
@@ -47,8 +40,11 @@ class System:
         if self.t_initial != 0.0:
             exit('Initial time has to be 0')
 
-        # Lattice sites to delete for particular values of nsa & nol_a
-        if self.nsa == 4 and self.nol_a == 4:
+        # Lattice sites to delete for particular values of nsa & nol_a [Symmetry NOT broken]
+        if self.nsa == 3 and self.nol_a == 4:
+            self.lat_del_pos = np.array([3, 7])
+            self.lat_del_pos_a = np.array([3, 6, 7, 8, 9])
+        elif self.nsa == 4 and self.nol_a == 4:
             self.lat_del_pos = np.array([3, 4, 9, 13])
             self.lat_del_pos_a = np.array([3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
         elif self.nsa == 4 and self.nol_a == 9:
@@ -90,7 +86,7 @@ def main():
     eigenstates, nos = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
     eigenstates_a, nos_a = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
     Output.status(1)
-    Output.write_file('Eigenstates.csv', eigenstates, fmt='%1d')
+    #Output.write_file('Eigenstates.csv', eigenstates, fmt='%1d')
 
     # Hamiltonian
     h_time1 = time.time()
@@ -112,8 +108,8 @@ def main():
     # ------Sub-Routine 2 (Recursion Time and State Relabelling)-----
 
     # Recursion Time
-    recur_time = SubRoutine2.recursion_time(eigenvalues)
-    Output.status(4, recur_time)
+    # recur_time = SubRoutine2.recursion_time(eigenvalues)
+    # Output.status(4, recur_time)
 
     # State Relabelling
     r_time1 = time.time()
@@ -126,7 +122,7 @@ def main():
     # Time Evolution
     evo_time1 = time.time()
     psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, relabelled_states, nos, nos_a, s.nop)
-    # psi_initial = eigenvectors[0] / la.norm(eigenvectors[0])
+    # psi_initial = eigenvectors[0]  # la.norm(eigenvectors[0])
     psi_t, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
     evo_time2 = time.time()
     Output.status(6, evo_time2 - evo_time1)
@@ -135,13 +131,19 @@ def main():
     # Von-Neumann Entropy
     vn_time1 = time.time()
     vn_entropy_b = SubRoutine3.von_neumann_b(psi_t, relabelled_states, nos)
+    vn_entropy_a = SubRoutine3.von_neumann_a(psi_t, relabelled_states, nos)
     vn_time2 = time.time()
     Output.status(7, vn_time2 - vn_time1)
     Output.write_file('Entropy_B.csv', vn_entropy_b)
 
     # -----Output-----
-    Output.plotting(timestep_array, vn_entropy_b)
-
+    # Output.plotting_b(timestep_array, vn_entropy_b.real)
+    # Output.plotting_a(timestep_array, vn_entropy_a.real)
+    # vn_entropy_ab = vn_entropy_a.real + vn_entropy_b.real
+    # print(vn_entropy_a.real, vn_entropy_b.real, vn_entropy_ab)
+    # Output.plotting_ab(timestep_array, vn_entropy_ab)
+    Output.plotting(timestep_array, vn_entropy_a.real, vn_entropy_b.real)
+   
     # -----Terminate-----
     Output.status(8)
     sys.exit()
