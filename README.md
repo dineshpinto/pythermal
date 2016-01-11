@@ -10,25 +10,17 @@ Program to simulate n-particles on a 2D lattice, which is divided into sub-latti
 deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List 
-- [ ] **SubRoutine2.recursion_time()** Recursion time calculation using LCM of the inverse of energy eigenvalues [Beta]
-- [ ] Break symmetry using lat_del_pos [Currently throws up warning] 
-- [ ] No. of lattice sites in B? ''self.nol - (self.nol_a + len(self.lat_del_pos)) + 1 or self.nol - (self.nol_a + len(self.lat_del_pos))''
+
+- [ ] Break symmetry using `lat_del_pos` [Currently throws up warning] 
+- [ ] No. of lattice sites in B? `self.nol - (self.nol_a + len(self.lat_del_pos)) + 1` or `self.nol - (self.nol_a + len(self.lat_del_pos))`
 - [ ] Evolve with a few eigenstates (estimate recurrence using ~4 decimal places)
 - [ ] Observe Poincare Recurrence [Larger case]
-- [ ] Replacement of lat_del_pos_a by np.concatenate + np.arange [Unlikely]
-
-
-## Changelog (30-12-2015)
-+ Lattice site deletion automated
-+ Error checking for particles in sub lattice A
-+ Von Neumann entropy output returned as 'real'
-+ Function **write_file()** for saving to disk
-+ Writing output made more verbose
-
 
 ## Programmers Notes 
 
 *Documentation by D. Pinto*
+
+#### [Cython](https://github.com/dkpinto/PyThermal/tree/cython) implementation of PyThermal. Currently in beta. 
 
 The code is centered around the main function, from which the entire program can be controlled. It derives data from a 
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
@@ -295,9 +287,17 @@ To control the threads used by OpenBLAS, call OpenMP when running the program
 34. Error checking for trace of density matrix made non-fatal [program execution uninterrupted]
 35. Verbose output to disk
 
-
 ### Changelog (16-12-2015) 
 36. **eigenstates()** function shifted to SubRoutine1
 37. Recursion time calculation added *[Beta]*
 38. Full forward compatibility with both Python 3
 39. Error checking now outputs to **stderr**
+
+
+### Changelog (30-12-2015)
+40. Lattice site deletion automated
+41. Error checking for particles in sub lattice A
+42. Von Neumann entropy output returned as 'real'
+43. Function **write_file()** for saving to disk
+44. Writing output made more verbose
+
