@@ -7,35 +7,29 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+import Main
+
 
 def status(status_num, time_taken=0.0):
+    # Differentiate between Windows and *Nix systems
+    if os.name == 'nt':
+        t = time.strftime("%H%M%S", time.gmtime(time_taken))
+    else:
+        t = time.strftime("%T", time.gmtime(time_taken))
+        
     if status_num == 1:
-        print("\n\tSub-Routine 1\nEigenstates........Complete!")
-        print("\nHamiltonian........Initiated")
+        print("Generated Eigenstates\nTime: {}".format(t))
     elif status_num == 2:
-        h_time = time.strftime("%T", time.gmtime(time_taken))
-        print("Hamiltonian........Complete!\tExecution time = ", h_time)
-        print("\nDiagonalization....Initiated")
+        print("\nGenerated Hamiltonian\nTime: {}".format(t))
     elif status_num == 3:
-        e_time = time.strftime("%T", time.gmtime(time_taken))
-        print("Diagonalization....Complete!\tExecution time = ", e_time)
-        print("\n\tSub-Routine 2\nRecursion.....Initiated")
+        print("\nGenerated Eigenvalues & Eigenvectors\nTime: {}".format(t))
     elif status_num == 4:
-        print("\nRecursion.....Complete!\tApproximate recursion time =", time_taken, "units")
-        print("\nRelabelling.....Initiated")
-        # time.strftime("%T", time.gmtime(time_taken))
+        print("\nGenerated Relabelled States\nTime: {}".format(t))
     elif status_num == 5:
-        r_time = time.strftime("%T", time.gmtime(time_taken))
-        print("Relabelling....Complete!\tExecution time = ", r_time)
-        print("\n\tSub-Routine 3\nTime Evolution....Initiated")
+        print("\nGenerated Psi(t)\nTime: {}".format(t))
     elif status_num == 6:
-        evo_time = time.strftime("%T", time.gmtime(time_taken))
-        print("\nTime Evolution....Complete!\tExecution time = ", evo_time)
-        print("\nVon-Neumannn Entropy.....Initiated")
+        print("\nGenerated Von-Neumannn Entropy\nTime: {}".format(t))
     elif status_num == 7:
-        vn_time = time.strftime("%T", time.gmtime(time_taken))
-        print("\nVon-Neumannn Entropy....Complete!\tExecution time = ", vn_time)
-    elif status_num == 8:
         print("Complete!")
     else:
         warning('Invalid status')
@@ -47,16 +41,22 @@ def warning(*objects):
 
 
 # Writes output to hard disk
-def write_file(filename, data, fmt='%.18e'):
-    # Check if Output directory exists
-    if not os.path.exists('Output'):
+def write_file(filename, data=None, fmt='%.18e'):
+    s = Main.System()
+    # Check if Output directory exists (Note: Race condition)
+    path = s.folder_path()
+    if not os.path.exists(path):
         try:
-            os.makedirs('Output')
+            os.makedirs(path)
         except OSError:
             pass
 
-    print("Writing to {0}".format(filename))
-    np.savetxt('Output/' + filename, data, delimiter=',', fmt=fmt)
+    print("Writing to {}".format(filename))
+
+    if '.png' in filename:
+        plt.savefig(path + filename, format='png', dpi=400)
+    else:
+        np.savetxt(path + filename, data, delimiter=',', fmt=fmt)
 
 
 # Reads from hard disk
@@ -64,17 +64,31 @@ def read_file(filename, dtype=np.float64):
     np.genfromtxt(filename, delimiter=',', dtype=dtype)
 
 
-def plotting(x, y):
+def plot_entropy(x, y):
     # Plot area formatting
     plt.grid(b=True, which='major', color='k', linestyle='-')
     plt.grid(b=True, which='minor', color='0.50', linestyle='-')
     plt.minorticks_on()
     plt.ylabel(r'Von-Neumann Entropy $[S_{VN} = - tr(\rho \ln(\rho))] \rightarrow$')
-    plt.xlabel(r'Time* $[\tau]\rightarrow$')
+    plt.xlabel(r'Time $[\tau]\rightarrow$')
     plt.title(r'Von-Neumann entropy ($S_{VN}$) vs time ($\tau$) for a 2D sub-lattice')
 
     # Entropy Plot
     plt.plot(x, y, 'bo', markersize=5, label=r'$S_{VN} = - tr(\rho \ln(\rho))$')
-    plt.savefig('Output/Entropy.png', format='png', dpi=400)
-    # plt.show()
-    return
+    write_file('Entropy_B.png')
+    plt.show()
+
+
+def plot_trace2(x, y):
+    # Plot area formatting
+    plt.grid(b=True, which='major', color='k', linestyle='-')
+    plt.grid(b=True, which='minor', color='0.50', linestyle='-')
+    plt.minorticks_on()
+    plt.ylabel(r'Trace of sqare of DM $[tr(\rho^2))] \rightarrow$')
+    plt.xlabel(r'Time $[\tau]\rightarrow$')
+    plt.title(r'Trace of sqare of DM vs time ($\tau$) for a 2D sub-lattice')
+
+    # Trace squared plot 
+    plt.plot(x, y, 'bo', markersize=5, label=r'$S_{VN} = - tr(\rho \ln(\rho))$')
+    write_file('Trace2_B.png')
+    plt.show()

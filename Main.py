@@ -17,37 +17,36 @@ __author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen
 class System:
     def __init__(self):
         # No of particles
-        self.nop = 3
+        self.nop = 2
         # Shape of square 2D array i.e. nsa = 2(2x2), 3(3x3)
         self.nsa = 4
         # No. of sites in sub-lattice A
         self.nol_a = 4
         # Time Evolution - starting time, ending time and no. of time steps
         self.t_initial = 0.0
-        self.t_final = 1.0
+        self.t_final = 10.0
         self.t_steps = 10
 
-        # Defined in sub-initialization self.sub_init()
-        self.nol = None
-        self.nol_b = None
-        self.lat_del_pos = None
-        self.lat_del_pos_a = None
-        self.link_pos = None
-        self.lat = None
-        self.delta_t = None
-        # Call to sub-initialization
-        self.sub_init()
-
-    def sub_init(self):
         # Check for number of particles in A
         if self.nop > self.nol_a:
             exit('Too many particles [{}] for sub-lattice A [{}]'.format(self.nop, self.nol_a))
 
-        # Check initial time
-        if self.t_initial != 0.0:
-            exit('Initial time has to be 0')
-
         # Lattice sites to delete for particular values of nsa & nol_a
+        self.lat_del_pos, self.lat_del_pos_a = self.lattice_generator()
+        # No of  lattice sites eg. nsa = 3 => nol = 9
+        self.nol = self.nsa * self.nsa
+        # No. of sites in sub-lattice B
+        self.nol_b = self.nol - (self.nol_a + len(self.lat_del_pos)) + 1
+        # Site joining sub-lattice A and B (numbered after deleting sites)
+        self.link_pos = mt.sqrt(self.nol_a) * self.nsa - (self.nsa - mt.sqrt(self.nol_a))
+        # Lattice after deleting sites
+        self.lat = np.arange(1, self.nol + 1, dtype=np.int32)
+        # Time gap between successive steps
+        self.delta_t = (self.t_final - self.t_initial) / self.t_steps
+        # Time array
+        self.timestep_array = np.arange(self.t_initial, self.t_final, self.delta_t)
+
+    def lattice_generator(self):
         if self.nsa == 4 and self.nol_a == 4:
             self.lat_del_pos = np.array([3, 4, 9, 13])
             self.lat_del_pos_a = np.array([3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
@@ -66,17 +65,12 @@ class System:
             self.lat_del_pos_a = np.array([5, 10, 15, 21, 21, 22, 23, 24, 25])
         else:
             exit('Lattice shape not supported. Unable to delete sites.')
+        return self.lat_del_pos, self.lat_del_pos_a
 
-        # No of  lattice sites eg. nsa = 3 => nol = 9
-        self.nol = self.nsa * self.nsa
-        # No. of sites in sub-lattice B
-        self.nol_b = self.nol - (self.nol_a + len(self.lat_del_pos)) + 1
-        # Site joining sub-lattice A and B (numbered after deleting sites)
-        self.link_pos = mt.sqrt(self.nol_a) * self.nsa - (self.nsa - mt.sqrt(self.nol_a))
-        # Lattice after deleting sites
-        self.lat = np.arange(1, self.nol + 1, dtype=np.int32)
-        # Time gap between successive steps
-        self.delta_t = (self.t_final - self.t_initial) / self.t_steps
+    # Define a unique folder to output to. Path is: Output/Case-(nop)_(nsa)_(nol_a)_(t_final)/
+    def folder_path(self):
+        name = 'Output/Case-{}_{}_{}_{}/'.format(self.nop, self.nsa, self.nol_a, self.t_final)
+        return name
 
 
 def main():
@@ -109,17 +103,14 @@ def main():
     Output.write_file('Eigenvalues.csv', eigenvalues)
     Output.write_file('Eigenvectors.csv', eigenvectors)
 
-    # ------Sub-Routine 2 (Recursion Time and State Relabelling)-----
-
-    # Recursion Time
-    recur_time = SubRoutine2.recursion_time(eigenvalues)
-    Output.status(4, recur_time)
+    # ------Sub-Routine 2 (State Relabelling and Density Matrices)-----
 
     # State Relabelling
     r_time1 = time.time()
-    relabelled_states = SubRoutine2.relabel(eigenstates)
+    relabelled_states = SubRoutine2.relabel(eigenstates, s.nop, s.link_pos, s.nol_b)
     r_time2 = time.time()
-    Output.status(5, r_time2 - r_time1)
+    Output.status(4, r_time2 - r_time1)
+    Output.write_file('RelabelledStates.csv', eigenvalues)
 
     # -----Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)-----
 
@@ -127,23 +118,24 @@ def main():
     evo_time1 = time.time()
     psi_initial = SubRoutine3.random_eigenvector(eigenvectors_a, relabelled_states, nos, nos_a, s.nop)
     # psi_initial = eigenvectors[0] / la.norm(eigenvectors[0])
-    psi_t, timestep_array = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos)
+    psi_t = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos, s.timestep_array)
     evo_time2 = time.time()
-    Output.status(6, evo_time2 - evo_time1)
+    Output.status(5, evo_time2 - evo_time1)
     Output.write_file('Psi.csv', psi_t)
 
     # Von-Neumann Entropy
     vn_time1 = time.time()
-    vn_entropy_b = SubRoutine3.von_neumann_b(psi_t, relabelled_states, nos)
+    vn_entropy_b, vn_trace2_b = SubRoutine3.von_neumann_b(psi_t, relabelled_states, nos, s.nol_b, s.nop)
     vn_time2 = time.time()
-    Output.status(7, vn_time2 - vn_time1)
+    Output.status(6, vn_time2 - vn_time1)
     Output.write_file('Entropy_B.csv', vn_entropy_b)
 
     # -----Output-----
-    Output.plotting(timestep_array, vn_entropy_b)
+    Output.plot_entropy(s.timestep_array, vn_entropy_b)
+    Output.plot_trace2(s.timestep_array, vn_trace2_b)
 
     # -----Terminate-----
-    Output.status(8)
+    Output.status(7)
     sys.exit()
 
 

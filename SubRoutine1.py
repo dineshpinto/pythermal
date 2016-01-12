@@ -2,26 +2,17 @@ from __future__ import division, print_function
 
 import itertools as it
 import multiprocessing as mp
-from __builtin__ import range
 
 import numpy as np
 import scipy.linalg as la
-
-import Main
+from tqdm import tqdm
 
 
 # Returns eigenstates for the given lattice sites and particles
 def eigenstates_lattice(lat, nop, lat_del_pos):
-    s = Main.System()
     if np.size(lat_del_pos) != 0:
         lat_del = np.delete(lat, lat_del_pos - 1)
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
-
-        # Output when deletion array matches standard deletion array in class System
-        if len(lat_del_pos) == len(s.lat_del_pos):
-            print('Lattice sites(total) =', lat_del)
-        if len(lat_del_pos) == len(s.lat_del_pos_a):
-            print('Lattice sites(A) =', lat_del)
     else:
         eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
     return eigenstates, len(eigenstates)
@@ -29,7 +20,7 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
 
 # Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
-    for j in range(start, stop):  # Start/Stop defined by distribute()
+    for j in tqdm(range(start, stop)):  # Start/Stop defined by distribute()
         for k in range(nos):  # k iterates over all possibilities
             c = np.intersect1d(eigenstates[j], eigenstates[k])
             c_sum = np.sum(c, dtype=np.int32)  # Sum of common elements
@@ -97,4 +88,10 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
 # Calculates eigenvectors and eigenvalues (linked to OpenBLAS Fortran libraries)
 def eigenvalvec(h):
     eigenvalues, eigenvectors = la.eig(h)
+
+    # Sort eigenvalues and eigenvectors by ascending eigenvalue
+    idx = eigenvalues.argsort()
+    eigenvectors = eigenvectors[:, idx]
+    eigenvalues = eigenvalues[idx]
+    
     return eigenvalues.real, eigenvectors
