@@ -33,18 +33,28 @@ def von_neumann_b(psi_array, relabelled_states, nos, nol_b, nop):
     # Output.warning('The logm input matrix may be nearly singular')
     warnings.filterwarnings('ignore')
 
-    for idx, psi_val in tqdm(enumerate(psi_array)):
+    idx = 0
+    for psi_val in tqdm(psi_array):
         d_matrix_b, trace2_b[idx] = SubRoutine2.density_matrix_b(relabelled_states, psi_val, nos, nol_b, nop)
         entropy_b[idx] = -1.0 * np.trace(np.dot(d_matrix_b, la.logm(d_matrix_b)))
+        idx += 1
 
     return entropy_b.real, trace2_b
 
 
 # Psi evolved as |psi(t)> = exp(-i * H * t)|psi(0)>
-def time_evolution(psi_initial, hamiltonian, nos, timestep_array):
+def time_evolution(psi_initial, hamiltonian, nos, timestep_array, relabel_states, nop):
     psi_t = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
 
-    for idx, t in tqdm(enumerate(timestep_array)):
+    sum_a, sum_b = np.zeros_like(timestep_array), np.zeros_like(timestep_array)
+    idx = 0
+    for t in tqdm(timestep_array):
         psi_t[idx] = np.dot(la.expm(-1.0j * hamiltonian * t), psi_initial)
 
-    return psi_t
+        for index, val in enumerate(relabel_states[:, 1]):
+            sum_a[idx] += (np.vdot(psi_t[idx][index], psi_t[idx][index])).real * val
+            sum_b[idx] += (np.vdot(psi_t[idx][index], psi_t[idx][index])).real * (nop - val)
+
+        idx += 1
+
+    return psi_t, sum_a, sum_b
