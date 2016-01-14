@@ -14,7 +14,7 @@ deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is
 1. Add Cython to process tree compilation to speed up execution, refer to `cython` branch 
 2. `@Cython.locals` decorators to be added
 
-## Updates (v1.0)
+## Release Updates (v1.0)
 
 1. Built GUI for high level interfacing using Tkinter `$ python GUI.py`
 2. Initial values called from `main()`
@@ -25,7 +25,7 @@ deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is
 7. Progress bars added for all major loops
 8. Optimized calls to class System 
 9. SubRoutine function interchange 
-
+10. OOP concepts implemented throughout execution 
 
 ## Programmers Notes 
 
