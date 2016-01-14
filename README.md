@@ -9,12 +9,16 @@ PyThermal - Time evolving fermions on a 2D crystal lattice
 Program to simulate n-particles on a 2D lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
-## Task List 
+## Task List
+1. Add Cython to process tree compilation to speed up execution
+2. `@Cython.locals` decorators to be added
 
-- [ ] Break symmetry using `lat_del_pos` [Currently throws up warning] 
-- [ ] No. of lattice sites in B? `self.nol - (self.nol_a + len(self.lat_del_pos)) + 1` or `self.nol - (self.nol_a + len(self.lat_del_pos))`
-- [ ] Evolve with a few eigenstates (estimate recurrence using ~4 decimal places)
-- [ ] Observe Poincare Recurrence [Larger case]
+## Updates(14-01-2016)
+
+1. Built GUI for high level interfacing using Tkinter
+2. Initial values called from `main()`
+3. Redesigned plotting interface 
+4. Major update involving column vectors in `psi_initial()`
 
 ## Programmers Notes 
 
@@ -35,6 +39,7 @@ This code requires:
 2. Matplotlib 
 3. Multiprocessing
 4. tqdm
+5. Tkinter(Py2) or tkinter(Py3)
 
 To control the threads used by OpenBLAS, call OpenMP when running the program
 
