@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 # Returns eigenstates for the given lattice sites and particles
 def eigenstates_lattice(lat, nop, lat_del_pos):
-    if np.size(lat_del_pos) != 0:
+    if np.size(lat_del_pos) is not 0:
         lat_del = np.delete(lat, lat_del_pos - 1)
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
     else:
@@ -18,7 +18,7 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
     return eigenstates, len(eigenstates)
 
 
-# Hamiltonian called by parallel_call_hamiltonian, is based on the conjecture
+# Generates hamiltonian from the system's eigenstates
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     for j in tqdm(range(start, stop)):  # Start/Stop defined by distribute()
         for k in range(nos):  # k iterates over all possibilities
@@ -43,13 +43,13 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     return
 
 
-# Distribution function used to distribute processes among processors
+# Distributes processes among processors
 def distribute(n_items, n_processes, i):
     # Defines no. of items ([j] index in Hamiltonian) per process and starting point
     items_per_process = n_items // n_processes  # Integer division
     start = i * items_per_process
 
-    # For last process, appends remaining items to last core
+    # For last process, appends all remaining items to last core
     if i == n_processes - 1:
         stop = n_items
     else:
@@ -58,20 +58,19 @@ def distribute(n_items, n_processes, i):
     return start, stop
 
 
-# Uses parallel processes to call the Hamiltonian function, automatically reads no. of cores
+# Uses parallel processes to call function, automatically reads no. of cores
 def parallel_call_hamiltonian(e_states, nos, nsa, nop):
     process_list = []
-    queue = mp.Queue()  # Setting up queue to store each processes' output
+    queue = mp.Queue()  # Setting up a queue to store each processes' output
     h = np.zeros(shape=(nos, nos), dtype=np.float32)
-    n_processes = mp.cpu_count()  # No. of processes to create for parallel processing of Hamiltonian
+    n_processes = mp.cpu_count()  # No. of processes to create for parallel processing
 
-    for i in range(n_processes):  # Iterate over the no. of processes
-        start, stop = distribute(nos, n_processes, i)  # Start, stop points from distribution function
+    for i in range(n_processes):
+        start, stop = distribute(nos, n_processes, i)  # Start, stop points from distribute()
         args = (start, stop, nos, nsa, nop, e_states, queue, h)
         process = mp.Process(target=hamiltonian_2d, args=args)
         process_list.append(process)  # Create list of processes
         process.start()
-        # print(start, stop, process, process.pid)
 
     for i in range(n_processes):  # Retrieves output from queue
         h += queue.get()
@@ -85,7 +84,7 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
     return h
 
 
-# Calculates eigenvectors and eigenvalues (linked to OpenBLAS Fortran libraries)
+# Calculates eigenvectors and eigenvalues used Pade algorithm (link to OpenBLAS Fortran libraries)
 def eigenvalvec(h):
     eigenvalues, eigenvectors = la.eig(h)
 

@@ -1,5 +1,5 @@
 PyThermal - Time evolving fermions on a 2D crystal lattice
------------------------------------------------------------------------
+----------------------------------------------------------
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
@@ -10,28 +10,35 @@ Program to simulate n-particles on a 2D lattice, which is divided into sub-latti
 deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List
-1. Add Cython to process tree compilation to speed up execution
+
+1. Add Cython to process tree compilation to speed up execution, refer to `cython` branch 
 2. `@Cython.locals` decorators to be added
 
-## Updates(14-01-2016)
+## Updates (v1.0)
 
-1. Built GUI for high level interfacing using Tkinter
+1. Built GUI for high level interfacing using Tkinter `$ python GUI.py`
 2. Initial values called from `main()`
-3. Redesigned plotting interface 
+3. Redesigned plotting interface, `plotting()` is now generalized  
 4. Major update involving column vectors in `psi_initial()`
+5. Calls time correctly on both Windows and *nix systems
+6. Intelligent file structure management
+7. Progress bars added for all major loops
+8. Optimized calls to class System 
+9. SubRoutine function interchange 
+
 
 ## Programmers Notes 
 
 *Documentation by D. Pinto*
 
-#### [Cython](https://github.com/dkpinto/PyThermal/tree/cython) implementation of PyThermal. Currently in beta. 
+##### [Cython](https://github.com/dkpinto/PyThermal/tree/cython) implementation of PyThermal. Currently in beta. 
 
 The code is centered around the main function, from which the entire program can be controlled. It derives data from a 
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
 The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It is fully compatible 
-with Python 3.x (no modifications necessary). [PEP 0008](https://www.python.org/dev/peps/pep-0008/) styling guidelines have been followed throughout the code.  
+with Python 3.x (no modifications necessary). [PEP8](https://www.python.org/dev/peps/pep-0008/) styling guidelines have been followed throughout the code.  
 
 This code requires:
 
@@ -41,182 +48,14 @@ This code requires:
 4. tqdm
 5. Tkinter(Py2) or tkinter(Py3)
 
-To control the threads used by OpenBLAS, call OpenMP when running the program
+Execute without GUI: `python Main.py`
 
-    OMP_NUM_THREADS=16 python Main.py 
-    
+Execute with GUI: `python GUI.py`
 
-## Program Structure
+To control the threads used by OpenBLAS, call OpenMP when running the program 
 
-### class System 
+        OMP_NUM_THREADS=16 python Main.py 
         
-    __init__()
-            Parameters:
-                nop: total no. of particles, int
-                nsa: shape of square lattice, int
-                nol_a: no. of sites in sub-lattice A, int
-                t_initial: initial time, float 
-                t_final final time, float
-                t_steps: no.of time steps, int
-            Generated automatically:
-                lat_del_pos: array of positions of deleted sites, np array
-                lat_del_pos_a: positions of deleted sites for sub-lattice A, np array
-                nol: total no. of lattice sites, int
-                nol_b: no. of sites in sub-lattice B, int
-                link_pos: site joining sub-lattices A and B, int
-                lat: lattice sites array, np.int32
-                delta_t: time interval between two time steps, float
-
-### main()
-
-#### - Sub-Routine 1 (Hamiltonian, Eigenvalues and Eigenvectors)
-
-    eigenstates_lattice(lat, nop, lat_del_pos)
-            Parameters:
-                lat: lattice sites array, np.int32
-                nop: no. of particles, int
-                lat_del_pos: array of positions of deleted sites, np array
-            Returns:
-                e_states: array of eigenstates, np.int32
-                len(e_states): total no. of eigenstates, int
-
-
-    hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h)
-            Parameters:
-                    start: start point of iterator [j], int
-                    stop: end point of iterator [j], int
-                    nsa: shape of square lattice, int
-                    nop: total no. of particles, int
-                    eigenstates: array of eigenstates, np.int32
-                    queue: multiprocessing queue to store each processes' output
-                    h: hamiltonian array, np.float32
-                    
-    distribute(n_items, n_processes, i)
-            Parameters:
-                    n_items: total number of items to compute, int
-                    n_processes: no. of processes to create (= no. of cores), int
-                    i: iterates over no. of processes, int
-            Returns:
-                    start: start point of iterator [j], int
-                    stop: end point of iterator [j], int
-                    
-    parallel_call_hamiltonian(e_states, nos, nsa, nop)
-            Parameters:
-                e_states: array of eigenstates, np.int32
-                nos: total no. of states, int
-                nsa: shape of 2D lattice, int
-                nop: total no. of particles, int
-            Returns:
-                h: 2D hamiltonian array, np.float32
-            Environment:
-                C: Numpy
-                Python: Multiprocessing
-                
-    eigenvalvec(h)
-            Parameters:
-                h: 2D hamiltonian array, np.float32
-            Returns:
-                e_vecs: eigenvector array, complex
-                e_vals: eigenvalue array, complex
-            Environment:
-                Fortran: OpenBLAS, OpenMP
-
-#### - Sub-Routine 2 (Relabelling, Density Matrices and Recursion Time)
-
-    recursion_time()[in development] 
-    
-    relabel(e_states, nol_a, nol_b, link_pos, nop)
-            Parameters:
-                e_states: array of eigenstates, np.int32
-                nol_a: no. of sites in sub-lattice A, int
-                nol_b: no. of particles in sub-lattice B, int
-                link_pos: site joining sub-lattices A and B, int
-                nop: total no. of particles, int
-            Returns:
-                np.array(y): array containing relabelled states, np.float64
-            Environment:
-                Python
-                
-    denmatrix_a(label, e_vecs, nos, nop, nol_a)
-            nol_b replaced by nol_a
-            See denmatrix_b below
-    
-    denmatrix_b(label, e_vec, nos, nop, nol_b)
-            Parameters:
-                label: array containing relabelled states,
-                e_vecs: eigenvector array, complex
-                nop: total no. of particles, int
-                nol_b: no. of particles in sub-lattice B, int
-            Returns:
-                density_mat: 2D density matrix for sub-lattice B, complex
-                den_trace: Sum of diagonal, complex
-                den_trace2: Sum of diagonal of product of DM with its conjugate, complex
-            Environment:
-                Fortran: OpenBLAS, OpenMP
-
-#### - Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)
-
-    random_eigenvector(eigenvectors, nos)(eigenvectors, relabelled_states, nos, nos_a, nop)
-            Parameters:
-                eigenvectors: eigenvector array, np.complex
-                relabelled_states: 
-                nos: total no. of states, int
-                nos_a: 
-                nop: 
-            Returns:
-                psi_initial: randomly chosen eigenvector used as initial state, np.complex
-            Environment:
-                C: Numpy
-                Python
-                
-    von_neumann_b(psi_array, labels, nos)
-            Parameters:
-                    psi_array: 
-                    labels: array containing relabelled states, np.float64
-                    nos:
-            Returns:
-                    entropy_b: array containing Von-Neumann entropy of sub-system B, (np.complex).real
-            Environment:
-                    C: Numpy
-                    Fortran: OpenBLAS, OpenMP
-                    
-    psi_t(eigenvectors, eigenvalues, nos, psi_initial, t)
-            Parameters:
-                    eigenvectors: eigenvector array, np.complex
-                    eigenvalues:
-                    nos:
-                    psi_initial: initial state, np.complex
-                    t: time, float
-            Returns:
-                    psi: array containing psi at time t 
-                    
-    time_evolution(eigenvectors, eigenvalues, psi_initial, nos)
-            Parameters:
-                    eigenvectors: 
-                    eigenvalues: 
-                    psi_initial: 
-                    nos:
-            Returns:
-                    psi_array: array of arrays containing psi at t, t + dt ...
- 
-### - Output/Plotting 
-
-    status_output()
-        Returns program status along with run times
-
-    printout() **[Deprecated]**
-        Extensive output function, class option to export certain output to LOG.txt, requires 
-        tabulate header files
-        
-    warning()
-        Function to pass non-fatal warning to. Outputs to stderr
-        
-    write_file()
-        Wrapper for np.savetxt, writes output to disk
-                
-    plotting()
-        Generalized plotting for 2D graphs, uses MatPlotLib
-    
 
 ## Previous build(s)
 
@@ -224,7 +63,6 @@ To control the threads used by OpenBLAS, call OpenMP when running the program
 1. Function eigenstates() rewritten to account for missing lattice sites, site deletion controlled by [lat_del_pos]
 2. Function nos() deprecated, nos replaced with len(c) in eigenstates()
 3. Changed Hamiltonian, using if conditions to place 1's(on numpy.zeros matrix)
-
 
 ### Changelog (15/2/2015)
 
@@ -298,11 +136,9 @@ To control the threads used by OpenBLAS, call OpenMP when running the program
 38. Full forward compatibility with both Python 3
 39. Error checking now outputs to **stderr**
 
-
 ### Changelog (30-12-2015)
 40. Lattice site deletion automated
 41. Error checking for particles in sub lattice A
 42. Von Neumann entropy output returned as 'real'
 43. Function **write_file()** for saving to disk
 44. Writing output made more verbose
-
