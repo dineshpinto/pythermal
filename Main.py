@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import math as mt
+import os
 import time
 
 import numpy as np
@@ -49,9 +50,9 @@ class System:
         # Array storing various times
         self.timestep_array = np.arange(self.t_initial, self.t_final, self.delta_t)
         # Show images during execution (0=NO & 1=YES)
-        self.checkbox = val[6]
+        self.checkbox = val[7]
         # Set initial state as an eigenvector of entire system (0=NO & 1=YES)
-        self.checkbox2 = val[7]
+        self.checkbox2 = val[8]
 
     # Generates arrays of sites to be deleted using nsa and nol_a. If unsuccessful raises FATAL Exception
     def lattice_generator(self):
@@ -72,20 +73,28 @@ class System:
             self.lat_del_pos = np.array([5, 10, 15, 21, 22, 23])
             self.lat_del_pos_a = np.array([5, 10, 15, 21, 21, 22, 23, 24, 25])
         else:
-            print('Lattice shape not supported. Unable to delete sites.')
-            raise Exception
+            self.lat_del_pos = np.array([3, 7])
+            self.lat_del_pos_a = np.array([3, 6, 7, 8, 9])
+            # print('Lattice shape not supported. Unable to delete sites.')
+            # raise Exception
 
         self.lat_del_pos = np.concatenate((self.lat_del_pos, self.break_symmetry))
         self.lat_del_pos_a = np.concatenate((self.lat_del_pos_a, self.break_symmetry))
+
         return self.lat_del_pos, self.lat_del_pos_a
 
-    # Returns a unique folder path to output to. Path is: Output/Case-(nop)_(nsa)_(nol_a)_(t_final)/
-    def folder_path(self):
-        return 'Output_PyThermal/Case-{}_{}_{}_{}/'.format(self.nop, self.nsa, self.nol_a, self.t_final)
+    # Folder for storing time independent variables
+    def folder_path_ti(self):
+        return 'Output_PyThermal/TI-{}_{}_{}/'.format(self.nop, self.nsa, self.nol_a)
+
+    # Folder for storing time dependent variables
+    def folder_path_td(self):
+        return 'Output_PyThermal/TD-{}_{}_{}_{}/'.format(self.nop, self.nsa, self.nol_a, self.t_final)
 
     # Stores metadata required for matplotlib plots
     @staticmethod
     def plotting_metadata():
+        fnames = ['VN_Entropy_B', 'Trace2_B', 'Avg_A', 'Avg_B', 'Avg_AB']
         titles = [r'Von-Neumann entropy ($S_{VN}$) vs time ($\tau$)', r'Purity ($tr(\rho^2))$) vs time ($\tau$)',
                   r'Avg. particles in A vs time ($\tau$)', r'Avg. particles in B vs time ($\tau$)',
                   r'Avg. particles in A and B vs time ($\tau$)']
@@ -94,15 +103,42 @@ class System:
                     r'Avg. particles in A and B']
         x_labels = [r'Time $[\tau]\rightarrow$']
         y_limits = [(0.0, 3.0), (-1.0, 2.0), (0.0, 5.0)]
-        return titles, y_labels, x_labels, y_limits
+        return fnames, titles, y_labels, x_labels, y_limits
+
+    @staticmethod
+    def variable_names():
+        names = ['Hamiltonian.csv', 'Hamiltonian_A.csv', 'Eigenvalues.csv',
+                 'Eigenvectors.csv', 'Eigenvalues_A.csv', 'Eigenvectors_A.csv', 'Psi.csv', 'Sum_A.csv', 'Sum_B.csv',
+                 'VN_Entropy_B.csv', 'VN_Trace2_B']
+        return names
+
+    def check_existence(self):
+        names = self.variable_names()
+        existence = [0] * len(names)
+        for idx, name in enumerate(names):
+            if os.path.isfile(self.folder_path_ti() + name):
+                existence[idx] = 1
+                print('{} exists'.format(name))
+            elif os.path.isfile(self.folder_path_td() + name):
+                existence[idx] = 1
+                print('{} exists'.format(name))
+            else:
+                print('{} does not exist'.format(name))
+
+        print('\n')
+        return names, existence
 
 
-def main(initial_values):
-    s = System(initial_values)
-    path = s.folder_path()
-    titles, y_labels, x_labels, y_limits = s.plotting_metadata()
-
+def main(initial_values, existence=None):
     Output.warning('Symmetry may still be present in lattice')
+
+    s = System(initial_values)
+    path_ti, path_td = s.folder_path_ti(), s.folder_path_td()
+    image_name, titles, y_labels, x_labels, y_limits = s.plotting_metadata()
+    if existence is None:
+        names, existence = s.check_existence()
+    else:
+        names = s.variable_names()
 
     # -----Sub-Routine 1 (Eigenstates, Hamiltonian, Eigenvalues and Eigenvectors)-----
 
@@ -110,28 +146,48 @@ def main(initial_values):
     eigenstates, nos = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
     eigenstates_a, nos_a = SubRoutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
     Output.status(1)
-    Output.write_file(path, 'Eigenstates.csv', eigenstates, fmt='%1d')
-    Output.write_file(path, 'Eigenstates_A.csv', eigenstates_a, fmt='%1d')
+    Output.write_file(path_ti, 'Eigenstates.csv', eigenstates, fmt='%1d')
+    Output.write_file(path_ti, 'Eigenstates_A.csv', eigenstates_a, fmt='%1d')
 
     # Hamiltonian
     h_time1 = time.time()
-    hamiltonian = SubRoutine1.parallel_call_hamiltonian(eigenstates, nos, s.nsa, s.nop)
-    hamiltonian_a = SubRoutine1.parallel_call_hamiltonian(eigenstates_a, nos_a, s.nsa, s.nop)
+    if existence[0]:
+        hamiltonian = Output.read_file(path_ti, names[0])
+    else:
+        print('Hamiltonian...')
+        hamiltonian = SubRoutine1.parallel_call_hamiltonian(eigenstates, nos, s.nsa, s.nop)
+        Output.write_file(path_ti, names[0], hamiltonian, fmt='%1d')
+
+    if existence[1]:
+        hamiltonian_a = Output.read_file(path_ti, names[1])
+    else:
+        hamiltonian_a = SubRoutine1.parallel_call_hamiltonian(eigenstates_a, nos_a, s.nsa, s.nop)
+        Output.write_file(path_ti, names[1], hamiltonian_a, fmt='%1d')
     h_time2 = time.time()
     Output.status(2, h_time2 - h_time1)
-    Output.write_file(path, 'Hamiltonian.csv', hamiltonian, fmt='%1d')
-    Output.write_file(path, 'Hamiltonian_A.csv', hamiltonian_a, fmt='%1d')
 
     # Eigenvalues and Eigenvectors
     e_time1 = time.time()
-    eigenvalues, eigenvectors = SubRoutine1.eigenvalvec(hamiltonian)
-    eigenvalues_a, eigenvectors_a = SubRoutine1.eigenvalvec(hamiltonian_a)
+    if existence[2] and existence[3]:
+        eigenvalues = Output.read_file(path_ti, names[2])
+        eigenvectors = Output.read_file(path_ti, names[3], dtype=complex)
+    else:
+        print('Diagonalizing...')
+        eigenvalues, eigenvectors = SubRoutine1.eigenvalvec(hamiltonian)
+        Output.write_file(path_ti, names[2], eigenvalues)
+        Output.write_file(path_ti, names[3], eigenvectors)
+
+    # Eigenvalues and Eigenvectors of A
+    if existence[4] and existence[5]:
+        eigenvalues_a = Output.read_file(path_ti, names[4])
+        eigenvectors_a = Output.read_file(path_ti, names[5], dtype=complex)
+    else:
+        print('Diagonalizing A...')
+        eigenvalues_a, eigenvectors_a = SubRoutine1.eigenvalvec(hamiltonian_a)
+        Output.write_file(path_ti, names[4], eigenvalues_a)
+        Output.write_file(path_ti, names[5], eigenvectors_a)
     e_time2 = time.time()
     Output.status(3, e_time2 - e_time1)
-    Output.write_file(path, 'Eigenvalues.csv', eigenvalues)
-    Output.write_file(path, 'Eigenvectors.csv', eigenvectors)
-    Output.write_file(path, 'Eigenvalues_A.csv', eigenvalues_a)
-    Output.write_file(path, 'Eigenvectors_A.csv', eigenvectors_a)
 
     # ------Sub-Routine 2 (State Relabelling and Initial State)-----
 
@@ -140,41 +196,54 @@ def main(initial_values):
     re_states = SubRoutine2.relabel(eigenstates, s.nop, s.link_pos, s.nol_b)
     r_time2 = time.time()
     Output.status(4, r_time2 - r_time1)
-    Output.write_file(path, 'RelabelledStates.csv', re_states)
+    Output.write_file(path_ti, 'RelabelledStates.csv', re_states)
 
     # Initial State
-    evo_time1 = time.time()
+    state_num = int(initial_values[6])
+    print(state_num)
     if s.checkbox2:
-        psi_initial = eigenvectors[:, 0] / la.norm(eigenvectors[:, 0])
+        psi_initial = eigenvectors[:, state_num] / la.norm(eigenvectors[:, state_num])
     else:
-        psi_initial = SubRoutine2.init_state(eigenvectors_a, re_states, nos, s.nop)
+        psi_initial = SubRoutine2.init_state(eigenvectors_a, re_states, nos, s.nop, state_num)
 
     # -----Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)-----
 
     # Time Evolution
-    psi_t, sum_a, sum_b = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos, s.timestep_array, re_states, s.nop)
+    evo_time1 = time.time()
+    if existence[6] and existence[7] and existence[8]:
+        psi_t = Output.read_file(path_td, names[6], dtype=complex)
+        sum_a = Output.read_file(path_td, names[7])
+        sum_b = Output.read_file(path_td, names[8])
+    else:
+        print('Time evolution...')
+        psi_t, sum_a, sum_b = SubRoutine3.time_evolution(psi_initial, hamiltonian, nos, s.timestep_array, re_states,
+                                                         s.nop)
+        Output.write_file(path_td, names[6], psi_t)
+        Output.write_file(path_td, names[7], sum_a)
+        Output.write_file(path_td, names[8], sum_b)
     evo_time2 = time.time()
     Output.status(5, evo_time2 - evo_time1)
-    Output.write_file(path, 'Psi.csv', psi_t)
 
     # Von-Neumann Entropy
     vn_time1 = time.time()
-    vn_entropy_b, vn_trace2_b = SubRoutine3.von_neumann_b(psi_t, re_states, nos, s.nol_b, s.nop)
+    if existence[9] and existence[10]:
+        vn_entropy_b = Output.read_file(path_td, names[9], dtype=complex)
+        vn_trace2_b = Output.read_file(path_td, names[10])
+    else:
+        print('Von-Neumann Entropy...')
+        vn_entropy_b, vn_trace2_b = SubRoutine3.von_neumann_b(psi_t, re_states, nos, s.nol_b, s.nop)
+        Output.write_file(path_td, names[9], vn_entropy_b)
+        Output.write_file(path_td, names[10], vn_trace2_b)
     vn_time2 = time.time()
     Output.status(6, vn_time2 - vn_time1)
-    Output.write_file(path, 'VN_Entropy_B.csv', vn_entropy_b)
 
     # -----Output-----
-    Output.plot(s.timestep_array, vn_entropy_b, titles[0], y_labels[0], x_labels[0], y_limits[0])
-    Output.write_image(path, 'VN_Entropy_B.png', s.checkbox)
-    Output.plot(s.timestep_array, vn_trace2_b, titles[1], y_labels[1], x_labels[0], y_limits[0])
-    Output.write_image(path, 'Trace2_B.png', s.checkbox)
-    Output.plot(s.timestep_array, sum_a, titles[2], y_labels[2], x_labels[0], y_limits[2])
-    Output.write_image(path, 'Avg_A.png', s.checkbox)
-    Output.plot(s.timestep_array, sum_b, titles[3], y_labels[3], x_labels[0], y_limits[2])
-    Output.write_image(path, 'Avg_B.png', s.checkbox)
-    Output.plot(s.timestep_array, sum_b + sum_a, titles[4], y_labels[4], x_labels[0], y_limits[2])
-    Output.write_image(path, 'Avg_AB.png', s.checkbox)
+    x = s.timestep_array
+    Output.plot(x, vn_entropy_b, titles[0], y_labels[0], x_labels[0], y_limits[0], path_td, image_name[0], s.checkbox)
+    Output.plot(x, vn_trace2_b, titles[1], y_labels[1], x_labels[0], y_limits[0], path_td, image_name[1], s.checkbox)
+    Output.plot(x, sum_a, titles[2], y_labels[2], x_labels[0], y_limits[2], path_td, image_name[2], s.checkbox)
+    Output.plot(x, sum_b, titles[3], y_labels[3], x_labels[0], y_limits[2], path_td, image_name[3], s.checkbox)
+    Output.plot(x, sum_b + sum_a, titles[4], y_labels[4], x_labels[0], y_limits[2], path_td, image_name[4], s.checkbox)
 
     # -----Terminate-----
     Output.status(7)
@@ -182,6 +251,7 @@ def main(initial_values):
 
 
 if __name__ == '__main__':
-    # [nop, nsa, nol_a, t_initial, t_final, t_steps, Show images(1=YES), initial psi(1=eigenstate of entire system)]
-    init_values = [2, 4, 9, 0.0, 50.0, 100, 0, 0]
+    # [nop, nsa, nol_a, t_initial, t_final, t_steps, Show images(1=YES), initial psi(1=eigenstate of entire system),
+    # eigenvector no.]
+    init_values = [2, 3, 4, 0.0, 50.0, 100, 0, 0, 0]
     main(init_values)

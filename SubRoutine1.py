@@ -30,11 +30,11 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
 
             if c_size == nop - 1:  # Only one element differs
                 if abs(j_sum - k_sum) == nsa:  # Element differs by dimension
-                    h[j][k] = float(1)
+                    h[j, k] = float(1)
                 elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % nsa == 0:  # Right/Left edge
-                    h[j][k] = float(1)
+                    h[j, k] = float(1)
                 elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % nsa == 1:  # Right/Left edge
-                    h[j][k] = float(1)
+                    h[j, k] = float(1)
                 else:
                     continue
             else:

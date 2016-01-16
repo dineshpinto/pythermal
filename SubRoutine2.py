@@ -40,13 +40,13 @@ def relabel(e_states, nop, link_pos, nol_b):
 
 
 # Returns an initial state by placing eigenvectors from A in a zero matrix
-def init_state(eigenvectors_a, relabelled_states, nos, nop):
+def init_state(eigenvectors_a, relabelled_states, nos, nop, state_num):
     psi_initial = np.zeros(nos, dtype=np.complex)
     j = 0
     # Iterates over second column of RS
     for idx, val in enumerate(relabelled_states[:, 1]):
         if val == nop:
-            psi_initial[idx] = eigenvectors_a[0][j]
+            psi_initial[idx] = eigenvectors_a[state_num, j]
             j += 1
 
     # Normalizes initial state

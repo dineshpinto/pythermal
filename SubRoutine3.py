@@ -49,10 +49,10 @@ def density_matrix_b(label, e_vec, nos, nol_b, nop):
 
     for i in range(nos):
         for j in range(nos):
-            if label[i][1] == label[j][1] and label[i][0] == label[j][0]:
-                m = int(label[i][2] + sum_ncr(nol_b, (nop - label[i][1])) - 1)
-                n = int(label[j][2] + sum_ncr(nol_b, (nop - label[j][1])) - 1)
-                density_mat_b[m][n] += np.vdot(e_vec[j], e_vec[i])
+            if label[i, 1] == label[j, 1] and label[i, 0] == label[j, 0]:
+                m = int(label[i, 2] + sum_ncr(nol_b, (nop - label[i, 1])) - 1)
+                n = int(label[j, 2] + sum_ncr(nol_b, (nop - label[j, 1])) - 1)
+                density_mat_b[m, n] += np.vdot(e_vec[j], e_vec[i])
 
     # Calculate trace & trace square of density matrix B
     den_trace_b = np.trace(density_mat_b.real)
