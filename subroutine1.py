@@ -1,3 +1,13 @@
+"""
+This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+
+PyThermal - Time evolving fermions on a 2D crystal lattice
+Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+
+Project Mentor: Dr. A. Gupta
+Project Students: A. Kumar, D. Pinto and M. Ghosh
+"""
+
 from __future__ import division, print_function
 
 import itertools as it
@@ -7,6 +17,11 @@ import numpy as np
 import scipy.linalg as la
 from tqdm import tqdm
 
+try:
+    from builtins import range
+except ImportError:
+    from __builtin__ import range
+
 
 # Returns eigenstates for the given lattice sites and particles
 def eigenstates_lattice(lat, nop, lat_del_pos):
@@ -15,13 +30,16 @@ def eigenstates_lattice(lat, nop, lat_del_pos):
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
     else:
         eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
+
     return eigenstates, len(eigenstates)
 
 
 # Generates hamiltonian from the system's eigenstates
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     for j in tqdm(range(start, stop)):  # Start/Stop defined by distribute()
+
         for k in range(nos):  # k iterates over all possibilities
+
             c = np.intersect1d(eigenstates[j], eigenstates[k])
             c_sum = np.sum(c, dtype=np.int32)  # Sum of common elements
             c_size = np.size(c)  # No. of common elements
@@ -29,6 +47,7 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
             k_sum = np.sum(eigenstates[k], dtype=np.int32)  # Sum of elements of m[k]
 
             if c_size == nop - 1:  # Only one element differs
+
                 if abs(j_sum - k_sum) == nsa:  # Element differs by dimension
                     h[j, k] = float(1)
                 elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % nsa == 0:  # Right/Left edge
@@ -37,10 +56,11 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
                     h[j, k] = float(1)
                 else:
                     continue
+
             else:
                 continue
+
     queue.put(h)
-    return
 
 
 # Distributes processes among processors
@@ -68,6 +88,7 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
     for i in range(n_processes):
         start, stop = distribute(nos, n_processes, i)  # Start, stop points from distribute()
         args = (start, stop, nos, nsa, nop, e_states, queue, h)
+
         process = mp.Process(target=hamiltonian_2d, args=args)
         process_list.append(process)  # Create list of processes
         process.start()
@@ -92,5 +113,5 @@ def eigenvalvec(h):
     idx = eigenvalues.argsort()
     eigenvectors = eigenvectors[:, idx]
     eigenvalues = eigenvalues[idx]
-    
+
     return eigenvalues.real, eigenvectors

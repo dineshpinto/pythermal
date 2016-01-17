@@ -1,3 +1,13 @@
+"""
+This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+
+PyThermal - Time evolving fermions on a 2D crystal lattice
+Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+
+Project Mentor: Dr. A. Gupta
+Project Students: A. Kumar, D. Pinto and M. Ghosh
+"""
+
 from __future__ import division, print_function
 
 import math as mt
@@ -16,6 +26,7 @@ def ncr(n, r):
 def relabel(e_states, nop, link_pos, nol_b):
     x = np.zeros(shape=(2, nop + 1), dtype=np.int32)
     y, dump = [], []
+
     for state in e_states:
         comm, temp = [], []
         n = 0
@@ -36,13 +47,15 @@ def relabel(e_states, nop, link_pos, nol_b):
 
         if x[1][n] == ncr(nol_b, nop - n):
             x[1][n] = 0
+
     return np.array(y)
 
 
-# Returns an initial state by placing eigenvectors from A in a zero matrix
+# Returns a normalized initial state by placing eigenvectors from A in a zero matrix
 def init_state(eigenvectors_a, relabelled_states, nos, nop, state_num):
     psi_initial = np.zeros(nos, dtype=np.complex)
     j = 0
+
     # Iterates over second column of RS
     for idx, val in enumerate(relabelled_states[:, 1]):
         if val == nop:
@@ -51,4 +64,5 @@ def init_state(eigenvectors_a, relabelled_states, nos, nop, state_num):
 
     # Normalizes initial state
     psi_initial /= la.norm(psi_initial)
+
     return psi_initial
