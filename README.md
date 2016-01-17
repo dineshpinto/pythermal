@@ -9,10 +9,10 @@ PyThermal - Time evolving fermions on a 2D crystal lattice
 Program to simulate n-particles on a 2D lattice, which is divided into sub-lattices A and B after
 deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
-## Task List
+## Task List and issues
+See [Open issues](https://github.com/dkpinto/PyThermal/issues) for details
 
-1. Add Cython to process tree compilation to speed up execution, refer to `cython` branch 
-2. `@Cython.locals` decorators to be added
+PyThermal also has a branch written in [cython](https://github.com/dkpinto/PyThermal/tree/cython). It is currently in beta.
 
 ## Release Updates (v1.0.0)
 
@@ -31,16 +31,13 @@ deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is
 
 *Documentation by D. Pinto*
 
-##### [Cython](https://github.com/dkpinto/PyThermal/tree/cython) implementation of PyThermal. Currently in beta. 
-
 The code is centered around the main function, from which the entire program can be controlled. It derives data from a 
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
-The code was designed on Python 2.7 and will not work with versions older than Python 2.6. It is fully compatible 
-with Python 3.x (no modifications necessary). [PEP8](https://www.python.org/dev/peps/pep-0008/) styling guidelines have been followed throughout the code.  
+The code was designed on Python 2.7 and will not work with versions older than Python 2.6. Care has been taken to make it fully compatible with Python 3.x (no modifications necessary). [PEP8](https://www.python.org/dev/peps/pep-0008/) styling guidelines have been followed throughout the code.  
 
-This code requires:
+This code requires the following modules:
 
 1. Numpy & Scipy (Recommended build against Fortran OpenBLAS libraries for parallel processing)
 2. Matplotlib 
@@ -48,13 +45,17 @@ This code requires:
 4. tqdm
 5. Tkinter(Py2) or tkinter(Py3)
 
-Execute without GUI: `python Main.py`
+Execute without graphical interface: `python Main.py`
 
-Execute with GUI: `python GUI.py`
+Execute with graphical interface: `python GUI.py`
 
-To control the threads used by OpenBLAS, call OpenMP when running the program 
+To control the threads used by OpenBLAS, call OpenMP when running the program:
 
         OMP_NUM_THREADS=16 python Main.py 
+or  
+
+        OMP_NUM_THREADS=16 python GUI.py 
+        
         
 
 ## Previous build(s)
@@ -75,12 +76,10 @@ To control the threads used by OpenBLAS, call OpenMP when running the program
 7. Replaced math.fabs() with abs()
 8. Added elif and else statements
 
-
 ### Changelog (16/4/2015)
 
 9. la.eig replaced with la.eigh to exploit symmetry of Hamiltonian matrix
 10. Original (la.eig)eigenvalvec() deprecated, replaced with (la.eigh)eigenvalvec()
-
 
 ### Changelog (23/15/2015)
 
