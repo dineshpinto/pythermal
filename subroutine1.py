@@ -1,12 +1,10 @@
-"""
-This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
-
-PyThermal - Time evolving fermions on a 2D crystal lattice
-Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
-
-Project Mentor: Dr. A. Gupta
-Project Students: A. Kumar, D. Pinto and M. Ghosh
-"""
+# This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+#
+# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+#
+# Project Mentor: Dr. A. Gupta
+# Project Students: A. Kumar, D. Pinto and M. Ghosh
 
 from __future__ import division, print_function
 
@@ -23,13 +21,21 @@ except ImportError:
     from __builtin__ import range
 
 
-# Returns eigenstates for the given lattice sites and particles
-def eigenstates_lattice(lat, nop, lat_del_pos):
-    if np.size(lat_del_pos) is not 0:
+def eigenstates_lattice(lat, nop, lat_del_pos=None):
+    """
+    Returns eigenstates for a given lattice & particles after deleting sites
+    :param lat: Array of lattice sites
+    :param nop: Nop of particles in lattice
+    :param lat_del_pos: Lattice sites to delete
+    :return: Eigenstates
+    :return: Total no. of states
+
+    """
+    if lat_del_pos is None:
+        eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
+    else:
         lat_del = np.delete(lat, lat_del_pos - 1)
         eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
-    else:
-        eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
 
     return eigenstates, len(eigenstates)
 
@@ -63,9 +69,17 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     queue.put(h)
 
 
-# Distributes processes among processors
 def distribute(n_items, n_processes, i):
     # Defines no. of items ([j] index in Hamiltonian) per process and starting point
+    """
+    Distributes processes among processors
+    :param n_items: Total no. of items
+    :param n_processes: No. of processors/cores/threads
+    :param i: Iterator over n_processes
+    :return: Start point of ith process
+    :return: Stop point of ith process
+
+    """
     items_per_process = n_items // n_processes  # Integer division
     start = i * items_per_process
 
@@ -105,8 +119,15 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
     return h
 
 
-# Calculates eigenvectors and eigenvalues used Pade algorithm (link to OpenBLAS Fortran libraries)
 def eigenvalvec(h):
+    """
+    Calculates eigenvectors and eigenvalues used Pade algorithm (link to OpenBLAS Fortran
+    libraries for parallel processing)
+    :param h: Hamiltonian matrix
+    :return: Real eigenvalues
+    :return: Complex eigenvectors
+
+    """
     eigenvalues, eigenvectors = la.eig(h)
 
     # Sort eigenvalues and eigenvectors by ascending eigenvalue

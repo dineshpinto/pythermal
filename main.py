@@ -1,12 +1,10 @@
-"""
-This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
-
-PyThermal - Time evolving fermions on a 2D crystal lattice
-Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
-
-Project Mentor: Dr. A. Gupta
-Project Students: A. Kumar, D. Pinto and M. Ghosh
-"""
+# This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+#
+# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+#
+# Project Mentor: Dr. A. Gupta
+# Project Students: A. Kumar, D. Pinto and M. Ghosh
 
 from __future__ import print_function, division
 
@@ -26,16 +24,19 @@ __author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen
 
 
 class System:
-    def __init__(self, val):
+    def __init__(self, val, lat_a=None, lat_b=None):
+        """
+        Class stores metadata about the system
+        :param val: List containing initial state values of the system
+        :param lat_a: Lattice sites in A (only used when manually defining lattice)
+        :param lat_b: Lattice sites in B (only used when manually defining lattice)
 
+        """
         # No of particles
         self.nop = int(val[0])
 
         # Shape of square 2D array i.e. nsa = 2(2x2), 3(3x3)
         self.nsa = int(val[1])
-
-        # No. of sites in sub-lattice A
-        self.nol_a = int(val[2])
 
         # Time Evolution - starting time, ending time and no. of time steps
         self.t_initial = float(val[3])
@@ -48,34 +49,63 @@ class System:
         # Set initial state as an eigenvector of entire system (0=NO & 1=YES)
         self.checkbox2 = val[8]
 
-        # Break symmetry
-        self.break_symmetry = np.array([])
-
         # Lattice sites to delete for particular values of nsa & nol_a
-        self.lat_del_pos, self.lat_del_pos_a = self.lattice_generator()
+        self.lat_del_pos, self.lat_del_pos_a = self.lattice_generator
 
-        # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
-        self.nol = self.nsa * self.nsa
+        # Automatically define lattice sites
+        if lat_a is None or lat_b is None:
+            # No. of sites in sub-lattice A
+            self.nol_a = int(val[2])
 
-        # No. of sites in sub-lattice B
-        self.nol_b = self.nol - (self.nol_a + len(self.lat_del_pos)) + 1
+            # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
+            self.nol = self.nsa * self.nsa
 
-        # Site joining sub-lattice A and B (numbered after deleting sites)
-        self.link_pos = mt.sqrt(self.nol_a) * self.nsa - (self.nsa - mt.sqrt(self.nol_a))
+            # No. of sites in sub-lattice B
+            self.nol_b = self.nol - (self.nol_a + len(self.lat_del_pos)) + 1
+
+            # Site joining sub-lattice A and B (numbered after deleting sites)
+            self.link_pos = mt.sqrt(self.nol_a) * self.nsa - (self.nsa - mt.sqrt(self.nol_a))
+
+        # Manually define lattice sites
+        else:
+            # No. of sites in sub-lattice A
+            self.nol_a = len(lat_a)
+            # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
+            self.nol = len(lat_a) + len(lat_b)
+
+            # No. of sites in sub-lattice B
+            self.nol_b = len(lat_b)
 
         # Lattice before deleting sites
         self.lat = np.arange(1, self.nol + 1, dtype=np.int32)
 
+    @property
+    def timesteps(self):
+        """
+        :return: Array of times the system will be sampled
+
+        """
         # Time gap between successive time steps
-        self.delta_t = (self.t_final - self.t_initial) / self.t_steps
+        delta_t = (self.t_final - self.t_initial) / self.t_steps
 
         # Array storing various times
-        self.timestep_array = np.arange(self.t_initial, self.t_final, self.delta_t)
+        timestep_array = np.arange(self.t_initial, self.t_final, delta_t)
 
-    # Generates arrays of sites to be deleted using nsa and nol_a. If unsuccessful raises FATAL Exception
+        return timestep_array
+
+    @property
     def lattice_generator(self):
+        """
+        Generates lattice for defined nsa and nol_a. Assumes square blocks for A and B. [DOES NOT BREAK SYMMETRY]
+        :return: Indices of lattice sites to be deleted to form whole lattice
+        :return: Indices of lattice sites to be deleted to form A
 
-        if self.nsa == 4 and self.nol_a == 4:
+        """
+        if self.nsa == 3 and self.nol_a == 4:
+            self.lat_del_pos = np.array([3, 7])
+            self.lat_del_pos_a = np.array([3, 6, 7, 8, 9])
+
+        elif self.nsa == 4 and self.nol_a == 4:
             self.lat_del_pos = np.array([3, 4, 9, 13])
             self.lat_del_pos_a = np.array([3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
 
@@ -97,27 +127,36 @@ class System:
             self.lat_del_pos_a = np.array([5, 10, 15, 21, 21, 22, 23, 24, 25])
 
         else:
-            self.lat_del_pos = np.array([3, 7])
-            self.lat_del_pos_a = np.array([3, 6, 7, 8, 9])
-            # print('Lattice shape not supported. Unable to delete sites.')
-            # raise Exception
+            raise Exception('Lattice shape {0}x{0} with {1} latice sites in A not supported. Unable to delete sites.'.
+                            format(self.nsa, self.nol_a))
 
-        self.lat_del_pos = np.concatenate((self.lat_del_pos, self.break_symmetry))
-        self.lat_del_pos_a = np.concatenate((self.lat_del_pos_a, self.break_symmetry))
         return self.lat_del_pos, self.lat_del_pos_a
 
-    # Folder for storing time independent variables
+    @property
     def folder_path_ti(self):
+        """
+        :return: Path for storing time independent variables
+        """
         return 'Output_PyThermal/TI-{}_{}_{}/'.format(self.nop, self.nsa, self.nol_a)
 
-    # Folder for storing time dependent variables
+    @property
     def folder_path_td(self):
+        """
+        :return: Path for storing time dependent variables
+        """
         return 'Output_PyThermal/TD-{}_{}_{}_{}/'.format(self.nop, self.nsa, self.nol_a, self.t_final)
 
-    # Stores metadata required for matplotlib plots
     @staticmethod
     def plotting_metadata():
+        """
+        Stores metadata for matplotlib plots
+        :return: Filename of images
+        :return: Image titles
+        :return: y axis labels
+        :return: x axis labels
+        :return: y axis limits
 
+        """
         fnames = ['VN_Entropy_B', 'Trace2_B', 'Avg_A', 'Avg_B', 'Avg_AB']
 
         titles = [r'Von-Neumann entropy ($S_{VN}$) vs time ($\tau$)', r'Purity ($tr(\rho^2))$) vs time ($\tau$)',
@@ -136,25 +175,34 @@ class System:
 
     @staticmethod
     def variable_names():
+        """
+        :return: Names of variables for storing on hard disk
 
+        """
         names = ['Hamiltonian.csv', 'Hamiltonian_A.csv', 'Eigenvalues.csv',
                  'Eigenvectors.csv', 'Eigenvalues_A.csv', 'Eigenvectors_A.csv', 'Psi.csv', 'Sum_A.csv', 'Sum_B.csv',
                  'VN_Entropy_B.csv', 'VN_Trace2_B']
 
         return names
 
-    # Checks hard disk locations for variables and generates a list (1=EXISTS, 0=DOES NOT EXIST)
+    @property
     def check_existence(self):
+        """
+        Checks whether variables exists on hard disk
+        :return: Names of variables for storing on hard disk
+        :return: Integer list whether files exists on hard disk(1) or not(0)
+
+        """
         names = self.variable_names()
         existence = [0] * len(names)
 
         for idx, name in enumerate(names):
 
-            if os.path.isfile(self.folder_path_ti() + name):
+            if os.path.isfile(self.folder_path_ti + name):
                 existence[idx] = 1
                 print('{} exists'.format(name))
 
-            elif os.path.isfile(self.folder_path_td() + name):
+            elif os.path.isfile(self.folder_path_td + name):
                 existence[idx] = 1
                 print('{} exists'.format(name))
 
@@ -165,26 +213,62 @@ class System:
         return names, existence
 
 
-def main(initial_values, existence=None):
-    s = System(initial_values)
-    path_ti, path_td = s.folder_path_ti(), s.folder_path_td()
+def check_lattice(initial_values):
+    """
+    Runs checks to make sure all inputs are valid. Raises ValueError if not.
+    :param initial_values: initial values from main()
+
+    """
+    if initial_values[0] <= 0:
+        raise ValueError('No. of particles should be greater than 0')
+
+    if initial_values[0] > initial_values[2] and not initial_values[8]:
+        raise ValueError('Too many particles [{}] for sub-lattice A [{}]'.format(initial_values[0], initial_values[2]))
+
+    if initial_values[0] > initial_values[1] ** 2:
+        raise ValueError('Too many particles [{}] for lattice [{}]'.format(initial_values[0], initial_values[1] ** 2))
+
+    if initial_values[1] < 3:
+        raise ValueError('Shape of lattice must be at least 3')
+
+    if initial_values[4] <= initial_values[3]:
+        raise ValueError(
+                'Final time [{}] must be greater than initial time [{}]'.format(initial_values[4], initial_values[3]))
+
+    if initial_values[5] <= 0:
+        raise ValueError('No. of time steps has to be greater than 0')
+
+
+def main(initial_values, lattice_a=None, lattice_b=None):
+    """
+    Contains calls to/control of all functions in program.
+    :param lattice_a: Array of lattice sites in A
+    :param lattice_b: Array of lattice sites in B
+    :param initial_values:
+    :return: True if execution was successful
+
+    """
+    check_lattice(initial_values)
+
+    if initial_values[9]:
+        s = System(initial_values, lattice_a, lattice_b)
+    else:
+        s = System(initial_values)
+
+    path_ti, path_td = s.folder_path_ti, s.folder_path_td
     image_name, titles, y_labels, x_labels, y_limits = s.plotting_metadata()
 
-    # Check for number of particles in A [Failure is FATAL]
-    if s.nop > s.nol_a:
-        raise Exception('Too many particles [{}] for sub-lattice A [{}]'.format(s.nop, s.nol_a))
-
-    if existence is None:
-        names, existence = s.check_existence()
-    else:
-        output.warning('Overriding filesystem check')
-        names = s.variable_names()
+    names, existence = s.check_existence
 
     # -----Sub-Routine 1 (Eigenstates, Hamiltonian, Eigenvalues and Eigenvectors)-----
 
     # Eigenstates
-    eigenstates, nos = subroutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
-    eigenstates_a, nos_a = subroutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
+    if initial_values[9]:
+        eigenstates, nos = subroutine1.eigenstates_lattice(s.lat, s.nop)
+        eigenstates_a, nos_a = subroutine1.eigenstates_lattice(lattice_a, s.nop)
+    else:
+        eigenstates, nos = subroutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
+        eigenstates_a, nos_a = subroutine1.eigenstates_lattice(s.lat, s.nop, s.lat_del_pos_a)
 
     output.status(1)
 
@@ -241,7 +325,10 @@ def main(initial_values, existence=None):
 
     # State Relabelling
     r_time1 = time.time()
-    re_states = subroutine2.relabel(eigenstates, s.nop, s.link_pos, s.nol_b)
+    if initial_values[9]:
+        re_states = subroutine2.relabel(eigenstates, s.nop, s.nol_b, link_pos=None, lat_b=lattice_b)
+    else:
+        re_states = subroutine2.relabel(eigenstates, s.nop, s.nol_b, link_pos=s.link_pos, lat_b=None)
     r_time2 = time.time()
     output.status(4, r_time2 - r_time1)
     output.write_file(path_ti, 'RelabelledStates.csv', re_states)
@@ -266,7 +353,7 @@ def main(initial_values, existence=None):
 
     else:
         print('Time evolution...')
-        psi_t, sum_a, sum_b = subroutine3.time_evolution(psi_initial, hamiltonian, nos, s.timestep_array, re_states,
+        psi_t, sum_a, sum_b = subroutine3.time_evolution(psi_initial, hamiltonian, nos, s.timesteps, re_states,
                                                          s.nop)
         output.write_file(path_td, names[6], psi_t)
         output.write_file(path_td, names[7], sum_a)
@@ -291,7 +378,7 @@ def main(initial_values, existence=None):
     output.status(6, vn_time2 - vn_time1)
 
     # -----Output-----
-    x = s.timestep_array
+    x = s.timesteps
 
     output.plot(x, vn_entropy_b, titles[0], y_labels[0], x_labels[0], y_limits[0], path_td, image_name[0], s.checkbox)
     output.plot(x, vn_trace2_b, titles[1], y_labels[1], x_labels[0], y_limits[0], path_td, image_name[1], s.checkbox)
@@ -306,7 +393,8 @@ def main(initial_values, existence=None):
 
 if __name__ == '__main__':
     # [nop, nsa, nol_a, t_initial, t_final, t_steps, Show images(1=YES), initial psi(1=eigenstate of entire system),
-    # eigenvector no.]
-    init_values = [1, 3, 4, 0.0, 50.0, 100, 0, 0, 0]
-    exists = [0] * 11
-    main(init_values, exists)
+    # eigenvector no., manually define lattice(1=YES), link position]
+    init_values = [1, 4, 4, 0.0, 50.0, 100, 0, 0, 0, 0, 0]
+    l_a = np.array([])
+    l_b = np.array([])
+    main(init_values)

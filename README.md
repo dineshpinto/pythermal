@@ -1,12 +1,12 @@
-PyThermal - Time evolving fermions on a 2D crystal lattice
-----------------------------------------------------------
+PyThermal - Time evolving bosons on a 2D crystal lattice
+--------------------------------------------------------
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
 *Project Mentor: Dr. A. Gupta*   
 *Project Students: A. Kumar, D. Pinto and M. Ghosh*
 
-Program to simulate n-particles on a 2D lattice, which is divided into sub-lattices A and B after
+Program to simulate n-particles on a 2D lattice, which is divided into two sub-lattices after
 deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List and issues
@@ -14,7 +14,7 @@ See [Open issues](https://github.com/dkpinto/PyThermal/issues) for details
 
 PyThermal also has a branch written in [cython](https://github.com/dkpinto/PyThermal/tree/cython). It is currently in beta.
 
-## Release Updates (v1.0.0)
+## Release Updates (v1.1.0)
 
 1. Built GUI for high level interfacing using Tkinter `$ python GUI.py`
 2. Initial values called from `main()`
@@ -35,7 +35,9 @@ The code is centered around the main function, from which the entire program can
 class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
 *Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
 
-The code was designed on Python 2.7 and will not work with versions older than Python 2.6. Care has been taken to make it fully compatible with Python 3.x (no modifications necessary). [PEP8](https://www.python.org/dev/peps/pep-0008/) styling guidelines have been followed throughout the code.  
+The code was designed on Python 2.7 and will not work with versions older than Python 2.6. Care has been taken to make 
+it fully compatible with Python 3.x (no modifications necessary). [PEP8](https://www.python.org/dev/peps/pep-0008/) 
+styling guidelines have been followed throughout the code.  
 
 This code requires the following modules:
 

@@ -1,12 +1,10 @@
-"""
-This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
-
-PyThermal - Time evolving fermions on a 2D crystal lattice
-Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
-
-Project Mentor: Dr. A. Gupta
-Project Students: A. Kumar, D. Pinto and M. Ghosh
-"""
+# This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+#
+# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+#
+# Project Mentor: Dr. A. Gupta
+# Project Students: A. Kumar, D. Pinto and M. Ghosh
 
 from __future__ import division, print_function
 
@@ -16,17 +14,22 @@ import warnings
 import numpy as np
 import scipy.linalg as la
 import tqdm
-
-import output
-
 try:
     from builtins import range
 except ImportError:
     from __builtin__ import range
 
+import output
 
-# Calculates nC0 + nC1 + ... + nCk
+
 def sum_ncr(n, k):
+    """
+    Calculates nC0 + nC1 + ... + nCr
+    :param n: Total no. of items
+    :param k: No. of items chosen
+    :return: Sum of combinations
+
+    """
     s = 0
     f = mt.factorial
 
@@ -39,11 +42,20 @@ def sum_ncr(n, k):
 
 # Calculates the density matrix for sub-lattice A
 def density_matrix_a(label, e_vec, nos, nol_a, nop):
+    """
+    Calculates density matrix for sub-lattice B
+    :param label: Relabelled states
+    :param e_vec: Eigenvectors
+    :param nos: No. of states
+    :param nol_a: No. of lattice sites in A
+    :param nop: No. of particles
+    :return: Density matrix of sub-lattice A
+
+    """
     dim_a = int(sum_ncr(nol_a, nop + 1))
     density_mat_a = np.zeros(shape=(dim_a, dim_a), dtype=complex)
 
     for i in range(nos):
-
         for j in range(nos):
 
             if label[i][1] == label[j][1] and label[i][2] == label[j][2]:
@@ -63,10 +75,20 @@ def density_matrix_a(label, e_vec, nos, nol_a, nop):
     return density_mat_a
 
 
-# Calculates the density matrix, its trace and the trace of the square of the density matrix for sub-lattice B
 def density_matrix_b(label, e_vec, nos, nol_b, nop):
+    """
+    Calculates density matrix for sub-lattice B
+    :param label: Relabelled states
+    :param e_vec: Eigenvectors
+    :param nos: No. of states
+    :param nol_b: No. of lattice sites in B
+    :param nop: No. of particles
+    :return: Density matrix of sub-lattice B
+    :return: Trace of square of density matrix
+
+    """
     dim_b = sum_ncr(nol_b, nop + 1)
-    density_mat_b = np.zeros(shape=(dim_b, dim_b), dtype=np.complex)
+    density_mat_b = np.zeros(shape=(dim_b, dim_b), dtype=np.complex, order='F')
 
     for i in range(nos):
         for j in range(nos):
@@ -88,9 +110,19 @@ def density_matrix_b(label, e_vec, nos, nol_b, nop):
     return density_mat_b, den_trace_b2
 
 
-# Calculates Von-Neumann entropy as entropy = - tr(rho * ln(rho))
 def von_neumann_b(psi_array, relabelled_states, nos, nol_b, nop):
-    entropy_b = np.zeros(len(psi_array), dtype=np.complex)
+    """
+    Calculates Von-Neumann entropy as entropy = - tr(rho * ln(rho))
+    :param psi_array: Psi(t)
+    :param relabelled_states: Relabelled states
+    :param nos: No. of states
+    :param nol_b: No. of lattice sites in B
+    :param nop: No. of particles
+    :return: Real Von-Neumann entropy
+    :return: Trace of density matrix of B
+
+    """
+    entropy_b = np.zeros(len(psi_array), dtype=np.complex, order='F')
     trace2_b = np.zeros(len(psi_array), dtype=np.float)
 
     # [CAUTION] Replaces default warning(Below) and ignores future warnings within scope
@@ -106,9 +138,21 @@ def von_neumann_b(psi_array, relabelled_states, nos, nol_b, nop):
     return entropy_b.real, trace2_b
 
 
-# Psi evolved as |Psi(t)> = exp(-i * H * t)|Psi(0)>
 def time_evolution(psi_initial, hamiltonian, nos, timestep_array, relabel_states, nop):
-    psi_t = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex)
+    """
+    Psi evolved as |Psi(t)> = exp(-i * H * t)|Psi(0)>
+    :param psi_initial: Initial state
+    :param hamiltonian: Hamiltonian matrix
+    :param nos: No. of states
+    :param timestep_array: Arrays of times
+    :param relabel_states: Relabelled states
+    :param nop: No. of particles
+    :return: Array of Psi(t)
+    :return: Avg. particles in sub-lattice A
+    :return: Avg. particles in sub-lattice B
+
+    """
+    psi_t = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex, order='F')
     sum_a = np.zeros_like(timestep_array)
     sum_b = np.zeros_like(timestep_array)
 
@@ -117,9 +161,9 @@ def time_evolution(psi_initial, hamiltonian, nos, timestep_array, relabel_states
 
         psi_t[idx] = np.dot(la.expm(-1.0j * hamiltonian * t), psi_initial)
 
-        for index, val in enumerate(relabel_states[:, 1]):
-            sum_a[idx] += (np.vdot(psi_t[idx][index], psi_t[idx][index])).real * val
-            sum_b[idx] += (np.vdot(psi_t[idx][index], psi_t[idx][index])).real * (nop - val)
+        for idx2, val in enumerate(relabel_states[:, 1]):
+            sum_a[idx] += (np.vdot(psi_t[idx, idx2], psi_t[idx, idx2])).real * val
+            sum_b[idx] += (np.vdot(psi_t[idx, idx2], psi_t[idx, idx2])).real * (nop - val)
 
         idx += 1
 

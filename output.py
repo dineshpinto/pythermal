@@ -1,12 +1,10 @@
-"""
-This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
-
-PyThermal - Time evolving fermions on a 2D crystal lattice
-Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
-
-Project Mentor: Dr. A. Gupta
-Project Students: A. Kumar, D. Pinto and M. Ghosh
-"""
+# This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+#
+# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+#
+# Project Mentor: Dr. A. Gupta
+# Project Students: A. Kumar, D. Pinto and M. Ghosh
 
 from __future__ import print_function
 
@@ -18,8 +16,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Returns status of program execution
 def status(status_num, time_taken=0.0):
+    """
+    Prints current status of program execution
+    :param status_num: Current status of program execution
+    :param time_taken: Block execution time
+
+    """
     # Differentiate between Windows and *nix systems
     if os.name is 'nt':
         t = time.strftime("%H%M%S", time.gmtime(time_taken))
@@ -44,14 +47,23 @@ def status(status_num, time_taken=0.0):
         warning('Invalid status')
 
 
-# Handles non-fatal warnings
 def warning(*objects):
+    """
+    Handles non-fatal warnings
+    :param objects:
+    """
     print("WARNING:", *objects, file=sys.stderr)
 
 
-# Writes output data to hard disk, path from class System.folder_path()
 def write_file(path, filename, data=None, fmt='%.18e'):
-    # Check if Output directory exists, if not then create it (Note race condition)
+    """
+    Checks if output directory exists, if not, creates it. Then writes to disk.
+    :param path: Folder path to write to
+    :param filename: Name of file
+    :param data: Data o be written
+    :param fmt: Format specifier
+
+    """
     if not os.path.exists(path):
         try:
             os.makedirs(path)
@@ -62,9 +74,13 @@ def write_file(path, filename, data=None, fmt='%.18e'):
     np.savetxt(path + filename, data, delimiter=',', fmt=fmt)
 
 
-# Writes output images to hard disk, similar to write_file()
 def write_image(path, filename):
-    # Check if Output directory exists, if not then create it (Note race condition)
+    """
+    Checks if output directory exists, if not, creates it. Then writes to disk.
+    :param path: Folder path to write to
+    :param filename: Name of file
+
+    """
     if not os.path.exists(path):
         try:
             os.makedirs(path)
@@ -78,8 +94,14 @@ def write_image(path, filename):
     plt.clf()
 
 
-# Reads data file from hard disk
 def read_file(path, filename, dtype=np.float64):
+    """
+    :param path: Path to folder
+    :param filename: Name of file
+    :param dtype: Data type of file
+    :return: Array
+
+    """
     if os.path.isfile(path + filename):
         print('Reading from {}'.format(filename))
         return np.genfromtxt(path + filename, delimiter=',', dtype=dtype)
@@ -89,9 +111,21 @@ def read_file(path, filename, dtype=np.float64):
         raise IOError
 
 
-# Generate graphs using matplotlib, uses metadata from class System.plotting_method()
 def plot(x, y, title=None, y_label=None, x_label=None, y_limit=None, path=None, filename=None, checkbox=None):
     # Plot area formatting
+    """
+    Generate graphs using matplotlib, uses metadata from class System.plotting_method()
+    :param x: x axis
+    :param y: y axis
+    :param title: Graph title
+    :param y_label: y axis label
+    :param x_label: x axis label
+    :param y_limit: y axis limits
+    :param path: Path for saving file
+    :param filename: Name of file
+    :param checkbox: Show images during execution(1) or not(0)
+
+    """
     plt.grid(b=True, which='major', color='k', linestyle='-')
     plt.grid(b=True, which='minor', color='0.50', linestyle='-')
     plt.minorticks_on()
