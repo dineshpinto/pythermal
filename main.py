@@ -24,41 +24,58 @@ __author__ = "Thermalization and Quantum Entanglement Project Group, St. Stephen
 
 
 class System:
-    def __init__(self, val, lat_a=None, lat_b=None):
+    def __init__(self, initial_value, option, lat_a=None, lat_b=None):
         """
         Class stores metadata about the system
-        :param val: List containing initial state values of the system
+        :param initial_value: List containing initial state values of the system
         :param lat_a: Lattice sites in A (only used when manually defining lattice)
         :param lat_b: Lattice sites in B (only used when manually defining lattice)
 
         """
         # No of particles
-        self.nop = int(val[0])
+        self.nop = int(initial_value[0])
 
         # Shape of square 2D array i.e. nsa = 2(2x2), 3(3x3)
-        self.nsa = int(val[1])
+        self.nsa = int(initial_value[1])
 
         # Time Evolution - starting time, ending time and no. of time steps
-        self.t_initial = float(val[3])
-        self.t_final = float(val[4])
-        self.t_steps = int(val[5])
+        self.t_initial = float(initial_value[3])
+        self.t_final = float(initial_value[4])
+        self.t_steps = int(initial_value[5])
+
+        # Initial state for psi_initial
+        self.initial_state = int(initial_value[6])
 
         # Show images during execution (0=NO & 1=YES)
-        self.checkbox = val[7]
+        self.show_images = option[0]
 
         # Set initial state as an eigenvector of entire system (0=NO & 1=YES)
-        self.checkbox2 = val[8]
+        self.eigenvector_ab = option[1]
 
-        # Lattice sites to delete for particular values of nsa & nol_a
-        self.lat_del_pos, self.lat_del_pos_a = self.lattice_generator
+        # Manually define lattice
+        self.manual_lattice = option[2]
+
+        # Manually define lattice sites
+        if self.manual_lattice:
+            # No. of sites in sub-lattice A
+            self.nol_a = len(lat_a)
+
+            # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
+            self.nol = len(lat_a) + len(lat_b)
+
+            # No. of sites in sub-lattice B
+            self.nol_b = len(lat_b)
 
         # Automatically define lattice sites
-        if lat_a is None or lat_b is None:
+        else:
             # No. of sites in sub-lattice A
-            self.nol_a = int(val[2])
+            self.nol_a = int(initial_value[2])
 
             # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
             self.nol = self.nsa * self.nsa
+
+            # Lattice sites to delete for particular values of nsa & nol_a
+            self.lat_del_pos, self.lat_del_pos_a = self.lattice_generator
 
             # No. of sites in sub-lattice B
             self.nol_b = self.nol - (self.nol_a + len(self.lat_del_pos)) + 1
@@ -66,32 +83,8 @@ class System:
             # Site joining sub-lattice A and B (numbered after deleting sites)
             self.link_pos = mt.sqrt(self.nol_a) * self.nsa - (self.nsa - mt.sqrt(self.nol_a))
 
-        # Manually define lattice sites
-        else:
-            # No. of sites in sub-lattice A
-            self.nol_a = len(lat_a)
-            # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
-            self.nol = len(lat_a) + len(lat_b)
-
-            # No. of sites in sub-lattice B
-            self.nol_b = len(lat_b)
-
         # Lattice before deleting sites
         self.lat = np.arange(1, self.nol + 1, dtype=np.int32)
-
-    @property
-    def timesteps(self):
-        """
-        :return: Array of times the system will be sampled
-
-        """
-        # Time gap between successive time steps
-        delta_t = (self.t_final - self.t_initial) / self.t_steps
-
-        # Array storing various times
-        timestep_array = np.arange(self.t_initial, self.t_final, delta_t)
-
-        return timestep_array
 
     @property
     def lattice_generator(self):
@@ -131,6 +124,20 @@ class System:
                             format(self.nsa, self.nol_a))
 
         return self.lat_del_pos, self.lat_del_pos_a
+
+    @property
+    def timesteps(self):
+        """
+        :return: Array of times the system will be sampled
+
+        """
+        # Time gap between successive time steps
+        delta_t = (self.t_final - self.t_initial) / self.t_steps
+
+        # Array storing various times
+        timestep_array = np.arange(self.t_initial, self.t_final, delta_t)
+
+        return timestep_array
 
     @property
     def folder_path_ti(self):
@@ -213,57 +220,61 @@ class System:
         return names, existence
 
 
-def check_lattice(initial_values):
+def check_lattice(initial_values, options):
     """
     Runs checks to make sure all inputs are valid. Raises ValueError if not.
-    :param initial_values: initial values from main()
+    :param options: list of options from main()
+    :param initial_values: list of initial values from main()
 
     """
-    if initial_values[0] <= 0:
+    if not initial_values[0] > 0:
         raise ValueError('No. of particles should be greater than 0')
 
-    if initial_values[0] > initial_values[2] and not initial_values[8]:
+    if not initial_values[0] < initial_values[2] and not options[1]:
         raise ValueError('Too many particles [{}] for sub-lattice A [{}]'.format(initial_values[0], initial_values[2]))
 
-    if initial_values[0] > initial_values[1] ** 2:
+    if not initial_values[0] < initial_values[1] ** 2:
         raise ValueError('Too many particles [{}] for lattice [{}]'.format(initial_values[0], initial_values[1] ** 2))
 
-    if initial_values[1] < 3:
+    if not initial_values[1] > 3:
         raise ValueError('Shape of lattice must be at least 3')
 
-    if initial_values[4] <= initial_values[3]:
-        raise ValueError(
-                'Final time [{}] must be greater than initial time [{}]'.format(initial_values[4], initial_values[3]))
+    if not initial_values[4] >= initial_values[3]:
+        raise ValueError('Final time [{}] must be greater than initial time [{}]'.
+                         format(initial_values[4], initial_values[3]))
 
-    if initial_values[5] <= 0:
+    if not initial_values[5] > 0:
         raise ValueError('No. of time steps has to be greater than 0')
 
 
-def main(initial_values, lattice_a=None, lattice_b=None):
+def main(initial_values, options, lattice_a=None, lattice_b=None):
     """
     Contains calls to/control of all functions in program.
-    :param lattice_a: Array of lattice sites in A
-    :param lattice_b: Array of lattice sites in B
+    :param lattice_a: List of sites in A
+    :param lattice_b: List of sites in B
+    :return: True if execution successful
+    :param options: List of options for program execution
     :param initial_values:
     :return: True if execution was successful
 
     """
-    check_lattice(initial_values)
+    check_lattice(initial_values, options)
 
-    if initial_values[9]:
-        s = System(initial_values, lattice_a, lattice_b)
-    else:
-        s = System(initial_values)
+    s = System(initial_values, options, lattice_a, lattice_b)
 
+    # Folder path for given system
     path_ti, path_td = s.folder_path_ti, s.folder_path_td
+
+    # Metadata for matplotlib plots
     image_name, titles, y_labels, x_labels, y_limits = s.plotting_metadata()
 
+    # Check existence of files on hard disk
     names, existence = s.check_existence
 
     # -----Sub-Routine 1 (Eigenstates, Hamiltonian, Eigenvalues and Eigenvectors)-----
 
     # Eigenstates
-    if initial_values[9]:
+    if s.manual_lattice:
         eigenstates, nos = subroutine1.eigenstates_lattice(s.lat, s.nop)
         eigenstates_a, nos_a = subroutine1.eigenstates_lattice(lattice_a, s.nop)
     else:
@@ -309,7 +320,7 @@ def main(initial_values, lattice_a=None, lattice_b=None):
 
     # Eigenvalues and Eigenvectors of A
     if existence[4] and existence[5]:
-        # eigenvalues_a = Output.read_file(path_ti, names[4])
+        eigenvalues_a = output.read_file(path_ti, names[4])
         eigenvectors_a = output.read_file(path_ti, names[5], dtype=complex)
 
     else:
@@ -325,21 +336,22 @@ def main(initial_values, lattice_a=None, lattice_b=None):
 
     # State Relabelling
     r_time1 = time.time()
-    if initial_values[9]:
+
+    if s.manual_lattice:
         re_states = subroutine2.relabel(eigenstates, s.nop, s.nol_b, link_pos=None, lat_b=lattice_b)
     else:
         re_states = subroutine2.relabel(eigenstates, s.nop, s.nol_b, link_pos=s.link_pos, lat_b=None)
+
     r_time2 = time.time()
     output.status(4, r_time2 - r_time1)
     output.write_file(path_ti, 'RelabelledStates.csv', re_states)
 
     # Initial State
-    state_num = int(initial_values[6])
 
-    if s.checkbox2:
-        psi_initial = eigenvectors[:, state_num] / la.norm(eigenvectors[:, state_num])
+    if s.eigenvector_ab:
+        psi_initial = eigenvectors[:, s.initial_state] / la.norm(eigenvectors[:, s.initial_state])
     else:
-        psi_initial = subroutine2.init_state(eigenvectors_a, re_states, nos, s.nop, state_num)
+        psi_initial = subroutine2.init_state(eigenvectors_a, re_states, nos, s.nop, s.initial_state)
 
     # -----Sub-Routine 3 (Time Evolution and Von-Neumann Entropy)-----
 
@@ -379,12 +391,13 @@ def main(initial_values, lattice_a=None, lattice_b=None):
 
     # -----Output-----
     x = s.timesteps
+    chk = s.show_images
 
-    output.plot(x, vn_entropy_b, titles[0], y_labels[0], x_labels[0], y_limits[0], path_td, image_name[0], s.checkbox)
-    output.plot(x, vn_trace2_b, titles[1], y_labels[1], x_labels[0], y_limits[0], path_td, image_name[1], s.checkbox)
-    output.plot(x, sum_a, titles[2], y_labels[2], x_labels[0], y_limits[2], path_td, image_name[2], s.checkbox)
-    output.plot(x, sum_b, titles[3], y_labels[3], x_labels[0], y_limits[2], path_td, image_name[3], s.checkbox)
-    output.plot(x, sum_b + sum_a, titles[4], y_labels[4], x_labels[0], y_limits[2], path_td, image_name[4], s.checkbox)
+    output.plot(x, vn_entropy_b, titles[0], y_labels[0], x_labels[0], y_limits[0], path_td, image_name[0], chk)
+    output.plot(x, vn_trace2_b, titles[1], y_labels[1], x_labels[0], y_limits[0], path_td, image_name[1], chk)
+    output.plot(x, sum_a, titles[2], y_labels[2], x_labels[0], y_limits[2], path_td, image_name[2], chk)
+    output.plot(x, sum_b, titles[3], y_labels[3], x_labels[0], y_limits[2], path_td, image_name[3], chk)
+    output.plot(x, sum_b + sum_a, titles[4], y_labels[4], x_labels[0], y_limits[2], path_td, image_name[4], chk)
 
     # -----Terminate-----
     output.status(7)
@@ -392,9 +405,11 @@ def main(initial_values, lattice_a=None, lattice_b=None):
 
 
 if __name__ == '__main__':
-    # [nop, nsa, nol_a, t_initial, t_final, t_steps, Show images(1=YES), initial psi(1=eigenstate of entire system),
-    # eigenvector no., manually define lattice(1=YES), link position]
-    init_values = [1, 4, 4, 0.0, 50.0, 100, 0, 0, 0, 0, 0]
-    l_a = np.array([])
-    l_b = np.array([])
-    main(init_values)
+    """
+    init_values = [nop, nsa, nol_a, t_initial, t_final, t_steps, initial eigenvector no.]
+    opts = [Show images(1=YES), initial psi(1=eigenstate of entire system), manually define lattice(1=YES),
+    link position]
+    """
+    init_values = [1, 4, 4, 0.0, 50.0, 100, 0]
+    opts = [0, 0, 0, 0]
+    main(init_values, opts)
