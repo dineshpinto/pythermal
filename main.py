@@ -57,6 +57,7 @@ class System:
 
         # Manually define lattice sites
         if self.manual_lattice:
+
             # No. of sites in sub-lattice A
             self.nol_a = len(lat_a)
 
@@ -68,6 +69,7 @@ class System:
 
         # Automatically define lattice sites
         else:
+
             # No. of sites in sub-lattice A
             self.nol_a = int(initial_value[2])
 
@@ -90,8 +92,8 @@ class System:
     def lattice_generator(self):
         """
         Generates lattice for defined nsa and nol_a. Assumes square blocks for A and B. [DOES NOT BREAK SYMMETRY]
-        :return: Indices of lattice sites to be deleted to form whole lattice
-        :return: Indices of lattice sites to be deleted to form A
+        :return: Indices of lattice sites to be deleted to from whole lattice
+        :return: Indices of lattice sites to be deleted to from A
 
         """
         if self.nsa == 3 and self.nol_a == 4:
@@ -128,7 +130,7 @@ class System:
     @property
     def timesteps(self):
         """
-        :return: Array of times the system will be sampled
+        :return: Array of times at which the system will be sampled
 
         """
         # Time gap between successive time steps
@@ -195,7 +197,7 @@ class System:
     @property
     def check_existence(self):
         """
-        Checks whether variables exists on hard disk
+        Checks whether variables exists on hard disk.
         :return: Names of variables for storing on hard disk
         :return: Integer list whether files exists on hard disk(1) or not(0)
 
@@ -223,8 +225,8 @@ class System:
 def check_lattice(initial_values, options):
     """
     Runs checks to make sure all inputs are valid. Raises ValueError if not.
-    :param options: list of options from main()
-    :param initial_values: list of initial values from main()
+    :param options: List of options passed for execution
+    :param initial_values: List of initial values for system
 
     """
     if not initial_values[0] > 0:
@@ -250,16 +252,17 @@ def check_lattice(initial_values, options):
 def main(initial_values, options, lattice_a=None, lattice_b=None):
     """
     Contains calls to/control of all functions in program.
+    :param options: List of options for program execution
+    :param initial_values: List of initial values for system
     :param lattice_a: List of sites in A
     :param lattice_b: List of sites in B
     :return: True if execution successful
-    :param options: List of options for program execution
-    :param initial_values:
-    :return: True if execution was successful
 
     """
+    # Check lattice for invalid entries
     check_lattice(initial_values, options)
 
+    # Calls class System
     s = System(initial_values, options, lattice_a, lattice_b)
 
     # Folder path for given system
@@ -271,7 +274,7 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
     # Check existence of files on hard disk
     names, existence = s.check_existence
 
-    # -----Sub-Routine 1 (Eigenstates, Hamiltonian, Eigenvalues and Eigenvectors)-----
+    # -----subroutine1.py (Eigenstates, Hamiltonian, Eigenvalues and Eigenvectors)-----
 
     # Eigenstates
     if s.manual_lattice:
@@ -347,7 +350,6 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
     output.write_file(path_ti, 'RelabelledStates.csv', re_states)
 
     # Initial State
-
     if s.eigenvector_ab:
         psi_initial = eigenvectors[:, s.initial_state] / la.norm(eigenvectors[:, s.initial_state])
     else:
@@ -407,8 +409,9 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
 if __name__ == '__main__':
     """
     init_values = [nop, nsa, nol_a, t_initial, t_final, t_steps, initial eigenvector no.]
-    opts = [Show images(1=YES), initial psi(1=eigenstate of entire system), manually define lattice(1=YES),
+    opts = [Show images(1=YES), initial psi(1=eigenstate of entire system), manually define lattice(1=YES), 
     link position]
+    
     """
     init_values = [1, 4, 4, 0.0, 50.0, 100, 0]
     opts = [0, 0, 0, 0]

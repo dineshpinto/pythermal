@@ -1,5 +1,7 @@
 PyThermal - Time evolving bosons on a 2D crystal lattice
 --------------------------------------------------------
+PyThermal v1.2.0
+
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
@@ -10,22 +12,10 @@ Program to simulate n-particles on a 2D lattice, which is divided into two sub-l
 deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List and issues
+
 See [Open issues](https://github.com/dkpinto/PyThermal/issues) for details
 
 PyThermal also has a branch written in [cython](https://github.com/dkpinto/PyThermal/tree/cython). It is currently in beta.
-
-## Release Updates (v1.1.0)
-
-1. Built GUI for high level interfacing using Tkinter `$ python GUI.py`
-2. Initial values called from `main()`
-3. Redesigned plotting interface, `plotting()` is now generalized  
-4. Major update involving column vectors in `psi_initial()`
-5. Calls time correctly on both Windows and *nix systems
-6. Intelligent file structure management
-7. Progress bars added for all major loops
-8. Optimized calls to class System 
-9. SubRoutine function interchange 
-10. OOP concepts implemented throughout execution 
 
 ## Programmers Notes 
 

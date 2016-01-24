@@ -40,7 +40,6 @@ def eigenstates_lattice(lat, nop, lat_del_pos=None):
     return eigenstates, len(eigenstates)
 
 
-# Generates hamiltonian from the system's eigenstates
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
     for j in tqdm(range(start, stop)):  # Start/Stop defined by distribute()
 
@@ -70,7 +69,6 @@ def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
 
 
 def distribute(n_items, n_processes, i):
-    # Defines no. of items ([j] index in Hamiltonian) per process and starting point
     """
     Distributes processes among processors
     :param n_items: Total no. of items

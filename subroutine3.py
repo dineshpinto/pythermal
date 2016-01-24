@@ -56,7 +56,8 @@ def density_matrix_a(label, e_vec, nos, nol_a, nop):
     dim_a = int(sum_ncr(nol_a, nop + 1))
     density_mat_a = np.zeros(shape=(dim_a, dim_a), dtype=complex)
 
-    for i in range(nos):
+    for i in range(nos):    
+        
         for j in range(nos):
 
             if label[i][1] == label[j][1] and label[i][2] == label[j][2]:
@@ -92,6 +93,7 @@ def density_matrix_b(label, e_vec, nos, nol_b, nop):
     density_mat_b = np.zeros(shape=(dim_b, dim_b), dtype=np.complex, order='F')
 
     for i in range(nos):
+
         for j in range(nos):
 
             if label[i, 1] == label[j, 1] and label[i, 0] == label[j, 0]:
