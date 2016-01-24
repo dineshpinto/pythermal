@@ -37,16 +37,16 @@ This code requires the following modules:
 4. tqdm
 5. Tkinter(Py2) or tkinter(Py3)
 
-Execute without graphical interface: `python Main.py`
+Execute without graphical interface: `python main.py`
 
-Execute with graphical interface: `python GUI.py`
+Execute with graphical interface: `python gui.py`
 
 To control the threads used by OpenBLAS, call OpenMP when running the program:
 
-        OMP_NUM_THREADS=16 python Main.py 
+        OMP_NUM_THREADS=16 python main.py 
 or  
 
-        OMP_NUM_THREADS=16 python GUI.py 
+        OMP_NUM_THREADS=16 python gui.py 
         
         
 
