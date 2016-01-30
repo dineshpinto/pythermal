@@ -1,7 +1,8 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
 # PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
-# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+# Thermalization and Quantum Entanglement Project Group
+# St. Stephen's Centre for Theoretical Physics
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -87,7 +88,7 @@ def write_image(path, filename):
         except OSError:
             pass
 
-    print("Drawing to {}".format(filename))
+    print("Drawing to {}.png".format(filename))
     plt.savefig(path + filename, format='png', dpi=400)
 
     # Clears figure from plt (prevents multiple plots from interfering)
@@ -111,10 +112,12 @@ def read_file(path, filename, dtype=np.float64):
         raise IOError
 
 
-def plot(x, y, title=None, y_label=None, x_label=None, y_limit=None, path=None, filename=None, checkbox=None):
+def plot(x, y, title=None, y_label=None, x_label=None, y_limit=None, path=None,
+         filename=None, checkbox=None):
     # Plot area formatting
     """
-    Generate graphs using matplotlib, uses metadata from class System.plotting_method()
+    Generate graphs using matplotlib, uses metadata from class
+    System.plotting_method() in main.py
     :param x: x axis
     :param y: y axis
     :param title: Graph title

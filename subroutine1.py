@@ -1,7 +1,8 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
 # PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
-# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+# Thermalization and Quantum Entanglement Project Group
+# St. Stephen's Centre for Theoretical Physics
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -35,30 +36,52 @@ def eigenstates_lattice(lat, nop, lat_del_pos=None):
         eigenstates = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
     else:
         lat_del = np.delete(lat, lat_del_pos - 1)
-        eigenstates = np.array(list(it.combinations(lat_del, nop)), dtype=np.int32)
+        eigenstates = np.array(list(it.combinations(lat_del, nop)),
+                               dtype=np.int32)
 
     return eigenstates, len(eigenstates)
 
 
 def hamiltonian_2d(start, stop, nos, nsa, nop, eigenstates, queue, h):
+    """
+    :param start: Start iterations at this point
+    :param stop: Stop iterations at this point
+    :param nos: No. of states
+    :param nsa: Shape of lattice
+    :param nop: No. of particles
+    :param eigenstates: Array of eigenstates
+    :param queue: Multiprocessing queue to store each processes' output
+    :param h: Hamiltonian matrix
+
+    """
     for j in tqdm(range(start, stop)):  # Start/Stop defined by distribute()
 
         for k in range(nos):  # k iterates over all possibilities
 
             c = np.intersect1d(eigenstates[j], eigenstates[k])
-            c_sum = np.sum(c, dtype=np.int32)  # Sum of common elements
-            c_size = np.size(c)  # No. of common elements
-            j_sum = np.sum(eigenstates[j], dtype=np.int32)  # Sum of elements of m[j]
-            k_sum = np.sum(eigenstates[k], dtype=np.int32)  # Sum of elements of m[k]
+            # Sum of common elements
+            c_sum = np.sum(c, dtype=np.int32)
+            # No. of common elements
+            c_size = np.size(c)
 
-            if c_size == nop - 1:  # Only one element differs
+            j_sum = np.sum(eigenstates[j], dtype=np.int32)
+            k_sum = np.sum(eigenstates[k], dtype=np.int32)
 
-                if abs(j_sum - k_sum) == nsa:  # Element differs by dimension
+            if c_size == nop - 1:
+                # Only one element differs
+
+                if abs(j_sum - k_sum) == nsa:
+                    # Element differs by dimension
                     h[j, k] = float(1)
-                elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % nsa == 0:  # Right/Left edge
+
+                elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % nsa == 0:
+                    # Right/Left edge
                     h[j, k] = float(1)
-                elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % nsa == 1:  # Right/Left edge
+
+                elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % nsa == 1:
+                    # Right/Left edge
                     h[j, k] = float(1)
+
                 else:
                     continue
 
@@ -90,15 +113,24 @@ def distribute(n_items, n_processes, i):
     return start, stop
 
 
-# Uses parallel processes to call function, automatically reads no. of cores
 def parallel_call_hamiltonian(e_states, nos, nsa, nop):
+    """
+    Multiple parallel calls to hamiltonian_2d.
+    :param e_states: Array of eigenstates
+    :param nos: No. of states
+    :param nsa: Shape of lattice.
+    :param nop: No. of particles
+    :return: Hamiltonian matrix
+
+    """
     process_list = []
     queue = mp.Queue()  # Setting up a queue to store each processes' output
     h = np.zeros(shape=(nos, nos), dtype=np.float32)
-    n_processes = mp.cpu_count()  # No. of processes to create for parallel processing
+    # No. of processes to create for parallel processing
+    n_processes = mp.cpu_count()
 
     for i in range(n_processes):
-        start, stop = distribute(nos, n_processes, i)  # Start, stop points from distribute()
+        start, stop = distribute(nos, n_processes, i)
         args = (start, stop, nos, nsa, nop, e_states, queue, h)
 
         process = mp.Process(target=hamiltonian_2d, args=args)
@@ -119,8 +151,8 @@ def parallel_call_hamiltonian(e_states, nos, nsa, nop):
 
 def eigenvalvec(h):
     """
-    Calculates eigenvectors and eigenvalues used Pade algorithm (link to OpenBLAS Fortran
-    libraries for parallel processing)
+    Calculates eigenvectors and eigenvalues used Pade algorithm
+    (link to OpenBLAS Fortran libraries for parallel processing)
     :param h: Hamiltonian matrix
     :return: Real eigenvalues
     :return: Complex eigenvectors

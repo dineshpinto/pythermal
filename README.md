@@ -1,6 +1,6 @@
 PyThermal - Time evolving bosons on a 2D crystal lattice
 --------------------------------------------------------
-PyThermal v1.2.0
+PyThermal v1.3.0
 
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**

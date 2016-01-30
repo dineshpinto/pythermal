@@ -1,7 +1,8 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
 # PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
-# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+# Thermalization and Quantum Entanglement Project Group
+# St. Stephen's Centre for Theoretical Physics
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -25,33 +26,29 @@ def ncr(n, r):
     return f(n) // (f(r) * f(n - r))
 
 
-def relabel(e_states, nop, nol_b, link_pos=None, lat_b=None):
+def relabel(eigenstates, nop, nol_b, link_pos=None, lat_b=None):
     """
-    Relabels states
+    Relabels states.
     :param lat_b: Sub-lattice B
-    :return:
-    :param e_states: Eigenstates
+    :param eigenstates: Eigenstates
     :param nop: No. of particles
     :param link_pos: Site linking arrays
     :param nol_b: No. of lattice sites in B
-    :return:
+    :return: Array of relabelled states
 
     """
     x = np.zeros(shape=(2, nop + 1), dtype=np.int32)
-    y, dump = [], []
+    relabelled_states, dump = [], []
 
-    for state in e_states:
-        comm, temp = [], []
+    for state in eigenstates:
+        temp = []
 
         if lat_b is None:
-            n, comm = num_a(comm, state, link_pos)
-
-        elif link_pos is None:
-            n, comm = num_a_manual(comm, state, lat_b)
-
+            comm = [k for k in state if k <= link_pos]
         else:
-            raise Exception('Specify linking position or define sub-lattice B')
+            comm = [k for k in state if k not in lat_b]
 
+        n = len(comm)
         x[1][n] += 1
 
         if comm not in dump:
@@ -59,54 +56,37 @@ def relabel(e_states, nop, nol_b, link_pos=None, lat_b=None):
             dump.append(comm)
 
         temp += [x[0][n], n, x[1][n]]
-        y.append(temp)
+        relabelled_states.append(temp)
 
         if x[1][n] == ncr(nol_b, nop - n):
             x[1][n] = 0
 
-    return np.array(y)
+    return np.array(relabelled_states)
 
 
-def num_a(comm, state, link_pos):
-    n = 0
-    for j in state:
-        if j <= link_pos:
-            comm.append(j)
-            n += 1
-    return n, comm
-
-
-def num_a_manual(comm, state, lat_b):
-    n = 0
-    for j in state:
-        if j in lat_b:
-            comm.append(j)
-            n += 1
-
-    return n, comm
-
-
-def init_state(eigenvectors_a, relabelled_states, nos, nop, state_num):
+def init_state(eigenvectors_a, relabelled_states, nos, nop, eigenvector_num):
     """
-    Returns a normalized initial state by placing eigenvectors from A in a zero matrix
+    Returns a normalized initial state by placing eigenvectors from A in
+    a matrix of zeros.
     :param eigenvectors_a: Eigenvector of sub lattice A
     :param relabelled_states: Array of relabelled states
     :param nos: No. of states
     :param nop: No. of particles
-    :param state_num: Initial eigenvector chosen
+    :param eigenvector_num: Initial eigenvector chosen
     :return: Normalized initial state
 
     """
-    if state_num > len(eigenvectors_a):
-        raise ValueError('Eigenvector not in range. Range(0 - {})'.format(len(eigenvectors_a)))
+    if eigenvector_num > len(eigenvectors_a):
+        raise ValueError('Eigenvector not in range. Range(0 - {})'
+                         .format(len(eigenvectors_a)))
 
     psi_initial = np.zeros(nos, dtype=np.complex)
     j = 0
 
-    # Iterates over second column of RS
+    # Iterates over second column of relabelled states
     for idx, val in enumerate(relabelled_states[:, 1]):
         if val == nop:
-            psi_initial[idx] = eigenvectors_a[state_num, j]
+            psi_initial[idx] = eigenvectors_a[eigenvector_num, j]
             j += 1
 
     # Normalizes initial state

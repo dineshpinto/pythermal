@@ -1,7 +1,8 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
 # PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
-# Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics
+# Thermalization and Quantum Entanglement Project Group
+# St. Stephen's Centre for Theoretical Physics
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -23,6 +24,18 @@ except ImportError:
 import output
 
 
+def ncr(n, r):
+    """
+    Find nCr using floor/integer division
+    :param n: Total no. of items
+    :param r: No. of items chosen
+    :return: No. of combinations
+
+    """
+    f = mt.factorial
+    return f(n) // (f(r) * f(n - r))
+
+
 def sum_ncr(n, k):
     """
     Calculates nC0 + nC1 + ... + nCr
@@ -31,17 +44,10 @@ def sum_ncr(n, k):
     :return: Sum of combinations
 
     """
-    s = 0
-    f = mt.factorial
-
-    # Find nCr using floor/integer division
-    for r in range(k):
-        s += f(n) // (f(r) * f(n - r))
-
+    s = sum(ncr(n, r) for r in range(k))
     return s
 
 
-# Calculates the density matrix for sub-lattice A
 def density_matrix_a(label, e_vec, nos, nol_a, nop):
     """
     Calculates density matrix for sub-lattice B
@@ -68,11 +74,11 @@ def density_matrix_a(label, e_vec, nos, nol_a, nop):
 
     # Calculates trace & trace of square of density matrix A
     den_trace_a = np.trace(density_mat_a.real)
-    # den_trace_a2 = np.trace(np.linalg.matrix_power(density_mat_a, 2))
 
     # Error checking to make sure trace of DM remains ~1.0
-    if mt.fabs(den_trace_a - 1.0) > 1.0e-5:
-        output.warning('Trace of density matrix A is not 1, Trace=', den_trace_a)
+    if mt.fabs(den_trace_a - 1.0) > 1.0e-1:
+        output.warning('Trace of density matrix A is not 1, Trace=',
+                       den_trace_a)
 
     return density_mat_a
 
@@ -104,13 +110,24 @@ def density_matrix_b(label, e_vec, nos, nol_b, nop):
 
     # Calculate trace & trace square of density matrix B
     den_trace_b = np.trace(density_mat_b.real)
-    den_trace_b2 = np.trace(np.linalg.matrix_power(density_mat_b, 2))
 
     # Error checking to make sure trace of DM remains ~1.0
     if mt.fabs(den_trace_b - 1.0) > 1.0e-1:
-        output.warning('Trace of density matrix B is not 1, Trace=', den_trace_b)
+        output.warning('Trace of density matrix B is not 1, Trace=',
+                       den_trace_b)
 
-    return density_mat_b, den_trace_b2
+    return density_mat_b
+
+
+def trace_squared(density_matrix):
+    """
+    Calculate the trace of the square of the density matrix.
+    :param density_matrix: Density matrix
+    :return: Trace of the square of the density matrix
+
+    """
+    den_trace_squared = np.trace(np.linalg.matrix_power(density_matrix, 2))
+    return den_trace_squared
 
 
 def von_neumann_b(psi_array, relabelled_states, nos, nol_b, nop):
@@ -126,28 +143,33 @@ def von_neumann_b(psi_array, relabelled_states, nos, nol_b, nop):
 
     """
     entropy_b = np.zeros(len(psi_array), dtype=np.complex, order='F')
-    trace2_b = np.zeros(len(psi_array), dtype=np.float)
+    trace_squared_b = np.zeros(len(psi_array), dtype=np.float)
 
-    # [CAUTION] Replaces default warning(Below) and ignores future warnings within scope
+    # [CAUTION] Replaces default warning(Below) and ignores future warnings
+    # within von_neumann_b
     # Output.warning('The logm input matrix may be nearly singular')
     warnings.filterwarnings('ignore')
 
     idx = 0
     for psi_val in tqdm.tqdm(psi_array):
-        d_matrix_b, trace2_b[idx] = density_matrix_b(relabelled_states, psi_val, nos, nol_b, nop)
-        entropy_b[idx] = -1.0 * np.trace(np.dot(d_matrix_b, la.logm(d_matrix_b)))
+        d_matrix_b = density_matrix_b(relabelled_states, psi_val, nos, nol_b,
+                                      nop)
+        entropy_b[idx] = -1.0 * np.trace(np.dot(d_matrix_b,
+                                                la.logm(d_matrix_b)))
+        trace_squared_b[idx] = trace_squared(d_matrix_b)
         idx += 1
 
-    return entropy_b.real, trace2_b
+    return entropy_b.real, trace_squared_b
 
 
-def time_evolution(psi_initial, hamiltonian, nos, timestep_array, relabel_states, nop):
+def time_evolution(psi_initial, hamiltonian, nos, timestep_array,
+                   relabel_states, nop):
     """
     Psi evolved as |Psi(t)> = exp(-i * H * t)|Psi(0)>
     :param psi_initial: Initial state
     :param hamiltonian: Hamiltonian matrix
     :param nos: No. of states
-    :param timestep_array: Arrays of times
+    :param timestep_array: Array of times
     :param relabel_states: Relabelled states
     :param nop: No. of particles
     :return: Array of Psi(t)
@@ -155,7 +177,8 @@ def time_evolution(psi_initial, hamiltonian, nos, timestep_array, relabel_states
     :return: Avg. particles in sub-lattice B
 
     """
-    psi_t = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex, order='F')
+    psi_t = np.zeros(shape=(len(timestep_array), nos), dtype=np.complex,
+                     order='F')
     sum_a = np.zeros_like(timestep_array)
     sum_b = np.zeros_like(timestep_array)
 
@@ -165,8 +188,11 @@ def time_evolution(psi_initial, hamiltonian, nos, timestep_array, relabel_states
         psi_t[idx] = np.dot(la.expm(-1.0j * hamiltonian * t), psi_initial)
 
         for idx2, val in enumerate(relabel_states[:, 1]):
-            sum_a[idx] += (np.vdot(psi_t[idx, idx2], psi_t[idx, idx2])).real * val
-            sum_b[idx] += (np.vdot(psi_t[idx, idx2], psi_t[idx, idx2])).real * (nop - val)
+            sum_a[idx] += \
+                (np.vdot(psi_t[idx, idx2], psi_t[idx, idx2])).real * val
+            sum_b[idx] += \
+                (np.vdot(psi_t[idx, idx2], psi_t[idx, idx2])).real * (nop -
+                                                                      val)
 
         idx += 1
 
