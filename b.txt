@@ -1,7 +1,0 @@
-# Enter sub-lattice B here as a column, lattice indices start from 1
-4
-5
-6
-7
-8
-10
