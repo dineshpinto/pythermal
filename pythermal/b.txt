@@ -1,7 +1,17 @@
-# Enter sub-lattice B here as a column, lattice indices start from 1
-4
-5
-6
-7
-8
-10
+#   An example lattice [1]
+#   a   a   a   a   a
+#   a   a   a   a   x
+#   a   a   a   x   b
+#   a   x   b   b   b
+#   x   b   b   b   b
+# [1] arXiv:0708.1324v2, 11 Jun 2009, Thermalization and its mechanism for
+# generic isolated quantum systems
+# Lattice sites in sub-lattice B
+15
+18
+19
+20
+22
+23
+24
+25

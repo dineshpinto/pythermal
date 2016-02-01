@@ -2,7 +2,7 @@
 #
 # PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
-# St. Stephen's Centre for Theoretical Physics
+# St. Stephen's Centre for Theoretical Physics, New Delhi
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -22,25 +22,25 @@ except ImportError:
     import Tkinter as tk
     import ttk
 
-import main
+from main import __version__
+import about
 
-__author__ = "D. Pinto"
 __all__ = ['fetch', 'graphical_interface', 'execute']
 
 
 # Set input text fields
-fields = ['Total no. of particles', 'Shape of lattice',
+fields = ['Total no. of particles*', 'Shape of lattice',
           'No. of sites in sub-lattice A',
-          'Start evolving at', 'Stop evolving at',
-          'Time steps',
-          'Initial Eigenvector (Ground state = 0)']
+          'Start evolving at*', 'Stop evolving at*',
+          'Time steps*',
+          'Initial Eigenvector (Ground state = 0)*']
 
 fields2 = ['Show images during execution',
            'Initialize with eigenvector of entire system '
            '(default is eigenvector of A)',
            'Manually define sub-lattices A and B (optional, '
            'create text \nfiles "a.txt" and "b.txt" '
-           'in same folder with lattice sites as columns)']
+           'in same folder with lattice sites as columns)*']
 
 fields_func = ['Hamiltonian of whole system', 'Hamiltonian of sub-lattice A',
                'Eigenvalues of whole system', 'Eigenvectors of whole system',
@@ -87,7 +87,7 @@ def graphical_interface(base):
     for field in fields:
         row = ttk.Frame(base)
 
-        label = ttk.Label(row, width=40, text=field + ':', anchor='w')
+        label = ttk.Label(row, width=40, text=field, anchor='w')
         entry = ttk.Entry(row)
 
         entry.insert(0, '0')
@@ -129,6 +129,7 @@ def execute(initial_values, optional_values):
         lat_a, lat_b = None, None
 
     try:
+        import main
         main.main(initial_values, optional_values, lat_a, lat_b)
     except Exception as e:
         print(e, traceback.format_exc())
@@ -137,7 +138,8 @@ def execute(initial_values, optional_values):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('PyThermal')
+    root.title('PyThermal {}'.format(__version__))
+    about.about()
 
     # Setting icon for window
     try:

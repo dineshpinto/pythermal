@@ -1,41 +1,62 @@
-"""
-Command line output of information on PyTehermal and its dependencies. 
-"""
+# This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+#
+# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# Thermalization and Quantum Entanglement Project Group
+# St. Stephen's Centre for Theoretical Physics, New Delhi
+#
+# Project Mentor: Dr. A. Gupta
+# Project Students: A. Kumar, D. Pinto and M. Ghosh
+
 from __future__ import print_function
-import sys
-import os
-import platform
-import numpy
-import scipy
+
 import multiprocessing
+import platform
+import sys
+
 from main import __version__
 
-__all__ = ['about_pythermal']
+__all__ = ['about']
 
 
-def about_pythermal():
+# noinspection PyUnresolvedReferences
+def about():
     """
-    Gives version numbers for PyThermal, 
-    NumPy, SciPy, MatPlotLib and tqdm.
-    
+    Checks dependencies and return version numbers for PyThermal.
     """
-    print("")
+
     print("PyThermal - Time evolving bosons on a 2D crystal lattice")
-    print("Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics")
+    print("Thermalization and Quantum Entanglement Project Group, "
+          "St. Stephen's Centre for Theoretical Physics")
     print("")
     print("PyThermal version: {}".format(__version__))
-    print("NumPy Version: {}".format(numpy.__version__))
-    print("SciPy Version: {}".format(scipy.__version__))
+    try:
+        import numpy
+        print("NumPy Version: {}".format(numpy.__version__))
+    except ImportError:
+        sys.stderr.write("[REQUIRED] Unable to import the 'numpy' module")
+
+    try:
+        import scipy
+        print("SciPy Version: {}".format(scipy.__version__))
+    except ImportError:
+        sys.stderr.write("[REQUIRED] Unable to import the 'scipy' module")
+
     try:
         import matplotlib
-        matplotlib_ver = matplotlib.__version__
-    except:
-        matplotlib_ver = 'None'
-    print("Matplotlib Version: {}".format(matplotlib_ver))
-    print("Python Version: {}{}{}".format(sys.version_info[0:3]))
-    print("Number of CPUs: {}".format(multiprocessing.cpucount())
+        print("Matplotlib Version: {}".format(matplotlib.__version__))
+    except ImportError:
+        sys.stderr.write("[REQUIRED] Unable to import the 'matplotlib' module")
+
+    try:
+        import tqdm
+        print("tqdm Version: {}".format(tqdm.__version__))
+    except ImportError:
+        sys.stderr.write("[REQUIRED] Unable to import the 'tqdm' module")
+
+    print("Python Version: {}".format(platform.python_version()))
+    print("Number of CPUs: {}".format(multiprocessing.cpu_count()))
     print("Platform Info: {} {}".format(platform.system(), platform.machine()))
     print("")
 
 if __name__ == "__main__":
-    about_pythermal()
+    about()

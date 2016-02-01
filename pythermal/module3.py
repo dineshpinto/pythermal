@@ -24,7 +24,7 @@ except ImportError:
 import output
 
 __all__ = ['ncr', 'sum_ncr', 'density_matrix_a', 'density_matrix_b',
-           'trace_squared', 'von_neumann_b', 'time_evolution',
+           'trace_squared', 'vn_entropy_b', 'time_evolution',
            'particle_counter']
 
 
@@ -134,7 +134,7 @@ def trace_squared(a):
     return tr_squared
 
 
-def von_neumann_b(psi_t, label, nos, nol_b, nop):
+def vn_entropy_b(psi_t, label, nos, nol_b, nop):
     """
     Calculates Von-Neumann entropy as entropy = - tr(rho * ln(rho))
     :param psi_t: Psi(t)
