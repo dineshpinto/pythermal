@@ -1,6 +1,6 @@
 PyThermal - Time evolving bosons on a 2D crystal lattice
 --------------------------------------------------------
-PyThermal v1.4.0
+PyThermal v1.4.5
 
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
@@ -11,7 +11,7 @@ PyThermal v1.4.0
 Program to simulate n-particles on a 2D lattice, which is divided into two sub-lattices after
 deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
-## Task List and issues
+## Task List and Issues
 
 See [Open issues](https://github.com/dkpinto/PyThermal/issues) for details
 
