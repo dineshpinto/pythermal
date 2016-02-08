@@ -74,7 +74,8 @@ def fetch(values, values2):
 
 def graphical_interface(base):
     """
-    Base layout for text fields and their labels.
+    Base layout for text fields and their labels. The order in which they
+    are placed matters. This may be addressed in a future update.
     :param base: Root
     :return: List of entries
 
@@ -138,8 +139,8 @@ def execute(initial_values, optional_values):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('PyThermal {}'.format(__version__))
-    about.about()
+    root.title('PyThermal GUI {} (Alpha build)'.format(__version__))
+    about.about(test=False)
 
     # Setting icon for window
     try:

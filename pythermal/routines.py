@@ -23,13 +23,14 @@ try:
 except ImportError:
     from __builtin__ import range
 
-__all__ = ['eigenstates_lattice', 'hamiltonian_2d', 'distribute',
+__all__ = ['position_states', 'hamiltonian_2d', 'distribute',
            'parallel_call_h', 'eig', 'ncr', 'sum_ncr', 'relabel',
            'initial_state', 'density_matrix_a', 'density_matrix_b',
-           'trace_squared', 'vn_entropy_b', 'time_evolution', 'avg_particles']
+           'trace_squared', 'vn_entropy_b', 'time_evolution',
+           'avg_particles', 'state_initializer', 'epsilon']
 
 
-def eigenstates_lattice(lat, nop, del_pos=None):
+def position_states(lat, nop, del_pos=None):
     """
     Returns eigenstates for a given lattice & particles after deleting sites
     :param lat: Array of lattice sites
@@ -40,13 +41,13 @@ def eigenstates_lattice(lat, nop, del_pos=None):
 
     """
     if del_pos is None:
-        e_states = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
+        pos_states = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
     else:
         lat_del = np.delete(lat, del_pos - 1)
-        e_states = np.array(list(it.combinations(lat_del, nop)),
-                            dtype=np.int32)
+        pos_states = np.array(list(it.combinations(lat_del, nop)),
+                              dtype=np.int32)
 
-    return e_states, len(e_states)
+    return pos_states, len(pos_states)
 
 
 def hamiltonian_2d(start, stop, nos, ndims, nop, e_states, queue, h):
@@ -197,13 +198,12 @@ def sum_ncr(n, k):
     return sum(ncr(n, r) for r in range(k))
 
 
-def relabel(e_states, nop, nol_b, link_pos=None, lat_b=None):
+def relabel(e_states, nop, nol_b, lat_a=None):
     """
     Relabels states.
-    :param lat_b: Sub-lattice B
+    :param lat_a: Sub-lattice B
     :param e_states: Eigenstates
     :param nop: No. of particles
-    :param link_pos: Site linking arrays
     :param nol_b: No. of lattice sites in B
     :return: Array of relabelled states
 
@@ -214,14 +214,9 @@ def relabel(e_states, nop, nol_b, link_pos=None, lat_b=None):
     for state in e_states:
         temp = []
 
-        if link_pos is not None:
-            comm = [k for k in state if k <= link_pos]
-        elif lat_b is not None:
-            comm = [k for k in state if k not in lat_b]
-        else:
-            raise ValueError('Unspecified link point for lattices.')
-
+        comm = [k for k in state if k in lat_a]
         n = len(comm)
+
         x[1][n] += 1
 
         if comm not in dump:
@@ -253,7 +248,6 @@ def initial_state(e_vec, label, nos, nop, e_vec_num):
     if e_vec_num > len(e_vec):
         raise ValueError('Eigenvector not in range. Range(0 - {})'
                          .format(len(e_vec)))
-    print(len(e_vec))
     psi_initial = np.zeros(nos, dtype=np.complex)
 
     j = 0
@@ -328,7 +322,7 @@ def density_matrix_b(label, e_vec, nos, nol_b, nop):
     tr_rho = np.trace(rho_b, dtype=float)
 
     if mt.fabs(tr_rho - 1.0) > 1.0e-1:
-        warnings.warn('Trace of density matrix B not 1, Trace=', tr_rho)
+        print('Trace of density matrix B not 1, Trace=', tr_rho)
 
     return rho_b
 
@@ -402,8 +396,8 @@ def avg_particles(psi_t, timesteps, labels, nop):
     :return: Avg. particles in sub-lattice B
 
     """
-    avg_a = np.zeros_like(timesteps, dtype=np.int32)
-    avg_b = np.zeros_like(timesteps, dtype=np.int32)
+    avg_a = np.zeros_like(timesteps)
+    avg_b = np.zeros_like(timesteps)
 
     for idx in range(len(timesteps)):
         for idx2, val in enumerate(labels[:, 1]):
@@ -412,3 +406,100 @@ def avg_particles(psi_t, timesteps, labels, nop):
             avg_b[idx] += fraction * (nop - val)
 
     return avg_a, avg_b
+
+
+def state_initializer(e_vals, e_vecs, num=None):
+    """
+    Returns a set of normalized eigenvectors. If num is not specified uses
+    average difference between eigenvalues to evenly space out eigenvalues.
+    If num is specified, just generates a list of size [num] of eigenvalues.
+    :param e_vals: Eigenvalues
+    :param e_vecs: Eigenvectors
+    :param num: Number of eigenvalues (optional)
+    :return: Normalized initial states
+
+    """
+    if num is not None:
+        length = len(e_vals)
+        step = length // num
+
+        if num < 2:
+            raise ValueError('No. of eigenstates chosen is too small[{}]. '
+                             'Min is 2'.format(num))
+
+        if num > length:
+            raise ValueError('Too many eigenstates chosen[{}]. Max is [{}].'
+                             .format(num, length))
+        idx_array = [i for i in range(0, len(e_vals) - step, step)]
+    else:
+        eps = epsilon(e_vals)
+
+        idx_array = [0]
+        a = e_vals[0]
+        for idx, eigenvalue in enumerate(e_vals):
+            if eigenvalue - a >= eps:
+                idx_array.append(idx)
+                a = eigenvalue
+
+    initial_states = [e_vecs[:, idx] / la.norm(e_vecs[:, idx]) for idx in
+                      idx_array]
+    initial_eigenvalues = [e_vals[idx] for idx in idx_array]
+    return np.array(initial_states), initial_eigenvalues
+
+
+def epsilon_alt(eigenvalues):
+    """
+    Defines an epsilon based on the average distance between
+    eigenvalues.
+    :param eigenvalues: Eigenvalues of system
+
+    """
+    diff = [0] * (len(eigenvalues) - 1)
+
+    for idx in range(len(eigenvalues) - 1):
+        diff[idx] = abs(eigenvalues[idx + 1] - eigenvalues[idx])
+
+    return sum(diff) / len(diff)
+
+
+def epsilon(eigenvalues):
+    """
+    Defines an epsilon based on the average distance between
+    eigenvalues. Approx twice as fast as epsilon().
+    :param eigenvalues: Eigenvalues
+    :return: Average difference between sucessive eigenvalues
+
+    """
+    iterable = iter(eigenvalues)
+    prev = next(iterable)
+
+    s = 0
+    for element in iterable:
+        s += element - prev
+        prev = element
+
+    return s / len(eigenvalues)
+
+
+def h_block_diagonal(lat_b, ndims, nop):
+    nol_b = len(lat_b)
+    size = sum_ncr(nol_b, nop + 1)
+    h_bd = np.zeros(shape=(size, size), dtype=int)
+
+    for k in range(nop + 1):
+        pos_states_b, nos_b = position_states(lat_b, k)
+        hamiltonian_b = parallel_call_h(pos_states_b, nos_b, ndims, k)
+
+        a = ncr(nol_b, k)
+        b = sum_ncr(nol_b, k)
+
+        for i in range(a):
+            for j in range(a):
+                h_bd[i + b, j + b] = hamiltonian_b[i, j]
+
+    if np.allclose(np.transpose(h_bd), h_bd):
+        print("Block diagonal is symmetric")
+    else:
+        print("Block diagonal is not symmetric")
+
+    return h_bd

@@ -9,27 +9,38 @@
 
 from __future__ import print_function, division, absolute_import
 
-import math as mt
 import os
 import time
+
+if 'OPENBLAS_MAIN_FREE' not in os.environ:
+    os.environ['OPENBLAS_MAIN_FREE'] = '1'
+
+if 'MKL_NUM_THREADS' not in os.environ:
+    os.environ['MKL_NUM_THREADS'] = '1'
+
+if 'OPENBLAS_NUM_THREADS' not in os.environ:
+    os.environ['OPENBLAS_NUM_THREADS'] = '1'
+
+if 'OMP_NUM_THREADS' not in os.environ:
+    os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 import numpy as np
 import scipy.linalg as la
 
 from output import status, write_file, read_file, plotting
-from routines import (eigenstates_lattice, parallel_call_h, eig, relabel,
+from routines import (position_states, parallel_call_h, eig, relabel,
                       initial_state, vn_entropy_b, time_evolution,
-                      avg_particles)
+                      avg_particles, h_block_diagonal)
+
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, SSCTP"
-__version__ = "v1.4.0"
+__version__ = "v1.5.0"
 
 
-class System:
-    def __init__(self, initial_value, option, lattice_a=None, lattice_b=None):
+class MetaSystem:
+    def __init__(self, initial_value, lattice_a=None, lattice_b=None):
         """
         Stores metadata about the system.
-
         :param initial_value: List of initial state values of the system
         :param lattice_a: Lattice sites in A (only used when manually
         defining lattice)
@@ -40,104 +51,31 @@ class System:
         # No of particles
         self.nop = int(initial_value[0])
 
+        # Dimensionality of lattice
+        self.ndims = int(initial_value[1])
+
         # Time Evolution - starting time, ending time and no. of time steps
-        self.t_initial = float(initial_value[3])
-        self.t_final = float(initial_value[4])
-        self.t_steps = int(initial_value[5])
+        self.t_initial = float(initial_value[2])
+        self.t_final = float(initial_value[3])
+        self.t_steps = int(initial_value[4])
 
         # Initial state for psi_initial
-        self.state_num = int(initial_value[6])
-
-        # Show images during execution (0=NO & 1=YES)
-        self.show_images = option[0]
+        self.state_num = int(initial_value[5])
 
         # Set initial state as an eigenvector of entire system (0=NO & 1=YES)
-        self.eigenvector_of_ab = option[1]
+        self.eigenvector_of_ab = int(initial_value[6])
 
-        # Manually define lattice
-        self.manual_lattice = option[2]
+        # No. of sites in sub-lattice A
+        self.nol_a = len(lattice_a)
 
-        if self.manual_lattice:
-            # Manually define lattice sites
-            self.ndims = 5
+        # No. of sites in sub-lattice B
+        self.nol_b = len(lattice_b)
 
-            # No. of sites in sub-lattice A
-            self.nol_a = len(lattice_a)
-
-            # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
-            self.nol = len(lattice_a) + len(lattice_b)
-
-            # No. of sites in sub-lattice B
-            self.nol_b = len(lattice_b)
-
-        else:
-            # Automatically define lattice sites
-
-            # Dimension of square 2D array i.e. ndims = 2(2x2), 3(3x3)
-            self.ndims = int(initial_value[1])
-
-            # No. of sites in sub-lattice A
-            self.nol_a = int(initial_value[2])
-
-            # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
-            self.nol = self.ndims * self.ndims
-
-            # Lattice sites to delete for particular values of nsa & nol_a
-            self.lat_del_pos, self.lat_del_pos_a = self.lattice_generator
-
-            # No. of sites in sub-lattice B
-            self.nol_b = self.nol - (self.nol_a + len(self.lat_del_pos)) + 1
-
-            # Site joining sub-lattice A and B (numbered after deleting sites)
-            self.link_pos = ((mt.sqrt(self.nol_a) * self.ndims) -
-                             (self.ndims - mt.sqrt(self.nol_a)))
+        # No of  lattice sites before deletion eg. nsa = 3 => nol = 9
+        self.nol = len(lattice_a) + len(lattice_b)
 
         # Lattice before deleting sites
         self.lat = np.arange(1, self.nol + 1, dtype=np.int32)
-
-    @property
-    def lattice_generator(self):
-        """
-        Generates lattice for defined nsa and nol_a. Assumes square blocks
-        for A and B. [DOES NOT BREAK SYMMETRY]
-        :return: Indices of lattice sites to be deleted to from whole lattice
-        :return: Indices of lattice sites to be deleted to from A
-
-        """
-        if self.ndims == 3 and self.nol_a == 4:
-            self.lat_del_pos = np.array([3, 7])
-            self.lat_del_pos_a = np.array([3, 6, 7, 8, 9])
-
-        elif self.ndims == 4 and self.nol_a == 4:
-            self.lat_del_pos = np.array([3, 4, 9, 13])
-            self.lat_del_pos_a = np.array([3, 4, 7, 8, 9, 10, 11, 12, 13, 14,
-                                           15, 16])
-
-        elif self.ndims == 4 and self.nol_a == 9:
-            self.lat_del_pos = np.array([4, 8, 13, 14])
-            self.lat_del_pos_a = np.array([4, 8, 12, 13, 14, 15, 16])
-
-        elif self.ndims == 5 and self.nol_a == 4:
-            self.lat_del_pos = np.array([3, 4, 5, 11, 16, 21])
-            self.lat_del_pos_a = np.array([3, 4, 5, 8, 9, 10, 11, 12, 13, 14,
-                                           15, 16, 17, 18, 19, 20, 21, 22, 23,
-                                           24, 25])
-
-        elif self.ndims == 5 and self.nol_a == 9:
-            self.lat_del_pos = np.array([4, 5, 9, 10, 16, 17, 21, 22])
-            self.lat_del_pos_a = np.array([4, 5, 9, 10, 14, 15, 16, 17, 18, 19,
-                                           20, 21, 22, 23, 24, 25])
-
-        elif self.ndims == 5 and self.nol_a == 16:
-            self.lat_del_pos = np.array([5, 10, 15, 21, 22, 23])
-            self.lat_del_pos_a = np.array([5, 10, 15, 21, 21, 22, 23, 24, 25])
-
-        else:
-            raise Exception('Lattice shape {0}x{0} with {1} lattice sites in A'
-                            ' not supported. Unable to delete sites.'
-                            .format(self.ndims, self.nol_a))
-
-        return self.lat_del_pos, self.lat_del_pos_a
 
     @property
     def timesteps(self):
@@ -158,16 +96,16 @@ class System:
         """
         :return: Path for storing time independent variables
         """
-        return '../Output_PyThermal/TI-{}_{}_{}/' \
-            .format(self.nop, self.ndims, self.nol_a)
+        return ('../Output_PyThermal/TI-{}_{}_{}/'
+                .format(self.nop, self.ndims, self.nol_a))
 
     @property
     def folder_path_td(self):
         """
         :return: Path for storing time dependent variables
         """
-        return '../Output_PyThermal/TD-{}_{}_{}_{}/' \
-            .format(self.nop, self.ndims, self.nol_a, self.t_final)
+        return ('../Output_PyThermal/TD-{}_{}_{}_{}/'
+                .format(self.nop, self.ndims, self.nol_a, self.t_final))
 
     @staticmethod
     def variable_names():
@@ -177,7 +115,7 @@ class System:
         """
         names = ['Hamiltonian.csv', 'Hamiltonian_A.csv', 'Eigenvalues.csv',
                  'Eigenvectors.csv', 'Eigenvalues_A.csv', 'Eigenvectors_A.csv',
-                 'Psi.csv', 'Sum_A.csv', 'Sum_B.csv', 'VN_Entropy_B.csv',
+                 'Psi_t.csv', 'Avg_A.csv', 'Avg_B.csv', 'VN_Entropy_B.csv',
                  'VN_Trace2_B']
 
         return names
@@ -186,30 +124,30 @@ class System:
     def check_existence(self):
         """
         Checks whether variables exists on hard disk.
-        :return: Names of variables for storing on hard disk
         :return: Integer list whether files exists on hard disk(1) or not(0)
 
         """
         names = self.variable_names()
-        existence = [0] * len(names)
+        existence = [False] * len(names)
 
         for idx, name in enumerate(names):
 
             if os.path.isfile(self.folder_path_ti + name):
-                existence[idx] = 1
+                existence[idx] = True
                 print('{} exists at {}'.format(name, self.folder_path_ti))
 
             elif os.path.isfile(self.folder_path_td + name):
-                existence[idx] = 1
+                existence[idx] = True
                 print('{} exists at {}'.format(name, self.folder_path_td))
 
             else:
                 print('{} does not exist'.format(name))
-
         print('')
-        return names, existence
+
+        return existence
 
 
+# :TODO: Rewrite check_lattice for manual definition of A and B
 def check_lattice(initial_values, options):
     """
     Runs checks to make sure all inputs are valid. Raises ValueError if not.
@@ -242,33 +180,47 @@ def check_lattice(initial_values, options):
 def main(initial_values, options, lattice_a=None, lattice_b=None):
     """
     Contains calls to/control of all functions in program.
+
     :param options: List of options for program execution
+        options = [
+            Show images(1=YES),
+            Check for files on disk(1=YES)]
+
     :param initial_values: List of initial values for system
+        initial_values = [
+            Total no. of particles(nop),
+            Dimension of lattice(ndims),
+            t_initial,
+            t_final,
+            t_steps,
+            initial eigenvector no.,
+            initial psi(1=eigenstate of entire system)]
+
     :param lattice_a: List of sites in A
     :param lattice_b: List of sites in B
     :return: True if execution successful
 
     """
+    if lattice_a is None or lattice_b is None:
+        raise ValueError('Enter both lattice A and lattice B')
 
-    if not options[2]:
-        check_lattice(initial_values, options)
-    s = System(initial_values, options, lattice_a, lattice_b)
+    s = MetaSystem(initial_values, lattice_a, lattice_b)
     path_ti, path_td = s.folder_path_ti, s.folder_path_td
-    names, existence = s.check_existence
+    names = s.variable_names()
+
+    if options[1]:
+        existence = s.check_existence
+    else:
+        existence = [False] * len(names)
 
     tot_time1 = time.time()
 
     # Eigenstates
-    if s.manual_lattice:
-        eigenstates, nos = eigenstates_lattice(s.lat, s.nop)
-        eigenstates_a, nos_a = eigenstates_lattice(lattice_a, s.nop)
-    else:
-        eigenstates, nos = eigenstates_lattice(s.lat, s.nop, s.lat_del_pos)
-        eigenstates_a, nos_a = eigenstates_lattice(s.lat, s.nop,
-                                                   s.lat_del_pos_a)
+    pos_states, nos = position_states(s.lat, s.nop)
+    pos_states_a, nos_a = position_states(lattice_a, s.nop)
     status(1)
-    write_file(path_ti, 'Eigenstates.csv', eigenstates, fmt='%1d')
-    write_file(path_ti, 'Eigenstates_A.csv', eigenstates_a, fmt='%1d')
+    write_file(path_ti, 'PositionStates.csv', pos_states, fmt='%1d')
+    write_file(path_ti, 'PositionStates_A.csv', pos_states_a, fmt='%1d')
 
     # Hamiltonian
     h_time1 = time.time()
@@ -278,21 +230,25 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
     else:
         # Otherwise generates Hamiltonian
         print('Hamiltonian...')
-        hamiltonian = parallel_call_h(eigenstates, nos, s.ndims, s.nop)
+        hamiltonian = parallel_call_h(pos_states, nos, s.ndims, s.nop)
         write_file(path_ti, names[0], hamiltonian, fmt='%1d')
 
     if existence[1]:
         hamiltonian_a = read_file(path_ti, names[1])
     else:
-        hamiltonian_a = parallel_call_h(eigenstates_a, nos_a, s.ndims, s.nop)
+        hamiltonian_a = parallel_call_h(pos_states_a, nos_a, s.ndims, s.nop)
         write_file(path_ti, names[1], hamiltonian_a, fmt='%1d')
     h_time2 = time.time()
     status(2, h_time2 - h_time1)
 
+    # Block diagonal of Hamiltonian
+    h_bd = h_block_diagonal(lattice_b, s.ndims, s.nop)
+    write_file(path_ti, 'H_BD.csv', h_bd, fmt='%1d')
+
     # Eigenvalues and Eigenvectors
     e_time1 = time.time()
     if existence[2] and existence[3]:
-        # eigenvalues = Output.read_file(path_ti, names[2])
+        eigenvalues = read_file(path_ti, names[2])
         eigenvectors = read_file(path_ti, names[3], dtype=complex)
     else:
         print('Diagonalizing...')
@@ -314,16 +270,18 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
 
     # State Relabelling
     r_time1 = time.time()
-    if s.manual_lattice:
-        # Pass lattice B for relabelling (when manually defining lattice)
-        re_states = relabel(eigenstates, s.nop, s.nol_b, link_pos=None,
-                            lat_b=lattice_b)
-    else:
-        re_states = relabel(eigenstates, s.nop, s.nol_b,
-                            link_pos=s.link_pos, lat_b=None)
+    labels = relabel(pos_states, s.nop, s.nol_b, lat_a=lattice_a)
     r_time2 = time.time()
     status(4, r_time2 - r_time1)
-    write_file(path_ti, 'RelabelledStates.csv', re_states)
+    write_file(path_ti, 'RelabelledStates.csv', labels)
+
+    # :TODO: Finds density matrix for a given number of pos_states
+    # states, eigenvals = state_initializer(eigenvalues, eigenvectors, num=66)
+    # write_file(path_ti, 'states.csv', states)
+    # for idx, state in enumerate(states):
+    #     d_matrix = density_matrix_b(labels, state, nos, s.nol_b, s.nop)
+    #     filename = 'density_b[{}].csv'.format(eigenvals[idx])
+    #     write_file(path_ti, filename, d_matrix)
 
     # Initial State
     if s.eigenvector_of_ab:
@@ -332,7 +290,7 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
         psi_initial = chosen_eigenvector / la.norm(chosen_eigenvector)
     else:
         # Initial state as eigenvector of A
-        psi_initial = initial_state(eigenvectors_a, re_states, nos, s.nop,
+        psi_initial = initial_state(eigenvectors_a, labels, nos, s.nop,
                                     s.state_num)
 
     # Time Evolution
@@ -351,7 +309,7 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
         avg_a = read_file(path_td, names[7])
         avg_b = read_file(path_td, names[8])
     else:
-        avg_a, avg_b = avg_particles(psi_t, s.timesteps, re_states, s.nop)
+        avg_a, avg_b = avg_particles(psi_t, s.timesteps, labels, s.nop)
         write_file(path_td, names[7], avg_a)
         write_file(path_td, names[8], avg_b)
 
@@ -359,18 +317,17 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
     vn_time1 = time.time()
     if existence[9] and existence[10]:
         entropy_b = read_file(path_td, names[9], dtype=complex)
-        trace_sqr_b = read_file(path_td, names[10])
+        tr_sqr_b = read_file(path_td, names[10])
     else:
         print('Von-Neumann Entropy...')
-        entropy_b, trace_sqr_b = vn_entropy_b(psi_t, re_states, nos,
-                                              s.nol_b, s.nop)
+        entropy_b, tr_sqr_b = vn_entropy_b(psi_t, labels, nos, s.nol_b, s.nop)
         write_file(path_td, names[9], entropy_b)
-        write_file(path_td, names[10], trace_sqr_b)
+        write_file(path_td, names[10], tr_sqr_b)
     vn_time2 = time.time()
     status(6, vn_time2 - vn_time1)
 
-    plotting(entropy_b, trace_sqr_b, avg_a, avg_b, path_td,
-             s.timesteps, s.show_images)
+    plotting(entropy_b, tr_sqr_b, avg_a, avg_b, path_td, s.timesteps,
+             options[0])
 
     tot_time2 = time.time()
     status(7, tot_time2 - tot_time1)
@@ -379,22 +336,24 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
 
 if __name__ == '__main__':
     """
-    init_values = [nop, nsa, nol_a, t_initial, t_final, t_steps,
-    initial eigenvector no.]
+    init_values = [
+    Total no. of particles(nop),
+    Dimension of lattice(ndims),
+    t_initial,
+    t_final,
+    t_steps,
+    initial eigenvector no.,
+    initial psi(1=eigenstate of entire system)]
 
-    opts = [Show images(1=YES), initial psi(1=eigenstate of entire system),
-    manually define lattice(1=YES)]
+    opts = [
+    Show images(1=YES),
+    Check for files on disk(1=YES)]
     
     """
-    init_values = [2, 4, 4, 0.0, 5.0, 10, 0]
-    opts = [0, 0, 0]
+    init_values = [2, 5, 0.0, 10.0, 50, 0, 0]
+    opts = [0, 0]
 
-    if opts[2]:
-        # Define lattices A and B manually
-        lat_a = np.genfromtxt('a.txt', dtype=int)
-        lat_b = np.genfromtxt('b.txt', dtype=int)
-        main(init_values, opts, lat_a, lat_b)
-
-    else:
-        # Use automatic definition for lattices A and B
-        main(init_values, opts)
+    # Define lattices A and B
+    lat_a = np.genfromtxt('a.txt', dtype=int)
+    lat_b = np.genfromtxt('b.txt', dtype=int)
+    main(init_values, opts, lat_a, lat_b)

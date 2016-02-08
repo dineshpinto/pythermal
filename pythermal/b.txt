@@ -4,8 +4,7 @@
 #   a   a   a   x   b
 #   a   x   b   b   b
 #   x   b   b   b   b
-# [1] arXiv:0708.1324v2, 11 Jun 2009, Thermalization and its mechanism for
-# generic isolated quantum systems
+#
 # Lattice sites in sub-lattice B
 15
 18
