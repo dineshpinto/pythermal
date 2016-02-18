@@ -10,9 +10,8 @@
 from __future__ import print_function, division, absolute_import
 
 import os
-from collections import namedtuple
-from time import time
 import traceback
+from time import time
 
 if 'OPENBLAS_NUM_THREADS' not in os.environ:
     os.environ['OPENBLAS_NUM_THREADS'] = '16'
@@ -20,14 +19,12 @@ if 'OPENBLAS_NUM_THREADS' not in os.environ:
 import numpy as np
 import scipy.linalg as la
 
-from output import status, write_file, read_file, plotting
+from output import status, write_file, read_file
 from routines import (position_states, hamiltonian_parallel, eig, relabel,
-                      initial_state, vn_entropy, time_evolution,
-                      avg_particles, h_block_diagonal, state_initializer,
-                      density_matrix_b, transformation)
+                      h_block_diagonal, density_matrix_b, transformation)
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, SSCTP"
-__version__ = "v1.5.0"
+__version__ = "v1.5.0-states"
 
 
 class System:
@@ -274,16 +271,17 @@ def main_states(initial_values, options=None, lattice_a=None, lattice_b=None):
 
     print ("Chosen eigenstate = {}".format(s.state_num))
     state = eigenvectors[s.state_num] / la.norm(eigenvectors[s.state_num])
+    print("RhoStates...")
     rho_pbasis = density_matrix_b(labels, state, nos_ab, s.nol_b, s.nop)
     filename = ('[{}]{}.csv'.format(s.state_num, eigenvalues[s.state_num]))
     write_file(path_ti + 'RhoStates(PosBasis)/', filename, rho_pbasis)
 
+    print("RhoEnergy...")
     rho_ebasis = transformation(rho_pbasis, h_bd_evecs)
     filename = ('[{}]{}.csv'.format(s.state_num, eigenvalues[s.state_num]))
     write_file(path_ti + 'RhoStates(EnBasis)/', filename, rho_ebasis)
 
     tot_time2 = time()
-
 
     status(7, tot_time2 - tot_time1)
     return True
@@ -300,7 +298,7 @@ if __name__ == '__main__':
     initial eigenvector no.,
     """
 
-    init_values = [1, 6, 0.0, 10.0, 50, 0]
+    init_values = [5, 6, 0.0, 10.0, 50, 26565]
 
     # Define lattices A and B
     lat_a = np.genfromtxt('a.txt', dtype=int)
