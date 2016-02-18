@@ -20,8 +20,8 @@ import numpy as np
 import scipy.linalg as la
 
 from output import status, write_file, read_file
-from routines import (position_states, hamiltonian_parallel, eig, relabel,
-                      h_block_diagonal, density_matrix_b, transformation)
+from routines2 import (position_states, hamiltonian_parallel, eig, relabel,
+                       h_block_diagonal, density_matrix_b, transformation)
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, SSCTP"
 __version__ = "v1.5.0-states"
@@ -237,7 +237,9 @@ def main_states(initial_values, options=None, lattice_a=None, lattice_b=None):
         ham = []
         for l in range(s.nop + 1):
             ham.append(hamiltonian_parallel(lat_b, s.n_dim, l))
+        print("Try worked :)")
     except Exception as e:
+        print("Try didnt work :(")
         print(e, traceback.format_exc())
         ham = []
         h_inter = h_block_diagonal(lattice_b, s.n_dim)
@@ -248,7 +250,7 @@ def main_states(initial_values, options=None, lattice_a=None, lattice_b=None):
             ham.append(read_file(path_ti, 'Hamiltonian_B_{}.csv'.format(k)))
 
     h_bd = la.block_diag(*ham)
-    write_file(path_ti, 'Hamiltonian_B_BD_abnormal.csv', h_bd, fmt='%1d')
+    write_file(path_ti, 'Hamiltonian_B_BD.csv', h_bd, fmt='%1d')
 
     print("Block diagonal done!")
 
@@ -270,7 +272,9 @@ def main_states(initial_values, options=None, lattice_a=None, lattice_b=None):
     write_file(path_ti, 'RelabelledStates.csv', labels)
 
     print ("Chosen eigenstate = {}".format(s.state_num))
+
     state = eigenvectors[s.state_num] / la.norm(eigenvectors[s.state_num])
+
     print("RhoStates...")
     rho_pbasis = density_matrix_b(labels, state, nos_ab, s.nol_b, s.nop)
     filename = ('[{}]{}.csv'.format(s.state_num, eigenvalues[s.state_num]))
@@ -298,8 +302,7 @@ if __name__ == '__main__':
     initial eigenvector no.,
     """
 
-    init_values = [5, 6, 0.0, 10.0, 50, 26565]
-
+    init_values = [1, 6, 0.0, 10.0, 50, 26565]
     # Define lattices A and B
     lat_a = np.genfromtxt('a.txt', dtype=int)
     lat_b = np.genfromtxt('b.txt', dtype=int)

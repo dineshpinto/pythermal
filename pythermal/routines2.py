@@ -50,7 +50,59 @@ def position_states(lat, nop, del_pos=None):
     return pos_states, len(pos_states)
 
 
-def _hamiltonian(start, stop, nos, ndims, nop, e_states, queue, h):
+# LEGACY
+# def hamiltonian(nos, ndims, nop, e_states, h):
+#     """
+#     :param start: Start iterations at this point
+#     :param stop: Stop iterations at this point
+#     :param nos: No. of states
+#     :param ndims: Shape of lattice
+#     :param nop: No. of particles
+#     :param e_states: Array of eigenstates
+#     :param queue: Multiprocessing queue to store each processes' output
+#     :param h: Hamiltonian matrix
+#
+#     """
+#
+#     for j in range(nos):  # Start/Stop defined by distribute()
+#         for k in range(nos):  # k iterates over all possibilities
+#
+#             c = np.intersect1d(e_states[j], e_states[k])
+#             # Sum of common elements
+#             c_sum = np.sum(c, dtype=np.int32)
+#             # No. of common elements
+#             c_size = np.size(c)
+#
+#             j_sum = np.sum(e_states[j], dtype=np.int32)
+#             k_sum = np.sum(e_states[k], dtype=np.int32)
+#
+#             if c_size == nop - 1:
+#                 # Only one element differs
+#
+#                 if abs(j_sum - k_sum) == ndims:
+#                     # Element differs by dimension
+#                     h[j, k] = 1
+#
+#                 elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % ndims
+# == 0:
+#                     # Right/Left edge
+#                     h[j, k] = 1
+#
+#                 elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % ndims
+# == 1:
+#                     # Right/Left edge
+#                     h[j, k] = 1
+#
+#                 else:
+#                     h[j, k] = 0
+#
+#             else:
+#                 h[j, k] = 0
+#
+#     return h
+
+
+def _hamiltonian(j):
     """
     :param start: Start iterations at this point
     :param stop: Stop iterations at this point
@@ -62,41 +114,41 @@ def _hamiltonian(start, stop, nos, ndims, nop, e_states, queue, h):
     :param h: Hamiltonian matrix
 
     """
-    for j in tqdm(range(start, stop)):  # Start/Stop defined by distribute()
+    ham = np.zeros(shape=(nos1, nos1))
 
-        for k in range(nos):  # k iterates over all possibilities
+    for k in range(nos1):  # k iterates over all possibilities
 
-            c = np.intersect1d(e_states[j], e_states[k])
-            # Sum of common elements
-            c_sum = np.sum(c, dtype=np.int32)
-            # No. of common elements
-            c_size = np.size(c)
+        c = np.intersect1d(pos_states1[j], pos_states1[k])
+        # Sum of common elements
+        c_sum = np.sum(c, dtype=np.int32)
+        # No. of common elements
+        c_size = np.size(c)
 
-            j_sum = np.sum(e_states[j], dtype=np.int32)
-            k_sum = np.sum(e_states[k], dtype=np.int32)
+        j_sum = np.sum(pos_states1[j], dtype=np.int32)
+        k_sum = np.sum(pos_states1[k], dtype=np.int32)
 
-            if c_size == nop - 1:
-                # Only one element differs
+        if c_size == nop1 - 1:
+            # Only one element differs
 
-                if abs(j_sum - k_sum) == ndims:
-                    # Element differs by dimension
-                    h[j, k] = float(1)
+            if abs(j_sum - k_sum) == ndims1:
+                # Element differs by dimension
+                ham[j, k] = 1
 
-                elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % ndims == 0:
-                    # Right/Left edge
-                    h[j, k] = float(1)
+            elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % ndims1 == 0:
+                # Right/Left edge
+                ham[j, k] = 1
 
-                elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % ndims == 1:
-                    # Right/Left edge
-                    h[j, k] = float(1)
-
-                else:
-                    continue
+            elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % ndims1 == 1:
+                # Right/Left edge
+                ham[j, k] = 1
 
             else:
-                continue
+                ham[j, k] = 0
 
-    queue.put(h)
+        else:
+            ham[j, k] = 0
+
+    return ham
 
 
 def distribute(n_items, n_processes, i):
@@ -131,28 +183,15 @@ def hamiltonian_parallel(lattice, ndims, nop):
 
     """
     pos_states, nos = position_states(lattice, nop)
-    process_list = []
-    queue = mp.Queue()  # Setting up a queue to store each processes' output
-    h = np.zeros(shape=(nos, nos), dtype=np.float32)
+    global ndims1, nos1, nop1, pos_states1
+    pos_states1 = pos_states
+    ndims1 = ndims
+    nos1 = nos
+    nop1 = nop
 
-    # No. of processes to create for parallel processing
-    n_processes = mp.cpu_count()
-
-    for i in range(n_processes):
-        start, stop = distribute(nos, n_processes, i)
-        args = (start, stop, nos, ndims, nop, pos_states, queue, h)
-        process = mp.Process(target=_hamiltonian, args=args)
-        process_list.append(process)  # Create list of processes
-        process.start()
-
-    for i in range(n_processes):  # Retrieves output from queue
-        h += queue.get()
-
-    queue.close()
-    queue.join_thread()
-
-    for jobs in process_list:  # Joins processes together
-        jobs.join()
+    p = mp.Pool(mp.cpu_count())
+    t = p.map(_hamiltonian, [k for k in range(nos)])
+    h = sum(t)
 
     return h
 
