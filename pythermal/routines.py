@@ -12,6 +12,7 @@ from __future__ import division, print_function, absolute_import
 import itertools as it
 import math as mt
 import multiprocessing as mp
+import traceback
 import warnings
 
 import numpy as np
@@ -23,10 +24,10 @@ try:
 except ImportError:
     from __builtin__ import range
 
-__all__ = ['position_states', 'hamiltonian_2d', 'distribute',
-           'parallel_call_h', 'eig', 'ncr', 'sum_ncr', 'relabel',
+__all__ = ['position_states', '_hamiltonian', 'distribute',
+           'hamiltonian_parallel', 'eig', 'ncr', 'sum_ncr', 'relabel',
            'initial_state', 'density_matrix_a', 'density_matrix_b',
-           'trace_squared', 'vn_entropy_b', 'time_evolution',
+           'trace_squared', 'vn_entropy', 'time_evolution',
            'avg_particles', 'state_initializer', 'epsilon']
 
 
@@ -50,7 +51,7 @@ def position_states(lat, nop, del_pos=None):
     return pos_states, len(pos_states)
 
 
-def hamiltonian_2d(start, stop, nos, ndims, nop, e_states, queue, h):
+def _hamiltonian(start, stop, nos, ndims, nop, e_states, queue, h):
     """
     :param start: Start iterations at this point
     :param stop: Stop iterations at this point
@@ -121,35 +122,35 @@ def distribute(n_items, n_processes, i):
     return start, stop
 
 
-def parallel_call_h(e_states, nos, ndims, nop):
+def hamiltonian_parallel(lattice, ndims, nop):
     """
     Multiple parallel calls to hamiltonian_2d.
-    :param e_states: Array of eigenstates
-    :param nos: No. of states
+    :param lattice: Lattice
     :param ndims: Shape of lattice.
     :param nop: No. of particles
     :return: Hamiltonian matrix
 
     """
+    pos_states, nos = position_states(lattice, nop)
     process_list = []
     queue = mp.Queue()  # Setting up a queue to store each processes' output
     h = np.zeros(shape=(nos, nos), dtype=np.float32)
+
     # No. of processes to create for parallel processing
     n_processes = mp.cpu_count()
 
     for i in range(n_processes):
         start, stop = distribute(nos, n_processes, i)
-        args = (start, stop, nos, ndims, nop, e_states, queue, h)
-
-        process = mp.Process(target=hamiltonian_2d, args=args)
+        args = (start, stop, nos, ndims, nop, pos_states, queue, h)
+        process = mp.Process(target=_hamiltonian, args=args)
         process_list.append(process)  # Create list of processes
         process.start()
 
     for i in range(n_processes):  # Retrieves output from queue
         h += queue.get()
 
-    while not queue.empty():  # Clear queue
-        h += queue.get()
+    queue.close()
+    queue.join_thread()
 
     for jobs in process_list:  # Joins processes together
         jobs.join()
@@ -336,7 +337,7 @@ def trace_squared(rho):
     return np.trace(np.linalg.matrix_power(rho, 2))
 
 
-def vn_entropy_b(psi_t, label, nos, nol_b, nop):
+def vn_entropy(psi_t, label, nos, nol_b, nop):
     """
     Calculates Von-Neumann entropy as entropy = - tr(rho * ln(rho)).
     Filter used to suppress warning 'The logm input matrix may be nearly
@@ -350,7 +351,7 @@ def vn_entropy_b(psi_t, label, nos, nol_b, nop):
     :return: Trace of density matrix of B
 
     """
-    vn_entropy = np.zeros(len(psi_t), dtype=complex, order='F')
+    entropy_b = np.zeros(len(psi_t), dtype=complex, order='F')
     tr_sqr = np.zeros(len(psi_t), dtype=float)
 
     warnings.filterwarnings('ignore')
@@ -358,11 +359,11 @@ def vn_entropy_b(psi_t, label, nos, nol_b, nop):
     idx = 0
     for val in tqdm(psi_t):
         d_matrix = density_matrix_b(label, val, nos, nol_b, nop)
-        vn_entropy[idx] = - np.trace(np.dot(d_matrix, la.logm(d_matrix)))
+        entropy_b[idx] = - np.trace(np.dot(d_matrix, la.logm(d_matrix)))
         tr_sqr[idx] = trace_squared(d_matrix)
         idx += 1
 
-    return vn_entropy.real, tr_sqr
+    return entropy_b.real, tr_sqr
 
 
 def time_evolution(psi_0, h, nos, timesteps):
@@ -421,7 +422,6 @@ def state_initializer(e_vals, e_vecs, num=None):
     """
     if num is not None:
         length = len(e_vals)
-        step = length // num
 
         if num < 2:
             raise ValueError('No. of eigenstates chosen is too small[{}]. '
@@ -430,7 +430,11 @@ def state_initializer(e_vals, e_vecs, num=None):
         if num > length:
             raise ValueError('Too many eigenstates chosen[{}]. Max is [{}].'
                              .format(num, length))
-        idx_array = [i for i in range(0, len(e_vals) - step, step)]
+        # step = length // num
+        # idx_array = [i for i in range(0, len(e_vals) - step, step)]
+        idx_array = (np.random.triangular(0, length // 2, length, num)).\
+            astype(int)
+        idx_array = sorted(idx_array)
     else:
         eps = epsilon(e_vals)
 
@@ -444,7 +448,7 @@ def state_initializer(e_vals, e_vecs, num=None):
     initial_states = [e_vecs[:, idx] / la.norm(e_vecs[:, idx]) for idx in
                       idx_array]
     initial_eigenvalues = [e_vals[idx] for idx in idx_array]
-    return np.array(initial_states), initial_eigenvalues
+    return np.array(initial_states), (initial_eigenvalues, idx_array)
 
 
 def epsilon_alt(eigenvalues):
@@ -481,25 +485,47 @@ def epsilon(eigenvalues):
     return s / len(eigenvalues)
 
 
-def h_block_diagonal(lat_b, ndims, nop):
-    nol_b = len(lat_b)
-    size = sum_ncr(nol_b, nop + 1)
-    h_bd = np.zeros(shape=(size, size), dtype=int)
+def h_block_diagonal(lat_b, n_dim):
+    hb_0 = hamiltonian_parallel(lat_b, n_dim, 0)
+    yield hb_0
+    hb_1 = hamiltonian_parallel(lat_b, n_dim, 1)
+    yield hb_1
+    hb_2 = hamiltonian_parallel(lat_b, n_dim, 2)
+    yield hb_2
+    # hb_3 = hamiltonian_parallel(lat_b, n_dim, 3)
+    # yield hb_3
+    # hb_4 = hamiltonian_parallel(lat_b, n_dim, 4)
+    # yield hb_4
+    # hb_5 = hamiltonian_parallel(lat_b, n_dim, 5)
+    # yield hb_5
+    # hb_6 = hamiltonian_parallel(lat_b, n_dim, 6)
+    # yield hb_6
 
-    for k in range(nop + 1):
-        pos_states_b, nos_b = position_states(lat_b, k)
-        hamiltonian_b = parallel_call_h(pos_states_b, nos_b, ndims, k)
+#
+# def transform(rho_pbasis, hbd_evecs):
+#     print (rho_pbasis.shape, hbd_evecs.shape)
+#     exit(0)
+#     print (np.vdot(hbd_evecs, np.dot(rho_pbasis, hbd_evecs))
+# )
+#     return np.vdot(hbd_evecs, np.dot(rho_pbasis, hbd_evecs))
 
-        a = ncr(nol_b, k)
-        b = sum_ncr(nol_b, k)
 
-        for i in range(a):
-            for j in range(a):
-                h_bd[i + b, j + b] = hamiltonian_b[i, j]
 
-    if np.allclose(np.transpose(h_bd), h_bd):
-        print("Block diagonal is symmetric")
-    else:
-        print("Block diagonal is not symmetric")
+def transformation(pho_pbasis, e_vecs_bd):
+    """
 
-    return h_bd
+    :param pho_pbasis:
+    :param e_vecs_bd:
+    :return:
+    """
+    rho_ebasis = np.zeros_like(pho_pbasis, dtype=complex)
+
+    for i in range(pho_pbasis.shape[0]):
+        for j in range(pho_pbasis.shape[1]):
+            rho_ebasis[i, j] = np.vdot(e_vecs_bd[:, i], np.dot(pho_pbasis, e_vecs_bd[:, j]))
+
+    if not np.allclose(np.transpose(np.conjugate(rho_ebasis)), rho_ebasis):
+        print("Transformation matrix is not symmetric")
+
+    return rho_ebasis
+                                                                                                                                                                                                                                                                                                                                                                                                                                                            

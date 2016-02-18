@@ -10,34 +10,27 @@
 from __future__ import print_function, division, absolute_import
 
 import os
-import time
-
-if 'OPENBLAS_MAIN_FREE' not in os.environ:
-    os.environ['OPENBLAS_MAIN_FREE'] = '1'
-
-if 'MKL_NUM_THREADS' not in os.environ:
-    os.environ['MKL_NUM_THREADS'] = '1'
+from collections import namedtuple
+from time import time
+import traceback
 
 if 'OPENBLAS_NUM_THREADS' not in os.environ:
-    os.environ['OPENBLAS_NUM_THREADS'] = '1'
-
-if 'OMP_NUM_THREADS' not in os.environ:
-    os.environ['OPENBLAS_NUM_THREADS'] = '1'
+    os.environ['OPENBLAS_NUM_THREADS'] = '16'
 
 import numpy as np
 import scipy.linalg as la
 
 from output import status, write_file, read_file, plotting
-from routines import (position_states, parallel_call_h, eig, relabel,
-                      initial_state, vn_entropy_b, time_evolution,
-                      avg_particles, h_block_diagonal)
-
+from routines import (position_states, hamiltonian_parallel, eig, relabel,
+                      initial_state, vn_entropy, time_evolution,
+                      avg_particles, h_block_diagonal, state_initializer,
+                      density_matrix_b, transformation)
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, SSCTP"
 __version__ = "v1.5.0"
 
 
-class MetaSystem:
+class System:
     def __init__(self, initial_value, lattice_a=None, lattice_b=None):
         """
         Stores metadata about the system.
@@ -52,18 +45,15 @@ class MetaSystem:
         self.nop = int(initial_value[0])
 
         # Dimensionality of lattice
-        self.ndims = int(initial_value[1])
+        self.n_dim = int(initial_value[1])
 
         # Time Evolution - starting time, ending time and no. of time steps
         self.t_initial = float(initial_value[2])
         self.t_final = float(initial_value[3])
         self.t_steps = int(initial_value[4])
 
-        # Initial state for psi_initial
+        # Eigenvector chosen
         self.state_num = int(initial_value[5])
-
-        # Set initial state as an eigenvector of entire system (0=NO & 1=YES)
-        self.eigenvector_of_ab = int(initial_value[6])
 
         # No. of sites in sub-lattice A
         self.nol_a = len(lattice_a)
@@ -75,7 +65,7 @@ class MetaSystem:
         self.nol = len(lattice_a) + len(lattice_b)
 
         # Lattice before deleting sites
-        self.lat = np.arange(1, self.nol + 1, dtype=np.int32)
+        self.lattice = np.concatenate((lattice_a, lattice_b))
 
     @property
     def timesteps(self):
@@ -92,31 +82,32 @@ class MetaSystem:
         return timestep_array
 
     @property
-    def folder_path_ti(self):
+    def fold_path_ti(self):
         """
         :return: Path for storing time independent variables
         """
-        return ('../Output_PyThermal/TI-{}_{}_{}/'
-                .format(self.nop, self.ndims, self.nol_a))
+        return ('../pythermal_output/TI-{}_{}_{}/'
+                .format(self.nop, self.n_dim, self.nol_a))
 
     @property
-    def folder_path_td(self):
+    def fold_path_td(self):
         """
         :return: Path for storing time dependent variables
         """
-        return ('../Output_PyThermal/TD-{}_{}_{}_{}/'
-                .format(self.nop, self.ndims, self.nol_a, self.t_final))
+        return ('../pythermal_output/TD-{}_{}_{}_{}/'
+                .format(self.nop, self.n_dim, self.nol_a, self.t_final))
 
     @staticmethod
-    def variable_names():
+    def file_names():
         """
         :return: Names of variables for storing on hard disk
 
         """
-        names = ['Hamiltonian.csv', 'Hamiltonian_A.csv', 'Eigenvalues.csv',
-                 'Eigenvectors.csv', 'Eigenvalues_A.csv', 'Eigenvectors_A.csv',
-                 'Psi_t.csv', 'Avg_A.csv', 'Avg_B.csv', 'VN_Entropy_B.csv',
-                 'VN_Trace2_B']
+        names = ['Hamiltonian_AB.csv', 'Hamiltonian_A.csv',
+                 'Eigenvalues_AB.csv', 'Eigenvectors_AB.csv',
+                 'Eigenvalues_A.csv', 'Eigenvectors_A.csv',
+                 'Psi_t.csv', 'Avg_A.csv', 'Avg_B.csv',
+                 'VN_Entropy_B.csv', 'VN_Trace2_B']
 
         return names
 
@@ -127,18 +118,18 @@ class MetaSystem:
         :return: Integer list whether files exists on hard disk(1) or not(0)
 
         """
-        names = self.variable_names()
+        names = self.file_names()
         existence = [False] * len(names)
 
         for idx, name in enumerate(names):
 
-            if os.path.isfile(self.folder_path_ti + name):
+            if os.path.isfile(self.fold_path_ti + name):
                 existence[idx] = True
-                print('{} exists at {}'.format(name, self.folder_path_ti))
+                print('{} exists at {}'.format(name, self.fold_path_ti))
 
-            elif os.path.isfile(self.folder_path_td + name):
+            elif os.path.isfile(self.fold_path_td + name):
                 existence[idx] = True
-                print('{} exists at {}'.format(name, self.folder_path_td))
+                print('{} exists at {}'.format(name, self.fold_path_td))
 
             else:
                 print('{} does not exist'.format(name))
@@ -146,38 +137,41 @@ class MetaSystem:
 
         return existence
 
+    def check_system(self, options, lattice_a, lattice_b):
+        """
+        Runs checks to make sure all inputs are valid.
+        Raises ValueError if not.
+        :param options:
+        :param lattice_a:
+        :param lattice_b:
 
-# :TODO: Rewrite check_lattice for manual definition of A and B
-def check_lattice(initial_values, options):
-    """
-    Runs checks to make sure all inputs are valid. Raises ValueError if not.
-    :param options: List of options passed for execution
-    :param initial_values: List of initial values for system
+        """
+        if lattice_a is None or lattice_b is None:
+            raise ValueError('Enter both lattice A and lattice B')
 
-    """
-    if not initial_values[0] > 0:
-        raise ValueError('No. of particles should be greater than 0')
-
-    if not initial_values[0] < initial_values[2] and not options[1]:
-        raise ValueError('Too many particles [{}] for sub-lattice A [{}]'
-                         .format(initial_values[0], initial_values[2]))
-
-    if not initial_values[0] < initial_values[1] ** 2:
-        raise ValueError('Too many particles [{}] for lattice [{}]'
-                         .format(initial_values[0], initial_values[1] ** 2))
-
-    if not initial_values[1] > 3:
-        raise ValueError('Shape of lattice must be at least 3')
-
-    if not initial_values[4] >= initial_values[3]:
-        raise ValueError('Final time [{}] must be more than initial time [{}]'
-                         .format(initial_values[4], initial_values[3]))
-
-    if not initial_values[5] > 0:
-        raise ValueError('No. of time steps has to be greater than 0')
+        if not self.nop > 0:
+            raise ValueError('No. of particles should be greater than 0')
+    
+        if self.nop > self.nol_a and not options[1]:
+            raise ValueError('Too many particles [{}] for sub-lattice A [{}]'
+                             .format(self.nop, self.nol_a))
+    
+        if not self.nop < self.n_dim ** 2:
+            raise ValueError('Too many particles [{}] for lattice [{}]'
+                             .format(self.nop, self.n_dim ** 2))
+    
+        if not self.n_dim > 3:
+            raise ValueError('Shape of lattice must be at least 3')
+    
+        if not self.t_final >= self.t_initial:
+            raise ValueError('Final time [{}] not more than initial time [{}]'
+                             .format(self.t_final, self.t_initial))
+    
+        if not self.t_steps > 0:
+            raise ValueError('No. of time steps has to be greater than 0')
 
 
-def main(initial_values, options, lattice_a=None, lattice_b=None):
+def main_states(initial_values, options=None, lattice_a=None, lattice_b=None):
     """
     Contains calls to/control of all functions in program.
 
@@ -201,135 +195,96 @@ def main(initial_values, options, lattice_a=None, lattice_b=None):
     :return: True if execution successful
 
     """
-    if lattice_a is None or lattice_b is None:
-        raise ValueError('Enter both lattice A and lattice B')
+    s = System(initial_values, lattice_a, lattice_b)
+    path_ti, path_td, names = s.fold_path_ti, s.fold_path_td, s.file_names()
+    s.check_system(options, lattice_a, lattice_b)
 
-    s = MetaSystem(initial_values, lattice_a, lattice_b)
-    path_ti, path_td = s.folder_path_ti, s.folder_path_td
-    names = s.variable_names()
-
-    if options[1]:
-        existence = s.check_existence
-    else:
-        existence = [False] * len(names)
-
-    tot_time1 = time.time()
+    tot_time1 = time()
 
     # Eigenstates
-    pos_states, nos = position_states(s.lat, s.nop)
+    pos_states_ab, nos_ab = position_states(s.lattice, s.nop)
     pos_states_a, nos_a = position_states(lattice_a, s.nop)
     status(1)
-    write_file(path_ti, 'PositionStates.csv', pos_states, fmt='%1d')
+    write_file(path_ti, 'PositionStates_AB.csv', pos_states_ab, fmt='%1d')
     write_file(path_ti, 'PositionStates_A.csv', pos_states_a, fmt='%1d')
 
-    # Hamiltonian
-    h_time1 = time.time()
-    if existence[0]:
-        # Reads Hamiltonian from hard disk
-        hamiltonian = read_file(path_ti, names[0])
-    else:
-        # Otherwise generates Hamiltonian
-        print('Hamiltonian...')
-        hamiltonian = parallel_call_h(pos_states, nos, s.ndims, s.nop)
-        write_file(path_ti, names[0], hamiltonian, fmt='%1d')
+    print("Hamiltonian...")
 
-    if existence[1]:
-        hamiltonian_a = read_file(path_ti, names[1])
-    else:
-        hamiltonian_a = parallel_call_h(pos_states_a, nos_a, s.ndims, s.nop)
-        write_file(path_ti, names[1], hamiltonian_a, fmt='%1d')
-    h_time2 = time.time()
+    # Hamiltonian
+    h_time1 = time()
+    # hamiltonian = read_file(path_ti, names[0], dtype=int)
+    hamiltonian = hamiltonian_parallel(s.lattice, s.n_dim, s.nop)
+    write_file(path_ti, names[0], hamiltonian, fmt='%1d')
+    h_time2 = time()
     status(2, h_time2 - h_time1)
 
-    # Block diagonal of Hamiltonian
-    h_bd = h_block_diagonal(lattice_b, s.ndims, s.nop)
-    write_file(path_ti, 'H_BD.csv', h_bd, fmt='%1d')
+    print ("Hamiltonian done!")
+
+    print("Diagonalization...")
 
     # Eigenvalues and Eigenvectors
-    e_time1 = time.time()
-    if existence[2] and existence[3]:
-        eigenvalues = read_file(path_ti, names[2])
-        eigenvectors = read_file(path_ti, names[3], dtype=complex)
-    else:
-        print('Diagonalizing...')
-        eigenvalues, eigenvectors = eig(hamiltonian)
-        write_file(path_ti, names[2], eigenvalues)
-        write_file(path_ti, names[3], eigenvectors)
-
-    # Eigenvalues and Eigenvectors of A
-    if existence[4] and existence[5]:
-        # eigenvalues_a = output.read_file(path_ti, names[4])
-        eigenvectors_a = read_file(path_ti, names[5], dtype=complex)
-    else:
-        print('Diagonalizing A...')
-        eigenvalues_a, eigenvectors_a = eig(hamiltonian_a)
-        write_file(path_ti, names[4], eigenvalues_a)
-        write_file(path_ti, names[5], eigenvectors_a)
-    e_time2 = time.time()
+    e_time1 = time()
+    # eigenvalues = read_file(path_ti, names[2])
+    # eigenvectors = read_file(path_ti, names[3], dtype=complex)
+    eigenvalues, eigenvectors = eig(hamiltonian)
+    write_file(path_ti, names[2], eigenvalues)
+    write_file(path_ti, names[3], eigenvectors)
+    e_time2 = time()
     status(3, e_time2 - e_time1)
 
+    print("Diagonalization done!")
+
+    print("Block diagonal...")
+
+    try:
+        ham = []
+        for l in range(s.nop + 1):
+            ham.append(hamiltonian_parallel(lat_b, s.n_dim, l))
+    except Exception as e:
+        print(e, traceback.format_exc())
+        ham = []
+        h_inter = h_block_diagonal(lattice_b, s.n_dim)
+        for h, k in zip(h_inter, range(s.nop + 1)):
+            write_file(path_ti, 'Hamiltonian_B_{}.csv'.format(k), h,
+                       fmt='%1d')
+        for k in range(s.nop + 1):
+            ham.append(read_file(path_ti, 'Hamiltonian_B_{}.csv'.format(k)))
+
+    h_bd = la.block_diag(*ham)
+    write_file(path_ti, 'Hamiltonian_B_BD_abnormal.csv', h_bd, fmt='%1d')
+
+    print("Block diagonal done!")
+
+    if np.allclose(np.transpose(h_bd), h_bd):
+        print("Block diagonal is symmetric")
+    else:
+        print("WARNING: Block diagonal is not symmetric")
+
+    print ("Diagonalizing block diagonal...")
+    _, h_bd_evecs = eig(h_bd)
+
+    print("Relabelling...")
+
     # State Relabelling
-    r_time1 = time.time()
-    labels = relabel(pos_states, s.nop, s.nol_b, lat_a=lattice_a)
-    r_time2 = time.time()
+    r_time1 = time()
+    labels = relabel(pos_states_ab, s.nop, s.nol_b, lat_a=lattice_a)
+    r_time2 = time()
     status(4, r_time2 - r_time1)
     write_file(path_ti, 'RelabelledStates.csv', labels)
 
-    # :TODO: Finds density matrix for a given number of pos_states
-    # states, eigenvals = state_initializer(eigenvalues, eigenvectors, num=66)
-    # write_file(path_ti, 'states.csv', states)
-    # for idx, state in enumerate(states):
-    #     d_matrix = density_matrix_b(labels, state, nos, s.nol_b, s.nop)
-    #     filename = 'density_b[{}].csv'.format(eigenvals[idx])
-    #     write_file(path_ti, filename, d_matrix)
+    print ("Chosen eigenstate = {}".format(s.state_num))
+    state = eigenvectors[s.state_num] / la.norm(eigenvectors[s.state_num])
+    rho_pbasis = density_matrix_b(labels, state, nos_ab, s.nol_b, s.nop)
+    filename = ('[{}]{}.csv'.format(s.state_num, eigenvalues[s.state_num]))
+    write_file(path_ti + 'RhoStates(PosBasis)/', filename, rho_pbasis)
 
-    # Initial State
-    if s.eigenvector_of_ab:
-        # Initial state as an eigenvector of the entire system
-        chosen_eigenvector = eigenvectors[:, s.state_num]
-        psi_initial = chosen_eigenvector / la.norm(chosen_eigenvector)
-    else:
-        # Initial state as eigenvector of A
-        psi_initial = initial_state(eigenvectors_a, labels, nos, s.nop,
-                                    s.state_num)
+    rho_ebasis = transformation(rho_pbasis, h_bd_evecs)
+    filename = ('[{}]{}.csv'.format(s.state_num, eigenvalues[s.state_num]))
+    write_file(path_ti + 'RhoStates(EnBasis)/', filename, rho_ebasis)
 
-    # Time Evolution
-    evo_time1 = time.time()
-    if existence[6] and existence[7] and existence[8]:
-        psi_t = read_file(path_td, names[6], dtype=complex)
-    else:
-        print('Time evolving...')
-        psi_t = time_evolution(psi_initial, hamiltonian, nos, s.timesteps)
-        write_file(path_td, names[6], psi_t)
-    evo_time2 = time.time()
-    status(5, evo_time2 - evo_time1)
+    tot_time2 = time()
 
-    # Average number of particles in A and B
-    if existence[7] and existence[8]:
-        avg_a = read_file(path_td, names[7])
-        avg_b = read_file(path_td, names[8])
-    else:
-        avg_a, avg_b = avg_particles(psi_t, s.timesteps, labels, s.nop)
-        write_file(path_td, names[7], avg_a)
-        write_file(path_td, names[8], avg_b)
 
-    # Von-Neumann Entropy
-    vn_time1 = time.time()
-    if existence[9] and existence[10]:
-        entropy_b = read_file(path_td, names[9], dtype=complex)
-        tr_sqr_b = read_file(path_td, names[10])
-    else:
-        print('Von-Neumann Entropy...')
-        entropy_b, tr_sqr_b = vn_entropy_b(psi_t, labels, nos, s.nol_b, s.nop)
-        write_file(path_td, names[9], entropy_b)
-        write_file(path_td, names[10], tr_sqr_b)
-    vn_time2 = time.time()
-    status(6, vn_time2 - vn_time1)
-
-    plotting(entropy_b, tr_sqr_b, avg_a, avg_b, path_td, s.timesteps,
-             options[0])
-
-    tot_time2 = time.time()
     status(7, tot_time2 - tot_time1)
     return True
 
@@ -343,17 +298,12 @@ if __name__ == '__main__':
     t_final,
     t_steps,
     initial eigenvector no.,
-    initial psi(1=eigenstate of entire system)]
-
-    opts = [
-    Show images(1=YES),
-    Check for files on disk(1=YES)]
-    
     """
-    init_values = [2, 5, 0.0, 10.0, 50, 0, 0]
-    opts = [0, 0]
+
+    init_values = [1, 6, 0.0, 10.0, 50, 0]
 
     # Define lattices A and B
     lat_a = np.genfromtxt('a.txt', dtype=int)
     lat_b = np.genfromtxt('b.txt', dtype=int)
-    main(init_values, opts, lat_a, lat_b)
+
+    main_states(init_values, lattice_a=lat_a, lattice_b=lat_b)

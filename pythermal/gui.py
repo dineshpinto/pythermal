@@ -29,18 +29,17 @@ __all__ = ['fetch', 'graphical_interface', 'execute']
 
 
 # Set input text fields
-fields = ['Total no. of particles*', 'Shape of lattice',
-          'No. of sites in sub-lattice A',
-          'Start evolving at*', 'Stop evolving at*',
-          'Time steps*',
-          'Initial Eigenvector (Ground state = 0)*']
+fields = ['Total no. of particles',
+          'Dimension of lattice',
+          'Start evolving at',
+          'Stop evolving at',
+          'Time steps',
+          'Initial Psi for evolution (Ground state = 0)',
+          'No. of eigenstates to use']
 
-fields2 = ['Show images during execution',
-           'Initialize with eigenvector of entire system '
-           '(default is eigenvector of A)',
-           'Manually define sub-lattices A and B (optional, '
-           'create text \nfiles "a.txt" and "b.txt" '
-           'in same folder with lattice sites as columns)*']
+fields2 = ['Initialize with Eigenvector of AB(default: Eigenvector A)',
+           'Show images during execution',
+           'Check for files on hard disk']
 
 fields_func = ['Hamiltonian of whole system', 'Hamiltonian of sub-lattice A',
                'Eigenvalues of whole system', 'Eigenvectors of whole system',
@@ -97,17 +96,23 @@ def graphical_interface(base):
         entry.pack(side=tk.RIGHT, expand=True)
         initial_values.append(entry)
 
-    chk = ttk.Checkbutton(base, text=fields2[0], variable=var1)
-    chk.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
-    optional_values.append(var1)
+    # chk = ttk.Checkbutton(base, text=fields2[0], variable=var1)
+    # chk.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
+    # optional_values.append(var1)
+    #
+    # chk2 = ttk.Checkbutton(base, text=fields2[1], variable=var2)
+    # chk2.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
+    # optional_values.append(var2)
+    #
+    # chk = ttk.Checkbutton(base, text=fields2[2], variable=var3)
+    # chk.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
+    # optional_values.append(var3)
 
-    chk2 = ttk.Checkbutton(base, text=fields2[1], variable=var2)
-    chk2.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
-    optional_values.append(var2)
-
-    chk = ttk.Checkbutton(base, text=fields2[2], variable=var3)
-    chk.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
-    optional_values.append(var3)
+    for field in fields2:
+        var = tk.IntVar()
+        chk = ttk.Checkbutton(base, text=field, variable=var)
+        chk.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
+        optional_values.append(var)
 
     return initial_values, optional_values
 
@@ -131,7 +136,7 @@ def execute(initial_values, optional_values):
 
     try:
         import main
-        main.main(initial_values, optional_values, lat_a, lat_b)
+        main.main_states(initial_values, optional_values, lat_a, lat_b)
     except Exception as e:
         print(e, traceback.format_exc())
         pass

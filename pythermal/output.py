@@ -71,7 +71,7 @@ def write_file(path, filename, data=None, fmt='%.18e'):
         except OSError:
             pass
 
-    print("Writing to {}".format(filename))
+    print("Writing to {}".format(path + filename))
     np.savetxt(path + filename, data, delimiter=',', fmt=fmt)
 
 
