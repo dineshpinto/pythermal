@@ -302,7 +302,7 @@ if __name__ == '__main__':
     initial eigenvector no.,
     """
 
-    init_values = [1, 6, 0.0, 10.0, 50, 26565]
+    init_values = [5, 6, 0.0, 10.0, 50, 26565]
     # Define lattices A and B
     lat_a = np.genfromtxt('a.txt', dtype=int)
     lat_b = np.genfromtxt('b.txt', dtype=int)

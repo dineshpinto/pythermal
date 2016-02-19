@@ -9,6 +9,7 @@
 
 from __future__ import division, print_function, absolute_import
 
+import ctypes
 import itertools as it
 import math as mt
 import multiprocessing as mp
@@ -50,9 +51,9 @@ def position_states(lat, nop, del_pos=None):
     return pos_states, len(pos_states)
 
 
-# LEGACY
-# def hamiltonian(nos, ndims, nop, e_states, h):
+# def hamiltonian(nos, ndims, nop, e_states):
 #     """
+#     Deprecated, will be removed soon.
 #     :param start: Start iterations at this point
 #     :param stop: Stop iterations at this point
 #     :param nos: No. of states
@@ -63,6 +64,7 @@ def position_states(lat, nop, del_pos=None):
 #     :param h: Hamiltonian matrix
 #
 #     """
+#     h = np.zeros((nos, nos), dtype=np.int8)
 #
 #     for j in range(nos):  # Start/Stop defined by distribute()
 #         for k in range(nos):  # k iterates over all possibilities
@@ -83,13 +85,13 @@ def position_states(lat, nop, del_pos=None):
 #                     # Element differs by dimension
 #                     h[j, k] = 1
 #
-#                 elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % ndims
-# == 0:
+#                 elif (k_sum - j_sum) == 1 and not \
+#                                         (j_sum - c_sum) % ndims == 0:
 #                     # Right/Left edge
 #                     h[j, k] = 1
 #
-#                 elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % ndims
-# == 1:
+#                 elif (j_sum - k_sum) == 1 and not \
+#                                         (j_sum - c_sum) % ndims == 1:
 #                     # Right/Left edge
 #                     h[j, k] = 1
 #
@@ -102,7 +104,30 @@ def position_states(lat, nop, del_pos=None):
 #     return h
 
 
-def _hamiltonian(j):
+# def distribute(n_items, n_processes, i):
+#     """
+#     Deprecated, will be removed soon.
+#     Distributes processes among processors
+#     :param n_items: Total no. of items
+#     :param n_processes: No. of processors/cores/threads
+#     :param i: Iterator over n_processes
+#     :return: Start point of ith process
+#     :return: Stop point of ith process
+#
+#     """
+#     items_per_process = n_items // n_processes  # Integer division
+#     start = i * items_per_process
+#
+#     # For last process, appends all remaining items to last core
+#     if i == n_processes - 1:
+#         stop = n_items
+#     else:
+#         stop = items_per_process * (i + 1)
+#
+#     return start, stop
+
+
+def _hamiltonian(j, k):
     """
     :param start: Start iterations at this point
     :param stop: Stop iterations at this point
@@ -114,63 +139,39 @@ def _hamiltonian(j):
     :param h: Hamiltonian matrix
 
     """
-    ham = np.zeros(shape=(nos1, nos1))
+    c = np.intersect1d(pos_states1[j], pos_states1[k])
+    # Sum of common elements
+    c_sum = np.sum(c, dtype=np.int32)
+    # No. of common elements
+    c_size = np.size(c)
 
-    for k in range(nos1):  # k iterates over all possibilities
+    j_sum = np.sum(pos_states1[j], dtype=np.int32)
+    k_sum = np.sum(pos_states1[k], dtype=np.int32)
 
-        c = np.intersect1d(pos_states1[j], pos_states1[k])
-        # Sum of common elements
-        c_sum = np.sum(c, dtype=np.int32)
-        # No. of common elements
-        c_size = np.size(c)
+    if c_size == nop1 - 1:
+        # Only one element differs
 
-        j_sum = np.sum(pos_states1[j], dtype=np.int32)
-        k_sum = np.sum(pos_states1[k], dtype=np.int32)
+        if abs(j_sum - k_sum) == ndims1:
+            # Element differs by dimension
+            ham[j, k] = 1
 
-        if c_size == nop1 - 1:
-            # Only one element differs
+        elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % ndims1 == 0:
+            # Right/Left edge
+            ham[j, k] = 1
 
-            if abs(j_sum - k_sum) == ndims1:
-                # Element differs by dimension
-                ham[j, k] = 1
-
-            elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % ndims1 == 0:
-                # Right/Left edge
-                ham[j, k] = 1
-
-            elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % ndims1 == 1:
-                # Right/Left edge
-                ham[j, k] = 1
-
-            else:
-                ham[j, k] = 0
+        elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % ndims1 == 1:
+            # Right/Left edge
+            ham[j, k] = 1
 
         else:
             ham[j, k] = 0
 
-    return ham
-
-
-def distribute(n_items, n_processes, i):
-    """
-    Distributes processes among processors
-    :param n_items: Total no. of items
-    :param n_processes: No. of processors/cores/threads
-    :param i: Iterator over n_processes
-    :return: Start point of ith process
-    :return: Stop point of ith process
-
-    """
-    items_per_process = n_items // n_processes  # Integer division
-    start = i * items_per_process
-
-    # For last process, appends all remaining items to last core
-    if i == n_processes - 1:
-        stop = n_items
     else:
-        stop = items_per_process * (i + 1)
+        ham[j, k] = 0
 
-    return start, stop
+
+def _h_wrapper(args):
+    return _hamiltonian(*args)
 
 
 def hamiltonian_parallel(lattice, ndims, nop):
@@ -182,18 +183,19 @@ def hamiltonian_parallel(lattice, ndims, nop):
     :return: Hamiltonian matrix
 
     """
-    pos_states, nos = position_states(lattice, nop)
-    global ndims1, nos1, nop1, pos_states1
-    pos_states1 = pos_states
+    global ndims1, nos1, nop1, pos_states1, ham
+    pos_states1, nos1 = position_states(lattice, nop)
     ndims1 = ndims
-    nos1 = nos
     nop1 = nop
 
-    p = mp.Pool(mp.cpu_count())
-    t = p.map(_hamiltonian, [k for k in range(nos)])
-    h = sum(t)
+    ham_base = mp.Array(ctypes.c_int8, nos1 * nos1)
+    ham = np.ctypeslib.as_array(ham_base.get_obj())
+    ham = ham.reshape(nos1, nos1)
 
-    return h
+    p = mp.Pool(mp.cpu_count())
+    p.map(_h_wrapper, ((j, k) for j in range(nos1) for k in range(nos1)))
+
+    return ham
 
 
 def eig(h):
