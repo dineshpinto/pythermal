@@ -17,12 +17,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def status(status_num, time_taken=0.0):
+def status(time_taken=0.0):
     """
     Prints current status of program execution
     :param status_num: Current status of program execution
     :param time_taken: Block execution time
-
     """
     # Differentiate between Windows and *nix systems
     if os.name is 'nt':
@@ -30,22 +29,7 @@ def status(status_num, time_taken=0.0):
     else:
         t = time.strftime("%T", time.gmtime(time_taken))
 
-    if status_num is 1:
-        print("Generated Eigenstates\tTime: {}".format(t))
-    elif status_num is 2:
-        print("\nGenerated Hamiltonian\nTime: {}".format(t))
-    elif status_num is 3:
-        print("\nGenerated Eigenvalues & Eigenvectors\nTime: {}".format(t))
-    elif status_num is 4:
-        print("\nGenerated Relabelled States\nTime: {}".format(t))
-    elif status_num is 5:
-        print("\nGenerated Psi(t)\nTime: {}".format(t))
-    elif status_num is 6:
-        print("\nGenerated Von-Neumann Entropy\nTime: {}".format(t))
-    elif status_num is 7:
-        print("\nComplete\nTime: {}".format(t))
-    else:
-        pass
+    print("Time: {}".format(t))
 
 
 def warning(*objects):
@@ -63,7 +47,6 @@ def write_file(path, filename, data=None, fmt='%.18e'):
     :param filename: Name of file
     :param data: Data o be written
     :param fmt: Format specifier
-
     """
     if not os.path.exists(path):
         try:
@@ -80,7 +63,6 @@ def write_image(path, filename):
     Checks if output directory exists, if not, creates it. Then writes to disk.
     :param path: Folder path to write to
     :param filename: Name of file
-
     """
     if not os.path.exists(path):
         try:
@@ -88,7 +70,7 @@ def write_image(path, filename):
         except OSError:
             pass
 
-    print("Drawing to {}.png".format(filename))
+    print("Drawing to {}.png".format(path + filename))
     plt.savefig(path + filename, format='png', dpi=400)
 
     # Clears figure from plt (prevents multiple plots from interfering)
@@ -101,12 +83,14 @@ def read_file(path, filename, dtype=np.float64):
     :param filename: Name of file
     :param dtype: Data type of file
     :return: Array
-
     """
     if os.path.isfile(path + filename):
-        print('Reading from {}'.format(filename))
-        return np.genfromtxt(path + filename, delimiter=',', dtype=dtype)
-
+        print('Reading from {}'.format(path + filename))
+        out = np.genfromtxt(path + filename, delimiter=',', dtype=dtype)
+        if dtype is complex:
+            return np.nan_to_num(out)
+        else:
+            return out
     else:
         print('{} not found'.format(path + filename))
         raise IOError
@@ -120,7 +104,6 @@ def plotting_metadata():
     :return: y axis labels
     :return: x axis labels
     :return: y axis limits
-
     """
     filenames = ['VN_Entropy_B', 'Trace2_B', 'Avg_A', 'Avg_B', 'Avg_AB']
 
@@ -154,7 +137,6 @@ def plotting(ent_b, tr_sqr_b, avg_part_a, avg_part_b, path_td, t, chk):
     :param t: Array of times
     :param chk: Checkbox for showing images
     :return:
-
     """
     image_name, titles, y_labels, x_labels, y_limits = plotting_metadata()
 
@@ -172,7 +154,6 @@ def plotting(ent_b, tr_sqr_b, avg_part_a, avg_part_b, path_td, t, chk):
 
 def plot_write(x, y, title=None, y_label=None, x_label=None, y_limit=None,
                path=None, filename=None, checkbox=None):
-    # Plot area formatting
     """
     Generate graphs using matplotlib. Saves graphs to hard disk.
     :param x: x axis

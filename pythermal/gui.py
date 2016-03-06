@@ -54,7 +54,6 @@ def fetch(values, values2):
     Prints data stored in entries for debugging purposes.
     :param values: List storing initial values
     :param values2: List storing sub-lattices A and B
-
     """
     for idx, value in enumerate(values):
         print('{}. {} = {}'.format(idx, fields[idx], value.get()))

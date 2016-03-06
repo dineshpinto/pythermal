@@ -1,25 +1,17 @@
-#   An example lattice
-#   a   a   a   a   a
-#   a   a   a   a   x
-#   a   a   a   x   b
-#   a   x   b   b   b
-#   x   b   b   b   b
+#   Lattice
+#   b   b   b   b   o   o
+#   o   b   b   b   o   a
+#   o   o   b   o   a   a
+#   a   o   a   a   a   a
+#   a   a   a   a   a   a
+#   o   a   a   a   o   o 
 #
-# Lattice sites in sub-lattice B
-12
-17
-18
-19
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-32
-33
-34
+# Lattice sites in sub-lattice b
+1
+2
+3
+4
+8
+9
+10
+15
