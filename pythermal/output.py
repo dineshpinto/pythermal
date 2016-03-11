@@ -1,6 +1,6 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
-# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
 # St. Stephen's Centre for Theoretical Physics, New Delhi
 #
@@ -19,11 +19,13 @@ import numpy as np
 
 def status(time_taken=0.0):
     """
-    Prints current status of program execution
-    :param status_num: Current status of program execution
+    Prints current status (execution time) of program execution.
+    Note: Times returned from here are not true measures of algorithm speed.
+    For rigorous testing use timeit.
+
     :param time_taken: Block execution time
     """
-    # Differentiate between Windows and *nix systems
+    # Differentiate between Windows and *nix systems for time
     if os.name is 'nt':
         t = time.strftime("%H%M%S", time.gmtime(time_taken))
     else:
@@ -34,24 +36,30 @@ def status(time_taken=0.0):
 
 def warning(*objects):
     """
-    Handles non-fatal warnings
-    :param objects:
+    Handles non-fatal warnings.
+
+    :param objects: Objects
     """
     print("WARNING:", *objects, file=sys.stderr)
 
 
 def write_file(path, filename, data=None, fmt='%.18e'):
     """
-    Checks if output directory exists, if not, creates it. Then writes to disk.
+    Checks if output directory exists, if not, creates it.
+    Writes arrays/lists to the disk. Performs IO using NumPy.
+
+    Possible switch in future to pandas (dependant code must be unaffected).
+
     :param path: Folder path to write to
-    :param filename: Name of file
-    :param data: Data o be written
+    :param filename: Name of file (include extension)
+    :param data: Data to be written
     :param fmt: Format specifier
     """
     if not os.path.exists(path):
         try:
             os.makedirs(path)
         except OSError:
+            # Catches race condition
             pass
 
     print("Writing to {}".format(path + filename))
@@ -61,8 +69,10 @@ def write_file(path, filename, data=None, fmt='%.18e'):
 def write_image(path, filename):
     """
     Checks if output directory exists, if not, creates it. Then writes to disk.
+    Writes images to the disk. Performs IO using MatPlotLib.
+
     :param path: Folder path to write to
-    :param filename: Name of file
+    :param filename: Name of file (including extension)
     """
     if not os.path.exists(path):
         try:
@@ -79,10 +89,15 @@ def write_image(path, filename):
 
 def read_file(path, filename, dtype=np.float64):
     """
+    Reads data from files stored locally.Performs IO using NumPy.
+
+    Possible switch in future to pandas (dependant code must be unaffected).
+
     :param path: Path to folder
     :param filename: Name of file
     :param dtype: Data type of file
-    :return: Array
+    :return: Array of read data
+    :raise: IOError if file not found
     """
     if os.path.isfile(path + filename):
         print('Reading from {}'.format(path + filename))
@@ -98,7 +113,8 @@ def read_file(path, filename, dtype=np.float64):
 
 def plotting_metadata():
     """
-    Stores metadata for matplotlib plots
+    Stores metadata for matplotlib plots.
+
     :return: Filename of images
     :return: Image titles
     :return: y axis labels

@@ -1,6 +1,6 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
-# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
 # St. Stephen's Centre for Theoretical Physics, New Delhi
 #

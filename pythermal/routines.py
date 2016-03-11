@@ -1,6 +1,6 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
-# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
 # St. Stephen's Centre for Theoretical Physics, New Delhi
 #
@@ -25,15 +25,16 @@ except ImportError:
     from __builtin__ import range
 
 __all__ = ['position_states', '_hamiltonian', 'distribute',
-           'hamiltonian_parallel', 'eigen', 'ncr', 'sum_ncr', 'relabel',
-           'density_matrix_a', 'rho_b_pbasis',
+           'hamiltonian_parallel', 'diagonalize', 'ncr', 'sum_ncr',
+           'relabel', 'density_matrix_a', 'rho_b_pbasis',
            'h_block_diagonal', 'transformation', 'naive_thermal']
 
 
 def position_states(lat, nop, del_pos=None):
     """
-    Returns position states for a given lattice & particles after deleting
-    sites
+    Returns position states for a given lattice and number of particles.
+    Parameter del_pos can be used to delete lattice sites.
+
     :param lat: Array of lattice sites
     :param nop: Nop of particles in lattice
     :param del_pos: Lattice sites to delete
@@ -50,17 +51,34 @@ def position_states(lat, nop, del_pos=None):
     return pos_states, len(pos_states)
 
 
-# Core hamiltonian function
 def _hamiltonian(start, stop, nos, ndims, nop, pos_states):
+    """
+    Core Hamiltonian function.
+
+    Generates hamiltonian matrix for a given system. Uses global
+    multiprocessing array (shared memory array) to store output hamiltonian.
+
+    When coupled to its function wrapper (hamiltonian_parallel), n processes
+    (n is no. of CPU's) call _hamiltonian simultaneously. The distribute
+    function allocated tasks to each process. A task is defined by the
+    starting and stopping points of the outer loop.
+
+    :param start: Starting point of [j] iteration
+    :param stop: Stopping point of [j] iteration
+    :param nos: No. of states
+    :param ndims: No. of dimension
+    :param nop: No. of particles
+    :param pos_states: Position states
+    """
     for j in tqdm(range(start, stop)):
         for k in range(nos):
-            # Find common elements, sum and no.
+            # Find common elements, sum and number
             c = np.intersect1d(pos_states[j], pos_states[k])
-            c_sum = np.sum(c, dtype=int)
+            c_sum = np.sum(c, dtype=np.int32)
             c_size = np.size(c)
 
-            j_sum = np.sum(pos_states[j], dtype=int)
-            k_sum = np.sum(pos_states[k], dtype=int)
+            j_sum = np.sum(pos_states[j], dtype=np.int32)
+            k_sum = np.sum(pos_states[k], dtype=np.int32)
 
             if c_size == nop - 1:
                 # Differ by one element
@@ -81,13 +99,15 @@ def _hamiltonian(start, stop, nos, ndims, nop, pos_states):
 
 def distribute(n_items, n_processes, i):
     """
-    Distributes items among processes.
+    Defines a starting and stopping point for a particular task to be
+    allocated to a process. Returns a (start, stop) tuple.
+
     :param n_items: Total no. of items
     :param n_processes: Total no. of processes
-    :param i: Process no.
+    :param i: Process no. (not same as PID)
     :return: Start & Stop point index in no. of items
     """
-    items_per_process = n_items // n_processes  # Integer division
+    items_per_process = n_items // n_processes
     start = i * items_per_process
 
     if i == n_processes - 1:
@@ -102,8 +122,10 @@ def distribute(n_items, n_processes, i):
 def hamiltonian_parallel(lattice, ndims, nop):
     """
     Wrapper for _hamiltonian. Creates multiple processes, each of which
-    process and forms a part of the hamiltonian array which is placed in
-    shared memory.
+    calls _hamiltonian simultaneously. Defines a global 'ham', which is a
+    multiprocessing array interfaced with ctypes and reshaped to generate an
+    empty (filled with zeros) hamiltonian array.
+
     :param lattice: Lattice used
     :param ndims: Dimensionality of lattice
     :param nop: No. of particles
@@ -114,7 +136,6 @@ def hamiltonian_parallel(lattice, ndims, nop):
     # Creates a multiprocessing Array and reshapes it for the hamiltonian
     # The Array is declared globally within this function
     # The Array is a part of shared memory for various processes
-    # Has been known to cause memory leaks [Use with caution]
     global ham
     ham_base = mp.Array(ctypes.c_int8, nos * nos)
     ham = np.ctypeslib.as_array(ham_base.get_obj())
@@ -137,11 +158,16 @@ def hamiltonian_parallel(lattice, ndims, nop):
     return ham
 
 
-def eigen(h):
+def diagonalize(h):
     """
-    Calculates eigenvectors and eigenvalues used Pade algorithm
-    (link to OpenBLAS Fortran libraries for parallel processing)
-    :param h: Hamiltonian matrix
+    Calculates eigenvectors and eigenvalues used Pade algorithm (see SciPy
+    documentation).
+
+    For thread control, pass 'OPENBLAS_NUM_THREADS' = '##'. Link to
+    lower level OpenBLAS (Basic Linear Algebra Subroutines) written in
+    Fortran for parallel processing.
+
+    :param h: Matrix
     :return: Real array of eigenvalues
     :return: Complex array of eigenvectors
     """
@@ -160,6 +186,8 @@ def eigen(h):
 
 def ncr(n, r):
     """
+    No. of combinations of k items taken from n items.
+
     :param n: Total no. of items
     :param r: No. of items chosen
     :return: Total no. of combinations
@@ -170,7 +198,8 @@ def ncr(n, r):
 
 def sum_ncr(n, k):
     """
-    Calculates nC0 + nC1 + ... + nCr
+    Calculates nC0 + nC1 + ... + nCr.
+
     :param n: Total no. of items
     :param k: No. of items chosen
     :return: Sum of combinations
@@ -178,9 +207,10 @@ def sum_ncr(n, k):
     return sum(ncr(n, r) for r in range(k))
 
 
-def relabel(e_states, nop, nol_b, lat_a=None):
+def relabel(e_states, nop, nol_b, lat_a):
     """
     Relabels states.
+
     :param lat_a: Sub-lattice B
     :param e_states: Eigenstates
     :param nop: No. of particles
@@ -213,7 +243,8 @@ def relabel(e_states, nop, nol_b, lat_a=None):
 
 def density_matrix_a(label, e_vec, nos, nol_a, nop):
     """
-    Calculates density matrix for sub-lattice B
+    Calculates density matrix for sub-lattice B.
+
     :param label: Relabelled states
     :param e_vec: Eigenvectors
     :param nos: No. of states
@@ -244,7 +275,8 @@ def density_matrix_a(label, e_vec, nos, nol_a, nop):
 def rho_b_pbasis(label, e_vec, nos, nol_b, nop):
     """
     Calculates density matrix for sub-lattice B. Error checks density matrix
-    whose trace should be 1.0. Warning raised if trace differs by >0.1.
+    (trace should be 1.0). Warning raised if trace differs by 1(+-)0.1.
+
     :param label: Relabelled states
     :param e_vec: Eigenvectors
     :param nos: No. of states
@@ -264,13 +296,23 @@ def rho_b_pbasis(label, e_vec, nos, nol_b, nop):
                 rho_b[m, n] += np.vdot(e_vec[j], e_vec[i])
 
     tr_rho = np.trace(rho_b.real, dtype=float)
+
     if mt.fabs(tr_rho - 1.0) > 1.0e-1:
-        print('Trace of density matrix B not 1, Trace=', tr_rho)
+        print('WARNING: Trace of density matrix B not 1, Trace=', tr_rho)
 
     return rho_b
 
 
 def h_block_diagonal(lat_b, n_dim, nop):
+    """
+    Creates a block diagonal matrix containing the hamiltonian (for various
+    no. of particles) of B placed in blocks along the diagonal.
+
+    :param lat_b: Lattice sites in B
+    :param n_dim: No. of dimensions
+    :param nop: No. of particles
+    :return: Block diagonal matrix
+    """
     bd = []
     for i in range(nop + 1):
         bd.append(hamiltonian_parallel(lat_b, n_dim, i))
@@ -278,12 +320,13 @@ def h_block_diagonal(lat_b, n_dim, nop):
 
 
 def transformation(rho_pbasis, e_vecs_bd):
+    # :TODO: Make faster (possibly using transformation matrix)
     """
     Transforms rho in position basis to rho in energy basis.
-    :TODO Make faster
-    :param rho_pbasis: rho in position basis
-    :param e_vecs_bd: eigenvectors of block diagonal hamiltonian
-    :return: rho in energy basis
+
+    :param rho_pbasis: Rho in position basis
+    :param e_vecs_bd: Eigenvectors of block diagonal hamiltonian
+    :return: Rho in energy basis
     """
     rho_ebasis = np.zeros_like(rho_pbasis, dtype=complex)
 
@@ -301,18 +344,16 @@ def transformation(rho_pbasis, e_vecs_bd):
 def naive_thermal(rho):
     """
     Compare maximum diagonal and off diagonal terms in density matrix.
-    CAUTION: Destroys original density matrix.
-    :param rho:
+    Note: Forms copy of DM, can be bypassed but will destroy original DM.
+
+    :param rho: Density matrix in energy basis
     :return: Max diagonal element
     :return: Max off-diagonal element
     """
     max_diag = rho.diagonal().max()
-    print("Max diagonal = {}".format(max_diag))
 
     rho_copy = np.copy(rho)
     np.fill_diagonal(rho_copy, -np.inf)
     max_offdiag = rho_copy.max()
-    print("Max off-diagonal = {}".format(max_offdiag))
 
-    print("Ratio (Diagonal/Off-diagonal) = {}".format(max_diag / max_offdiag))
     return max_diag, max_offdiag
