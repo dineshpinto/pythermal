@@ -1,15 +1,12 @@
-PyThermal - Time evolving bosons on a 2D crystal lattice
---------------------------------------------------------
-PyThermal v1.4.5
+PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
+---------------------------------------------------------------------------
+PyThermal v2.0.0
 
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
 *Project Mentor: Dr. A. Gupta*   
 *Project Students: A. Kumar, D. Pinto and M. Ghosh*
-
-Program to simulate n-particles on a 2D lattice, which is divided into two sub-lattices after
-deletion of sites. The variation in Von-Neumann entropy of these sub-lattices is then studied.
 
 ## Task List and Issues
 
@@ -21,13 +18,16 @@ PyThermal also has a branch written in [cython](https://github.com/dkpinto/PyThe
 
 *Documentation by D. Pinto*
 
-The code is centered around the main function, from which the entire program can be controlled. It derives data from a 
-class which is used to store initial values. The main function calls are subdivided into three sets of routines termed 
-*Sub-Routines* and an Output/Plotting function, all of which are stored in separate source files.
+The code is centered around the main function, from which the entire program can be controlled. It derives data from a
+class which is used to store (and process) initial values. 
 
-The code was designed on Python 2.7 and will not work with versions older than Python 2.6. Care has been taken to make 
-it fully compatible with Python 3.x (no modifications necessary). [PEP8](https://www.python.org/dev/peps/pep-0008/) 
-styling guidelines have been followed throughout the code.  
+The source code consists of:
+
+1. main.py - Overall control of program, program execution begins and ends here.
+2. routines.py - Set of 19 functions for simulating the hard-core bosons on a 2D lattice.
+3. output.py - Set of 8 functions to control Input/Output for files (csv) and images (png).
+4. about.py - Set of 4 functions to check dependencies and test OpenBLAS, NumPy and SciPy. 
+5. gui.py (Alpha) - Set of 3 functions forming a graphical interface for PyThermal (in Alpha).
 
 This code requires the following modules:
 
@@ -37,20 +37,25 @@ This code requires the following modules:
 4. tqdm
 5. Tkinter(Py2) or tkinter(Py3)
 
-Execute without graphical interface: `python main.py`
+Execute without graphical interface: `python3 main.py`
 
-Execute with graphical interface: `python gui.py`
+Execute with graphical interface: `python3 gui.py`
 
-To control the threads used by OpenBLAS, call OpenMP when running the program:
+To manually control the threads used by OpenBLAS, call OpenMP when running the program:
 
-        OMP_NUM_THREADS=16 python main.py 
+        OMP_NUM_THREADS=16 python3 main.py 
+
 or  
 
-        OMP_NUM_THREADS=16 python gui.py 
-        
+        OMP_NUM_THREADS=16 python3 gui.py 
         
 
+**Note:** the code was designed on Python 2.7 and will not work with versions older than Python 2.6. Care has been taken to make it fully compatible with Python 3.x (no modifications necessary). [PEP8](https://www.python.org/dev/peps/pep-0008/) styling guidelines have been strictly followed throughout the code.  
+
+
 ## Previous build(s)
+
+Future changelogs will be shifted to [commit logs](https://github.com/dkpinto/pythermal/commits/master) 
 
 ### Changelog (21/1/2015)
 1. Function eigenstates() rewritten to account for missing lattice sites, site deletion controlled by [lat_del_pos]
@@ -117,19 +122,24 @@ or
 32. Large eigenvalue problem fixed (within Main.py)
 
 ### Changelog (16/12/2015)
+
 33. tqdm reinstated for measuring progress of time-evolution and entropy [loop counter tqdm.tqdm]
 34. Error checking for trace of density matrix made non-fatal [program execution uninterrupted]
 35. Verbose output to disk
 
 ### Changelog (16-12-2015) 
+
 36. **eigenstates()** function shifted to SubRoutine1
 37. Recursion time calculation added *[Beta]*
 38. Full forward compatibility with both Python 3
 39. Error checking now outputs to **stderr**
 
 ### Changelog (30-12-2015)
+
 40. Lattice site deletion automated
 41. Error checking for particles in sub lattice A
 42. Von Neumann entropy output returned as 'real'
 43. Function **write_file()** for saving to disk
 44. Writing output made more verbose
+
+Changelogs shifted to [commit logs](https://github.com/dkpinto/pythermal/commits/master) 
