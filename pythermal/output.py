@@ -7,7 +7,7 @@
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
 
-from __future__ import print_function
+from __future__ import print_function, division, absolute_import
 
 import os
 import sys
@@ -15,6 +15,9 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+__all__ = ['status', 'warning', 'write_file', 'write_image', 'read_file',
+           'plotting_metadata', 'plotting', 'plot_write']
 
 
 def status(time_taken=0.0):
@@ -113,7 +116,7 @@ def read_file(path, filename, dtype=np.float64):
 
 def plotting_metadata():
     """
-    Stores metadata for matplotlib plots.
+    Stores metadata for MatPlotLib plots.
 
     :return: Filename of images
     :return: Image titles
@@ -141,10 +144,11 @@ def plotting_metadata():
     return filenames, titles, y_labels, x_labels, y_limits
 
 
-def plotting(ent_b, tr_sqr_b, avg_part_a, avg_part_b, path_td, t, chk):
+def plotting(ent_b, tr_sqr_b, avg_part_a, avg_part_b, path_td, t, chk=None):
     """
     Call to plot_write() with x and y data. Extracts metadata for
-    matplotlib plots from plotting_metadata().
+    MatPlotLib plots from plotting_metadata().
+
     :param ent_b: Entropy of B
     :param tr_sqr_b: Trace of square of B
     :param avg_part_a: Avg. particles in A
@@ -152,7 +156,6 @@ def plotting(ent_b, tr_sqr_b, avg_part_a, avg_part_b, path_td, t, chk):
     :param path_td: Time dependent variables file path
     :param t: Array of times
     :param chk: Checkbox for showing images
-    :return:
     """
     image_name, titles, y_labels, x_labels, y_limits = plotting_metadata()
 
@@ -171,7 +174,9 @@ def plotting(ent_b, tr_sqr_b, avg_part_a, avg_part_b, path_td, t, chk):
 def plot_write(x, y, title=None, y_label=None, x_label=None, y_limit=None,
                path=None, filename=None, checkbox=None):
     """
-    Generate graphs using matplotlib. Saves graphs to hard disk.
+    Generate graphs using MatPlotLib and save to hard disk.
+    Checkbox can be used to control plot display during execution.
+
     :param x: x axis
     :param y: y axis
     :param title: Graph title
@@ -181,7 +186,6 @@ def plot_write(x, y, title=None, y_label=None, x_label=None, y_limit=None,
     :param path: Path for saving file
     :param filename: Name of file
     :param checkbox: Show images during execution(1) or not(0)
-
     """
     plt.grid(b=True, which='major', color='k', linestyle='-')
     plt.grid(b=True, which='minor', color='0.50', linestyle='-')

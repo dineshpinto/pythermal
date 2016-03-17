@@ -14,21 +14,23 @@ from datetime import datetime
 from multiprocessing import cpu_count
 from time import time
 
-if cpu_count() > 4:
-    if 'OPENBLAS_NUM_THREADS' not in os.environ:
+if 'OPENBLAS_NUM_THREADS' not in os.environ:
+    if cpu_count() > 4:
         os.environ['OPENBLAS_NUM_THREADS'] = '16'
+    elif cpu_count() == 4:
+        os.environ['OPENBLAS_NUM_THREADS'] = '4'
+    else:
+        os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 import numpy as np
-from scipy.linalg import norm
+import scipy.linalg as la
 
-from output import status, write_file, read_file
-from routines import (position_states, hamiltonian_parallel, diagonalize,
-                      relabel, rho_b_pbasis, transformation, naive_thermal,
-                      h_block_diagonal)
+from output import *
+from routines import *
 
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, SSCTP"
-__version__ = "v1.9.0-states"
+__version__ = "v2.0.0"
 
 
 class System:
@@ -62,15 +64,16 @@ class System:
     @property
     def folder_path(self):
         """
-        :return: Path for storing output
+        :return: Path for storing program output
         """
-        return ('../pythermal_output/{}_{}_{}_{}/'
+        return ('../pythermal_output/P{}_D{}_A{}_B{}/'
                 .format(self.nop, self.n_dim, self.nol_a, self.nol_b))
 
     def check_existence(self, names):
         """
         Checks whether variables exists on hard disk.
-        Could be deprecated for try-except statements.
+        Generally deprecated for try-except statements.
+
         :param names: list of names of variables
         :return: Boolean list whether files exists on hard disk
         """
@@ -89,7 +92,8 @@ class System:
     def check_system(self):
         """
         Runs checks to make sure all inputs are valid.
-        Raises ValueError if not.
+
+        :raises Value errors for invalid inputs
         """
         if not self.nop > 0:
             raise ValueError('No. of particles should be greater than 0')
@@ -104,7 +108,9 @@ class System:
 
 def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
     """
-    Contains calls to/control of all functions in program.
+    Contains functions to find the density matrix of a subsystem in its energy
+    basis and compare the diagonal/off-diagonal elements.
+
     :param chosen_eigenstates: Eigenstates for which to compute DM's
     :param initial_values: List of initial values for system
         initial_values = [
@@ -173,7 +179,7 @@ def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
 
     for state_num in chosen_eigenstates:
         print("Eigenstate = {}/{}".format(state_num, nos_ab))
-        state = eigenvectors[state_num] / norm(eigenvectors[state_num])
+        state = eigenvectors[state_num] / la.norm(eigenvectors[state_num])
 
         # Density Matrix
         dm_time1 = time()
@@ -194,7 +200,7 @@ def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
                 write_file(path + 'RhoStates(PositionBasis)/', rho_fname,
                            rho_pbasis)
             print("Transforming DM to Energy basis...")
-            rho_ebasis = transformation(rho_pbasis, h_bd_evecs)
+            rho_ebasis = transform_basis(rho_pbasis, h_bd_evecs)
             write_file(path + 'RhoStates(EnergyBasis)/', rho_fname, rho_ebasis)
         dm_time2 = time()
         status(dm_time2 - dm_time1)
@@ -228,6 +234,128 @@ def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
     return True
 
 
+def main_time(initial_values, chosen_eigenstate, t_initial, t_final, t_steps,
+              lattice_a, lattice_b):
+    """
+    Contains functions to time evolve the entire system (both
+    sub-lattices) starting in an initial state where all particles are in
+    one sub-lattice.
+
+    :param initial_values: List of initial values for system
+        initial_values = [
+            Total no. of particles(nop),
+            Dimension of lattice(ndims)]
+    :param chosen_eigenstate: Initial state for time evolution
+    :param t_initial: Starting time
+    :param t_final: Ending time
+    :param t_steps: No. of steps
+    :param lattice_a: List of sites in A
+    :param lattice_b: List of sites in B
+    :return: True if execution successful
+    """
+    s = System(initial_values, lattice_a, lattice_b)
+    s.check_system()
+    path = s.folder_path
+    timesteps = np.arange(t_initial, t_final, (t_final - t_initial) / t_steps)
+
+    tot_time1 = time()
+
+    # Eigenstates
+    pos_states, nos = position_states(s.lattice, s.nop)
+    pos_states_a, nos_a = position_states(lattice_a, s.nop)
+    write_file(path, 'PositionStates.csv', pos_states, fmt='%1d')
+    write_file(path, 'PositionStates_A.csv', pos_states_a, fmt='%1d')
+
+    # Hamiltonian
+    h_time1 = time()
+    try:
+        # Reads Hamiltonian from hard disk
+        hamiltonian = read_file(path, 'Hamiltonian_AB.csv')
+    except IOError:
+        # Otherwise generates Hamiltonian
+        print('Hamiltonian...')
+        hamiltonian = hamiltonian_parallel(s.lattice, s.n_dim, s.nop)
+        write_file(path, 'Hamiltonian_AB.csv', hamiltonian, fmt='%1d')
+
+    try:
+        hamiltonian_a = read_file(path, 'Hamiltonian_A.csv')
+    except IOError:
+        hamiltonian_a = hamiltonian_parallel(lattice_a, s.n_dim, s.nop)
+        write_file(path, 'Hamiltonian_A.csv', hamiltonian_a, fmt='%1d')
+    h_time2 = time()
+    status(h_time2 - h_time1)
+
+    # Eigenvalues and Eigenvectors
+    e_time1 = time()
+    try:
+        eigenvalues = read_file(path, 'Eigenvalues_AB.csv')
+        eigenvectors = read_file(path, 'Eigenvectors_AB.csv', dtype=complex)
+    except IOError:
+        print('Diagonalizing...')
+        eigenvalues, eigenvectors = diagonalize(hamiltonian)
+        write_file(path, 'Eigenvalues_AB.csv', eigenvalues)
+        write_file(path, 'Eigenvectors_AB.csv', eigenvectors)
+
+    # Eigenvalues and Eigenvectors of A
+    try:
+        eigenvalues_a = read_file(path, 'Eigenvalues_A.csv')
+        eigenvectors_a = read_file(path, 'Eigenvectors_A.csv', dtype=complex)
+    except IOError:
+        print('Diagonalizing A...')
+        eigenvalues_a, eigenvectors_a = diagonalize(hamiltonian_a)
+        write_file(path, 'Eigenvalues_A.csv', eigenvalues_a)
+        write_file(path, 'Eigenvectors_AB.csv', eigenvectors_a)
+    e_time2 = time()
+    status(e_time2 - e_time1)
+
+    # State Relabelling
+    labels = relabel(pos_states, s.nop, s.nol_b, lat_a=lattice_a)
+    write_file(path, 'RelabelledStates.csv', labels)
+
+    # Initial state as eigenvector of A
+    psi_initial = initial_sublattice_state(eigenvectors_a, labels, nos,
+                                           s.nop, chosen_eigenstate)
+
+    # Time Evolution
+    evo_time1 = time()
+    try:
+        psi_t = read_file(path, 'Psi_t.csv', dtype=complex)
+    except IOError:
+        print('Time evolving...')
+        psi_t = time_evolution(psi_initial, hamiltonian, nos, timesteps)
+        write_file(path, 'Psi_t.csv', psi_t)
+    evo_time2 = time()
+    status(evo_time2 - evo_time1)
+
+    # Average number of particles in A and B
+    try:
+        avg_a = read_file(path, 'Avg_A.csv')
+        avg_b = read_file(path, 'Avg_B.csv')
+    except IOError:
+        avg_a, avg_b = avg_particles(psi_t, timesteps, labels, s.nop)
+        write_file(path, 'Avg_A.csv', avg_a)
+        write_file(path, 'Avg_B.csv', avg_b)
+
+    # Von-Neumann Entropy
+    vn_time1 = time()
+    try:
+        entropy_b = read_file(path, 'Entropy_b.csv', dtype=complex)
+        tr_sqr_b = read_file(path, 'Trace_square_B.csv')
+    except IOError:
+        print('Von-Neumann Entropy...')
+        entropy_b, tr_sqr_b = vn_entropy_b(psi_t, labels, nos, s.nol_b, s.nop)
+        write_file(path, 'Entropy_b.csv', entropy_b)
+        write_file(path, 'Trace_square_B.csv', tr_sqr_b)
+    vn_time2 = time()
+    status(vn_time2 - vn_time1)
+
+    plotting(entropy_b, tr_sqr_b, avg_a, avg_b, path, timesteps)
+
+    tot_time2 = time()
+    status(tot_time2 - tot_time1)
+    return True
+
+
 if __name__ == '__main__':
     """
     init_values = [Total no. of particles(nop), Dimension of lattice(ndims)]
@@ -235,7 +363,8 @@ if __name__ == '__main__':
     """
     init_values = [2, 6]
     chosen_e_states = [_ for _ in range(10, 100, 2)]
+    sub_lattice_a = np.genfromtxt('a.txt', dtype=int)
+    sub_lattice_b = np.genfromtxt('b.txt', dtype=int)
 
-    main_states(init_values, chosen_e_states,
-                lattice_a=np.genfromtxt('a.txt', dtype=int),
-                lattice_b=np.genfromtxt('b.txt', dtype=int))
+    main_states(init_values, chosen_e_states, sub_lattice_a, sub_lattice_b)
+    # main_time(init_values, 0, 0, 100, 100, sub_lattice_a, sub_lattice_b)

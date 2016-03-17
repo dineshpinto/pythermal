@@ -16,7 +16,7 @@ import multiprocessing as mp
 import warnings
 
 import numpy as np
-from scipy.linalg import eig, block_diag
+import scipy.linalg as la
 from tqdm import tqdm
 
 try:
@@ -26,8 +26,10 @@ except ImportError:
 
 __all__ = ['position_states', '_hamiltonian', 'distribute',
            'hamiltonian_parallel', 'diagonalize', 'ncr', 'sum_ncr',
-           'relabel', 'density_matrix_a', 'rho_b_pbasis',
-           'h_block_diagonal', 'transformation', 'naive_thermal']
+           'relabel', 'rho_a_pbasis', 'rho_b_pbasis',
+           'h_block_diagonal', 'transform_basis', 'naive_thermal',
+           'initial_sublattice_state', 'trace_squared', 'vn_entropy_b',
+           'time_evolution', 'avg_particles']
 
 
 def position_states(lat, nop, del_pos=None):
@@ -171,7 +173,7 @@ def diagonalize(h):
     :return: Real array of eigenvalues
     :return: Complex array of eigenvectors
     """
-    eigenvalues, eigenvectors = eig(h, check_finite=False)
+    eigenvalues, eigenvectors = la.eig(h, check_finite=False)
 
     # Select only real part of eigenvalues
     eigenvalues = eigenvalues.real
@@ -241,7 +243,7 @@ def relabel(e_states, nop, nol_b, lat_a):
     return np.array(relabelled_states)
 
 
-def density_matrix_a(label, e_vec, nos, nol_a, nop):
+def rho_a_pbasis(label, e_vec, nos, nol_a, nop):
     """
     Calculates density matrix for sub-lattice B.
 
@@ -316,11 +318,11 @@ def h_block_diagonal(lat_b, n_dim, nop):
     bd = []
     for i in range(nop + 1):
         bd.append(hamiltonian_parallel(lat_b, n_dim, i))
-    return block_diag(*bd)
+    return la.block_diag(*bd)
 
 
-def transformation(rho_pbasis, e_vecs_bd):
-    # :TODO: Make faster (possibly using transformation matrix)
+def transform_basis(rho_pbasis, e_vecs_bd):
+    # :TODO: Use transformation matrix for speed
     """
     Transforms rho in position basis to rho in energy basis.
 
@@ -344,7 +346,7 @@ def transformation(rho_pbasis, e_vecs_bd):
 def naive_thermal(rho):
     """
     Compare maximum diagonal and off diagonal terms in density matrix.
-    Note: Forms copy of DM, can be bypassed but will destroy original DM.
+    Note: Makes copy of DM (bypass will destroy original DM)
 
     :param rho: Density matrix in energy basis
     :return: Max diagonal element
@@ -357,3 +359,147 @@ def naive_thermal(rho):
     max_offdiag = rho_copy.max()
 
     return max_diag, max_offdiag
+
+
+# From pythermal-master
+
+def initial_sublattice_state(e_vec, label, nos, nop, e_vec_num):
+    """
+    Returns a normalized initial state with all particles in one sub-lattice.
+    Control which sub-lattice is used by passing appropriate eigenvectors
+    (i.e. eigenvectors of the chosen sub-lattice) as an argument.
+
+    :param e_vec: Eigenvectors of either sub-lattice
+    :param label: Array of relabelled states
+    :param nos: No. of states
+    :param nop: No. of particles
+    :param e_vec_num: Initial eigenvector chosen
+    :return: Normalized initial state
+    """
+    if e_vec_num > len(e_vec):
+        raise ValueError('Eigenvector not in range. Range(0 - {})'
+                         .format(len(e_vec)))
+
+    psi_initial = np.zeros(nos, dtype=np.complex)
+
+    j = 0
+    for idx, val in enumerate(label[:, 1]):
+        if val == nop:
+            # Picks out states where all particles are in one sub-lattice
+            psi_initial[idx] = e_vec[e_vec_num, j]
+            j += 1
+
+    return psi_initial / la.norm(psi_initial)
+
+
+def trace_squared(rho):
+    """
+    Calculate the trace of the square of the density matrix.
+
+    :param rho: Density matrix
+    :return: Trace of the square of the density matrix
+    """
+    return np.trace(np.linalg.matrix_power(rho, 2))
+
+
+def vn_entropy_a(psi_t, label, nos, nol_a, nop):
+    """
+    Calculates Von-Neumann entropy as S = - tr(rho * ln(rho)).
+    Also calculates trace of square of density matrix (measure of
+    entanglement).
+    Uses a filter to suppress 'WARNING: The logm input matrix may be nearly
+    singular'. Wraps loop in tqdm for progress bar.
+
+    :param psi_t: Psi(t)
+    :param label: Relabelled states
+    :param nos: No. of states
+    :param nol_a: No. of lattice sites in A
+    :param nop: No. of particles
+    :return: Real Von-Neumann entropy
+    :return: Trace of density matrix of B
+    """
+    vn_entropy = np.zeros(len(psi_t), dtype=complex)
+    tr_sqr = np.zeros(len(psi_t), dtype=float)
+
+    warnings.filterwarnings('ignore')
+
+    idx = 0
+    for val in tqdm(psi_t):
+        d_matrix = rho_a_pbasis(label, val, nos, nol_a, nop)
+        vn_entropy[idx] = - np.trace(np.dot(d_matrix, la.logm(d_matrix)))
+        tr_sqr[idx] = trace_squared(d_matrix)
+        idx += 1
+
+    return vn_entropy.real, tr_sqr
+
+
+def vn_entropy_b(psi_t, label, nos, nol_b, nop):
+    """
+    Calculates Von-Neumann entropy as S = - tr(rho * ln(rho)).
+    Also calculates trace of square of density matrix (measure of
+    entanglement).
+    Uses a filter to suppress 'WARNING: The logm input matrix may be nearly
+    singular'. Wraps loop in tqdm for progress bar.
+
+    :param psi_t: Psi(t)
+    :param label: Relabelled states
+    :param nos: No. of states
+    :param nol_b: No. of lattice sites in B
+    :param nop: No. of particles
+    :return: Real Von-Neumann entropy
+    :return: Trace of density matrix of B
+    """
+    vn_entropy = np.zeros(len(psi_t), dtype=complex)
+    tr_sqr = np.zeros(len(psi_t), dtype=float)
+
+    warnings.filterwarnings('ignore')
+
+    for val, idx in enumerate(psi_t):
+        d_matrix = rho_b_pbasis(label, val, nos, nol_b, nop)
+        vn_entropy[idx] = - np.trace(np.dot(d_matrix, la.logm(d_matrix)))
+        tr_sqr[idx] = trace_squared(d_matrix)
+
+    return vn_entropy.real, tr_sqr
+
+
+def time_evolution(psi_0, h, nos, timesteps):
+    """
+    Psi evolved as |Psi(t)> = exp(-i * h * t)|Psi(0)>.
+    Uses matrix exponential for computation.
+
+    :param psi_0: Initial state
+    :param h: Hamiltonian matrix
+    :param nos: No. of states
+    :param timesteps: Array of times
+    :return: Array of Psi(t)
+    """
+    psi_t = np.zeros(shape=(len(timesteps), nos), dtype=complex)
+
+    idx = 0
+    for t in tqdm(timesteps):
+        psi_t[idx] = np.dot(la.expm(-1.0j * h * t), psi_0)
+        idx += 1
+
+    return psi_t
+
+
+def avg_particles(psi_t, timesteps, labels, nop):
+    """
+    Calculates the average number of particles in sub-lattices A and B.
+
+    :param psi_t: Array of psi at various times
+    :param timesteps: Array of times
+    :param labels: Relabelled states
+    :param nop: Total no. of particles
+    :return: Avg. particles in sub-lattice A
+    :return: Avg. particles in sub-lattice B
+    """
+    avg_a, avg_b = np.zeros_like(timesteps), np.zeros_like(timesteps)
+
+    for idx in range(len(timesteps)):
+        for idx2, val in enumerate(labels[:, 1]):
+            fraction = (np.vdot(psi_t[idx, idx2], psi_t[idx, idx2])).real
+            avg_a[idx] += fraction * val
+            avg_b[idx] += fraction * (nop - val)
+
+    return avg_a, avg_b

@@ -143,7 +143,7 @@ def execute(initial_values, optional_values):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    root.title('PyThermal GUI {} (Alpha build)'.format(__version__))
+    root.title('PyThermal {} GUI (Alpha)'.format(__version__))
     about.about(test=False)
 
     # Setting icon for window

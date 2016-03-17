@@ -7,7 +7,7 @@
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
 
-from __future__ import print_function, division
+from __future__ import print_function, division, absolute_import
 
 import multiprocessing
 import os
