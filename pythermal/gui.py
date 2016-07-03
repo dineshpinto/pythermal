@@ -168,7 +168,7 @@ if __name__ == '__main__':
     b2 = ttk.Button(root, text='Close', command=root.quit)
     b2.pack(side=tk.LEFT, padx=8, pady=8)
 
-    b3 = ttk.Button(root, text='Print',
+    b3 = ttk.Button(root, text='Display',
                     command=lambda: fetch(init_values, opt_values))
     b3.pack(side=tk.RIGHT, padx=8, pady=8)
 

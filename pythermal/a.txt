@@ -5,7 +5,6 @@
 #   a   o   a   a   a   a
 #   a   a   a   a   a   a
 #   o   a   a   a   o   o
-#
 # Lattice sites in sub-lattice A
 12
 17

@@ -20,11 +20,13 @@ import scipy.linalg as la
 from tqdm import tqdm
 
 try:
+    # Python 3
     from builtins import range
 except ImportError:
+    # Python 2
     from __builtin__ import range
 
-__all__ = ['position_states', '_hamiltonian', 'distribute',
+__all__ = ['position_states', '_hamiltonian_', 'distribute',
            'hamiltonian_parallel', 'diagonalize', 'ncr', 'sum_ncr',
            'relabel', 'rho_a_pbasis', 'rho_b_pbasis',
            'h_block_diagonal', 'transform_basis', 'naive_thermal',
@@ -53,7 +55,7 @@ def position_states(lat, nop, del_pos=None):
     return pos_states, len(pos_states)
 
 
-def _hamiltonian(start, stop, nos, ndims, nop, pos_states):
+def _hamiltonian_(start, stop, nos, ndims, nop, pos_states):
     """
     Core Hamiltonian function.
 
@@ -61,9 +63,9 @@ def _hamiltonian(start, stop, nos, ndims, nop, pos_states):
     multiprocessing array (shared memory array) to store output hamiltonian.
 
     When coupled to its function wrapper (hamiltonian_parallel), n processes
-    (n is no. of CPU's) call _hamiltonian simultaneously. The distribute
+    (n is no. of CPU's) call _hamiltonian_ simultaneously. The distribute
     function allocated tasks to each process. A task is defined by the
-    starting and stopping points of the outer loop.
+    starting and stopping points of the outer loop (represented by 'j').
 
     :param start: Starting point of [j] iteration
     :param stop: Stopping point of [j] iteration
@@ -76,13 +78,13 @@ def _hamiltonian(start, stop, nos, ndims, nop, pos_states):
         for k in range(nos):
             # Find common elements, sum and number
             c = np.intersect1d(pos_states[j], pos_states[k])
-            c_sum = np.sum(c, dtype=np.int32)
             c_size = np.size(c)
 
-            j_sum = np.sum(pos_states[j], dtype=np.int32)
-            k_sum = np.sum(pos_states[k], dtype=np.int32)
-
             if c_size == nop - 1:
+                c_sum = np.sum(c, dtype=np.int32)
+                j_sum = np.sum(pos_states[j], dtype=np.int32)
+                k_sum = np.sum(pos_states[k], dtype=np.int32)
+
                 # Differ by one element
                 if abs(j_sum - k_sum) == ndims:
                     # Differ by dimension
@@ -150,7 +152,7 @@ def hamiltonian_parallel(lattice, ndims, nop):
     for i in range(n_processes):
         start, stop = distribute(nos, n_processes, i)
         args = (start, stop, nos, ndims, nop, pos_states)
-        process = mp.Process(target=_hamiltonian, args=args)
+        process = mp.Process(target=_hamiltonian_, args=args)
         process_list.append(process)
         process.start()
 
@@ -287,14 +289,13 @@ def rho_b_pbasis(label, e_vec, nos, nol_b, nop):
     :return: Density matrix of sub-lattice B
     """
     dim_b = sum_ncr(nol_b, nop + 1)
-    rho_b = np.zeros(shape=(dim_b, dim_b), dtype=complex, order='F')
+    rho_b = np.zeros(shape=(dim_b, dim_b), dtype=complex)
 
     for i in tqdm(range(nos)):
         for j in range(nos):
             if label[i, 1] == label[j, 1] and label[i, 0] == label[j, 0]:
                 m = int(label[i, 2] + sum_ncr(nol_b, (nop - label[i, 1])) - 1)
                 n = int(label[j, 2] + sum_ncr(nol_b, (nop - label[j, 1])) - 1)
-
                 rho_b[m, n] += np.vdot(e_vec[j], e_vec[i])
 
     tr_rho = np.trace(rho_b.real, dtype=float)
@@ -454,8 +455,8 @@ def vn_entropy_b(psi_t, label, nos, nol_b, nop):
 
     warnings.filterwarnings('ignore')
 
-    for val, idx in enumerate(psi_t):
-        d_matrix = rho_b_pbasis(label, val, nos, nol_b, nop)
+    for idx, vec in enumerate(psi_t):
+        d_matrix = rho_b_pbasis(label, vec, nos, nol_b, nop)
         vn_entropy[idx] = - np.trace(np.dot(d_matrix, la.logm(d_matrix)))
         tr_sqr[idx] = trace_squared(d_matrix)
 

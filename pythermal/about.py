@@ -34,12 +34,14 @@ def about(test=True):
     print("PyThermal Version: {}".format(__version__))
     print("Python Version: {}".format(platform.python_version()))
     print("Number of CPUs: {}".format(multiprocessing.cpu_count()))
+
     try:
         ram = check_ram()
     except Exception:
         pass
     else:
         print("Available RAM: {} GB".format(ram))
+
     print("Platform Info: {} {}".format(platform.system(), platform.machine()))
 
     try:
@@ -51,7 +53,7 @@ def about(test=True):
 
     try:
         import tqdm
-        print("tqdm Version: {}".format(tqdm.__version__))
+        print("Tqdm Version: {}".format(tqdm.__version__))
     except ImportError:
         sys.stderr.write("[REQUIRED] Unable to import the 'tqdm' module")
         print("")
@@ -73,6 +75,7 @@ def about(test=True):
     except ImportError:
         sys.stderr.write("[REQUIRED] Unable to import the 'scipy' module")
         print("")
+    print("Complete.")
 
 
 def check_ram():

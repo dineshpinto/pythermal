@@ -4,8 +4,7 @@
 #   o   o   b   o   a   a
 #   a   o   a   a   a   a
 #   a   a   a   a   a   a
-#   o   a   a   a   o   o 
-#
+#   o   a   a   a   o   o
 # Lattice sites in sub-lattice B
 1
 2

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 __all__ = ['status', 'warning', 'write_file', 'write_image', 'read_file',
-           'plotting_metadata', 'plotting', 'plot_write']
+           'plot_write']
 
 
 def status(time_taken=0.0):
@@ -114,63 +114,6 @@ def read_file(path, filename, dtype=np.float64):
         raise IOError
 
 
-def plotting_metadata():
-    """
-    Stores metadata for MatPlotLib plots.
-
-    :return: Filename of images
-    :return: Image titles
-    :return: y axis labels
-    :return: x axis labels
-    :return: y axis limits
-    """
-    filenames = ['VN_Entropy_B', 'Trace2_B', 'Avg_A', 'Avg_B', 'Avg_AB']
-
-    titles = [r'Von-Neumann entropy ($S_{VN}$) vs time ($\tau$)',
-              r'Purity ($tr(\rho^2))$) vs time ($\tau$)',
-              r'Avg. particles in A vs time ($\tau$)',
-              r'Avg. particles in B vs time ($\tau$)',
-              r'Avg. particles in A and B vs time ($\tau$)']
-
-    y_labels = [r'Von-Neumann Entropy $[S_{VN} = - tr(\rho \ln(\rho))]$',
-                r'Purity $[tr(\rho^2))] \rightarrow$',
-                r'Avg. particles in A', r'Avg. particles in B',
-                r'Avg. particles in A and B']
-
-    x_labels = [r'Time $[\tau]\rightarrow$']
-
-    y_limits = [(0.0, 3.0), (-1.0, 2.0), (0.0, 5.0)]
-
-    return filenames, titles, y_labels, x_labels, y_limits
-
-
-def plotting(ent_b, tr_sqr_b, avg_part_a, avg_part_b, path_td, t, chk=None):
-    """
-    Call to plot_write() with x and y data. Extracts metadata for
-    MatPlotLib plots from plotting_metadata().
-
-    :param ent_b: Entropy of B
-    :param tr_sqr_b: Trace of square of B
-    :param avg_part_a: Avg. particles in A
-    :param avg_part_b: Avg. particles in B
-    :param path_td: Time dependent variables file path
-    :param t: Array of times
-    :param chk: Checkbox for showing images
-    """
-    image_name, titles, y_labels, x_labels, y_limits = plotting_metadata()
-
-    plot_write(t, ent_b, titles[0], y_labels[0], x_labels[0],
-               y_limits[0], path_td, image_name[0], chk)
-    plot_write(t, tr_sqr_b, titles[1], y_labels[1], x_labels[0],
-               y_limits[0], path_td, image_name[1], chk)
-    plot_write(t, avg_part_a, titles[2], y_labels[2], x_labels[0],
-               y_limits[2], path_td, image_name[2], chk)
-    plot_write(t, avg_part_b, titles[3], y_labels[3], x_labels[0],
-               y_limits[2], path_td, image_name[3], chk)
-    plot_write(t, avg_part_b + avg_part_a, titles[4], y_labels[4],
-               x_labels[0], y_limits[2], path_td, image_name[4], chk)
-
-
 def plot_write(x, y, title=None, y_label=None, x_label=None, y_limit=None,
                path=None, filename=None, checkbox=None):
     """
@@ -201,5 +144,8 @@ def plot_write(x, y, title=None, y_label=None, x_label=None, y_limit=None,
 
     if checkbox:
         plt.show()
+
+    if path is None:
+        path = ''
 
     write_image(path, filename)

@@ -15,10 +15,10 @@ from multiprocessing import cpu_count
 from time import time
 
 if 'OPENBLAS_NUM_THREADS' not in os.environ:
-    if cpu_count() > 4:
+    if cpu_count() >= 16:
         os.environ['OPENBLAS_NUM_THREADS'] = '16'
-    elif cpu_count() == 4:
-        os.environ['OPENBLAS_NUM_THREADS'] = '4'
+    elif 4 <= cpu_count() < 16:
+        os.environ['OPENBLAS_NUM_THREADS'] = '{}'.format(cpu_count())
     else:
         os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
@@ -30,7 +30,7 @@ from routines import *
 
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, SSCTP"
-__version__ = "v2.0.0"
+__version__ = "v2.1.0"
 
 
 class System:
@@ -64,10 +64,63 @@ class System:
     @property
     def folder_path(self):
         """
+        The naming convection is as follows:
+        P[Total no. of particles]
+        D[Dimensionality of lattice]
+        A[No. of particles in A]
+        B[No. of particles in B]
+
         :return: Path for storing program output
         """
-        return ('../pythermal_output/P{}_D{}_A{}_B{}/'
+        return ('../pythermal_output/P[{}]D[{}]A[{}]B[{}]/'
                 .format(self.nop, self.n_dim, self.nol_a, self.nol_b))
+
+    def check_system(self):
+        """
+        Runs checks to make sure all inputs are valid.
+
+        :raises Value errors for invalid inputs
+        """
+        if not self.nop > 0:
+            raise ValueError('No. of particles should be greater than 0')
+
+        if not self.nop < self.n_dim ** 2:
+            raise ValueError('Too many particles [{}] for lattice [{}]'
+                             .format(self.nop, self.n_dim ** 2))
+
+        if not self.n_dim > 3:
+            raise ValueError('Shape of lattice must be at least 3')
+
+    @staticmethod
+    def plotting_metadata():
+        """
+          Stores metadata for MatPlotLib plots.
+
+          :return: Filename of images
+          :return: Image titles
+          :return: y axis labels
+          :return: x axis labels
+          :return: y axis limits
+          """
+        image_names = ['VN_Entropy_B', 'Trace_sqr_B', 'Avg_A', 'Avg_B',
+                       'Avg_AB']
+
+        titles = [r'Von-Neumann entropy ($S_{VN}$) vs time ($\tau$)',
+                  r'Purity ($tr(\rho^2))$) vs time ($\tau$)',
+                  r'Avg. particles in A vs time ($\tau$)',
+                  r'Avg. particles in B vs time ($\tau$)',
+                  r'Avg. particles in A and B vs time ($\tau$)']
+
+        y_labels = [r'Von-Neumann Entropy $[S_{VN} = - tr(\rho \ln(\rho))]$',
+                    r'Purity $[tr(\rho^2))] \rightarrow$',
+                    r'Avg. particles in A', r'Avg. particles in B',
+                    r'Avg. particles in A and B']
+
+        x_labels = [r'Time $[\tau]\rightarrow$']
+
+        y_limits = [(0.0, 3.0), (-1.0, 2.0), (0.0, 5.0)]
+
+        return image_names, titles, y_labels, x_labels, y_limits
 
     def check_existence(self, names):
         """
@@ -89,27 +142,14 @@ class System:
 
         return existence
 
-    def check_system(self):
-        """
-        Runs checks to make sure all inputs are valid.
-
-        :raises Value errors for invalid inputs
-        """
-        if not self.nop > 0:
-            raise ValueError('No. of particles should be greater than 0')
-
-        if not self.nop < self.n_dim ** 2:
-            raise ValueError('Too many particles [{}] for lattice [{}]'
-                             .format(self.nop, self.n_dim ** 2))
-    
-        if not self.n_dim > 3:
-            raise ValueError('Shape of lattice must be at least 3')
-
 
 def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
     """
-    Contains functions to find the density matrix of a subsystem in its energy
-    basis and compare the diagonal/off-diagonal elements.
+    Contains functions to find the density matrix of a subsystem in its
+    energy basis and compare the diagonal/off-diagonal elements.
+    Uses time() module to time execution of various functions and output
+    to standard output.
+
 
     :param chosen_eigenstates: Eigenstates for which to compute DM's
     :param initial_values: List of initial values for system
@@ -127,10 +167,25 @@ def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
     tot_time1 = time()
 
     # Position States
-    pos_states_ab, nos_ab = position_states(s.lattice, s.nop)
-    pos_states_a, nos_a = position_states(lattice_a, s.nop)
-    write_file(path, 'PositionStates_AB.csv', pos_states_ab, fmt='%1d')
-    write_file(path, 'PositionStates_A.csv', pos_states_a, fmt='%1d')
+    try:
+        pos_states_ab = read_file(path, 'PositionStates_AB.csv')
+        nos_ab = len(pos_states_ab)
+        pos_states_a = read_file(path, 'PositionStates_A.csv')
+        nos_a = len(pos_states_a)
+    except IOError:
+        pos_states_ab, nos_ab = position_states(s.lattice, s.nop)
+        pos_states_a, nos_a = position_states(lattice_a, s.nop)
+        write_file(path, 'PositionStates_AB.csv', pos_states_ab, fmt='%1d')
+        write_file(path, 'PositionStates_A.csv', pos_states_a, fmt='%1d')
+
+    # Hamiltonian
+    try:
+        hamiltonian = read_file(path, 'Hamiltonian_AB.csv', dtype=int)
+    except IOError:
+        print("Hamiltonian...")
+        hamiltonian = hamiltonian_parallel(s.lattice, s.n_dim, s.nop)
+        write_file(path, 'Hamiltonian_AB.csv', hamiltonian, fmt='%1d')
+        print("Hamiltonian done!")
 
     # Eigenvalues and Eigenvectors
     e_time1 = time()
@@ -138,37 +193,33 @@ def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
         eigenvalues = read_file(path, 'Eigenvalues_AB.csv')
         eigenvectors = read_file(path, 'Eigenvectors_AB.csv', dtype=complex)
     except IOError:
-        try:
-            hamiltonian = read_file(path, 'Hamiltonian_AB.csv', dtype=int)
-        except IOError:
-            print("Hamiltonian...")
-            hamiltonian = hamiltonian_parallel(s.lattice, s.n_dim, s.nop)
-            write_file(path, 'Hamiltonian_AB.csv', hamiltonian, fmt='%1d')
-            print("Hamiltonian done!")
-        print("Diagonalizing...")
+        print("Eigenvalues/Eigenvectors of Hamiltonian...")
         eigenvalues, eigenvectors = diagonalize(hamiltonian)
         write_file(path, 'Eigenvalues_AB.csv', eigenvalues)
         write_file(path, 'Eigenvectors_AB.csv', eigenvectors)
-        print("Diagonalizing done!")
+        print("Eigenvalues/Eigenvectors of Hamiltonian done!")
     e_time2 = time()
     status(e_time2 - e_time1)
 
-    # Block diagonal
+    # Block diagonal Hamiltonian
     bd_time1 = time()
+    try:
+        h_bd = read_file(path, 'Hamiltonian_B_BD.csv')
+    except IOError:
+        print("Block diagonal...")
+        h_bd = h_block_diagonal(lattice_b, s.n_dim, s.nop)
+        write_file(path, 'Hamiltonian_B_BD.csv', h_bd, fmt='%1d')
+        print("Block diagonal done!")
+
+    # Diagonalizing block diagonal Hamiltonian
     try:
         h_bd_evecs = read_file(path, 'Hamiltonian_B_BD_Evecs.csv',
                                dtype=complex)
     except IOError:
-        try:
-            h_bd = read_file(path, 'Hamiltonian_B_BD.csv')
-        except IOError:
-            print("Block diagonal...")
-            h_bd = h_block_diagonal(lattice_b, s.n_dim, s.nop)
-            write_file(path, 'Hamiltonian_B_BD.csv', h_bd, fmt='%1d')
-            print("Block diagonal done!")
-        print("Diagonalizing block diagonal...")
+        print("Eigenvalues/Eigenvectors of block diagonal...")
         _, h_bd_evecs = diagonalize(h_bd)
         write_file(path, 'Hamiltonian_B_BD_Evecs.csv', h_bd_evecs)
+        print("Eigenvalues/Eigenvectors of block diagonal done!")
     bd_time2 = time()
     status(bd_time2 - bd_time1)
 
@@ -177,33 +228,42 @@ def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
     labels = relabel(pos_states_ab, s.nop, s.nol_b, lat_a=lattice_a)
     write_file(path, 'RelabelledStates.csv', labels)
 
+    # Density Matrices for chosen eigenstates
     for state_num in chosen_eigenstates:
         print("Eigenstate = {}/{}".format(state_num, nos_ab))
+        # Normalize state
         state = eigenvectors[state_num] / la.norm(eigenvectors[state_num])
 
         # Density Matrix
         dm_time1 = time()
         rho_fname = '[{}]{}.csv'.format(state_num, eigenvalues[state_num])
+
+        # Density matrix in position basis
         try:
-            rho_ebasis = read_file(path + 'RhoStates(EnergyBasis)/',
+            rho_pbasis = read_file(path + 'RhoStates(PositionBasis)/',
                                    rho_fname, dtype=complex)
         except IOError:
-            try:
-                rho_pbasis = read_file(path + 'RhoStates(PositionBasis)/',
-                                       rho_fname, dtype=complex)
-            except IOError:
-                print("DM in position basis...")
-                rho_pbasis = rho_b_pbasis(labels, state, nos_ab, s.nol_b,
-                                          s.nop)
-                rho_fname = ('[{}]{}.csv'.format(state_num,
-                                                 eigenvalues[state_num]))
-                write_file(path + 'RhoStates(PositionBasis)/', rho_fname,
-                           rho_pbasis)
+            print("DM in position basis...")
+            rho_pbasis = rho_b_pbasis(labels, state, nos_ab, s.nol_b,
+                                      s.nop)
+            rho_fname = ('[{}]{}.csv'.format(state_num,
+                                             eigenvalues[state_num]))
+            write_file(path + 'RhoStates(PositionBasis)/', rho_fname,
+                       rho_pbasis)
+
+        # Density matrix in energy basis
+        try:
+            rho_ebasis = read_file(path + 'RhoStates(EnergyBasis)/', rho_fname,
+                                   dtype=complex)
+        except IOError:
             print("Transforming DM to Energy basis...")
             rho_ebasis = transform_basis(rho_pbasis, h_bd_evecs)
             write_file(path + 'RhoStates(EnergyBasis)/', rho_fname, rho_ebasis)
+
         dm_time2 = time()
         status(dm_time2 - dm_time1)
+
+        # Place tests for Density matrices after this
 
         # Naive check for thermal DM
         max_diag, max_offdiag = naive_thermal(rho_ebasis)
@@ -239,7 +299,7 @@ def main_time(initial_values, chosen_eigenstate, t_initial, t_final, t_steps,
     """
     Contains functions to time evolve the entire system (both
     sub-lattices) starting in an initial state where all particles are in
-    one sub-lattice.
+    one sub-lattice. Possible issues.
 
     :param initial_values: List of initial values for system
         initial_values = [
@@ -254,25 +314,29 @@ def main_time(initial_values, chosen_eigenstate, t_initial, t_final, t_steps,
     :return: True if execution successful
     """
     s = System(initial_values, lattice_a, lattice_b)
-    s.check_system()
     path = s.folder_path
+    s.check_system()
+
     timesteps = np.arange(t_initial, t_final, (t_final - t_initial) / t_steps)
 
     tot_time1 = time()
 
-    # Eigenstates
-    pos_states, nos = position_states(s.lattice, s.nop)
-    pos_states_a, nos_a = position_states(lattice_a, s.nop)
-    write_file(path, 'PositionStates.csv', pos_states, fmt='%1d')
-    write_file(path, 'PositionStates_A.csv', pos_states_a, fmt='%1d')
+    # Position States
+    try:
+        pos_states_ab = read_file(path, 'PositionStates_AB.csv')
+        nos_ab = len(pos_states_ab)
+        pos_states_a = read_file(path, 'PositionStates_A.csv')
+        nos_a = len(pos_states_a)
+    except IOError:
+        pos_states_ab, nos_ab = position_states(s.lattice, s.nop)
+        pos_states_a, nos_a = position_states(lattice_a, s.nop)
+        write_file(path, 'PositionStates_AB.csv', pos_states_ab, fmt='%1d')
+        write_file(path, 'PositionStates_A.csv', pos_states_a, fmt='%1d')
 
     # Hamiltonian
-    h_time1 = time()
     try:
-        # Reads Hamiltonian from hard disk
         hamiltonian = read_file(path, 'Hamiltonian_AB.csv')
     except IOError:
-        # Otherwise generates Hamiltonian
         print('Hamiltonian...')
         hamiltonian = hamiltonian_parallel(s.lattice, s.n_dim, s.nop)
         write_file(path, 'Hamiltonian_AB.csv', hamiltonian, fmt='%1d')
@@ -282,74 +346,94 @@ def main_time(initial_values, chosen_eigenstate, t_initial, t_final, t_steps,
     except IOError:
         hamiltonian_a = hamiltonian_parallel(lattice_a, s.n_dim, s.nop)
         write_file(path, 'Hamiltonian_A.csv', hamiltonian_a, fmt='%1d')
-    h_time2 = time()
-    status(h_time2 - h_time1)
 
     # Eigenvalues and Eigenvectors
     e_time1 = time()
     try:
-        eigenvalues = read_file(path, 'Eigenvalues_AB.csv')
-        eigenvectors = read_file(path, 'Eigenvectors_AB.csv', dtype=complex)
+        eigenvalues_ab = read_file(path, 'Eigenvalues_AB.csv')
+        eigenvectors_ab = read_file(path, 'Eigenvectors_AB.csv', dtype=complex)
     except IOError:
         print('Diagonalizing...')
-        eigenvalues, eigenvectors = diagonalize(hamiltonian)
-        write_file(path, 'Eigenvalues_AB.csv', eigenvalues)
-        write_file(path, 'Eigenvectors_AB.csv', eigenvectors)
+        eigenvalues_ab, eigenvectors_ab = diagonalize(hamiltonian)
+        write_file(path, 'Eigenvalues_AB.csv', eigenvalues_ab)
+        write_file(path, 'Eigenvectors_AB.csv', eigenvectors_ab)
 
     # Eigenvalues and Eigenvectors of A
     try:
         eigenvalues_a = read_file(path, 'Eigenvalues_A.csv')
         eigenvectors_a = read_file(path, 'Eigenvectors_A.csv', dtype=complex)
     except IOError:
-        print('Diagonalizing A...')
+        print('Eigenvalues/Eigenvectors of A...')
         eigenvalues_a, eigenvectors_a = diagonalize(hamiltonian_a)
         write_file(path, 'Eigenvalues_A.csv', eigenvalues_a)
-        write_file(path, 'Eigenvectors_AB.csv', eigenvectors_a)
+        write_file(path, 'Eigenvectors_A.csv', eigenvectors_a)
+        print('Eigenvalues/Eigenvectors of A done!')
     e_time2 = time()
     status(e_time2 - e_time1)
 
     # State Relabelling
-    labels = relabel(pos_states, s.nop, s.nol_b, lat_a=lattice_a)
+    labels = relabel(pos_states_ab, s.nop, s.nol_b, lat_a=lattice_a)
     write_file(path, 'RelabelledStates.csv', labels)
 
     # Initial state as eigenvector of A
-    psi_initial = initial_sublattice_state(eigenvectors_a, labels, nos,
+    psi_initial = initial_sublattice_state(eigenvectors_a, labels, nos_ab,
                                            s.nop, chosen_eigenstate)
+
+    # Used to create a unique filename for each set of times
+    t_data = '[{},{},{}]'.format(t_initial, t_final, t_steps)
 
     # Time Evolution
     evo_time1 = time()
     try:
-        psi_t = read_file(path, 'Psi_t.csv', dtype=complex)
+        psi_t = read_file(path, 'Psi_t{}.csv'.format(t_data), dtype=complex)
     except IOError:
         print('Time evolving...')
-        psi_t = time_evolution(psi_initial, hamiltonian, nos, timesteps)
-        write_file(path, 'Psi_t.csv', psi_t)
+        psi_t = time_evolution(psi_initial, hamiltonian, nos_ab, timesteps)
+        write_file(path, 'Psi_t{}.csv'.format(t_data), psi_t)
+        print('Time evolution done!')
     evo_time2 = time()
     status(evo_time2 - evo_time1)
 
     # Average number of particles in A and B
     try:
-        avg_a = read_file(path, 'Avg_A.csv')
-        avg_b = read_file(path, 'Avg_B.csv')
+        avg_a = read_file(path, 'Avg_A{}.csv'.format(t_data))
+        avg_b = read_file(path, 'Avg_B{}.csv'.format(t_data))
     except IOError:
         avg_a, avg_b = avg_particles(psi_t, timesteps, labels, s.nop)
-        write_file(path, 'Avg_A.csv', avg_a)
-        write_file(path, 'Avg_B.csv', avg_b)
+        write_file(path, 'Avg_A{}.csv'.format(t_data), avg_a)
+        write_file(path, 'Avg_B{}.csv'.format(t_data), avg_b)
 
     # Von-Neumann Entropy
     vn_time1 = time()
     try:
-        entropy_b = read_file(path, 'Entropy_b.csv', dtype=complex)
-        tr_sqr_b = read_file(path, 'Trace_square_B.csv')
+        entropy_b = read_file(path, 'Entropy_B{}.csv'
+                              .format(t_data), dtype=complex)
+        tr_sqr_b = read_file(path, 'Trace_Square_B{}.csv'.format(t_data))
     except IOError:
         print('Von-Neumann Entropy...')
-        entropy_b, tr_sqr_b = vn_entropy_b(psi_t, labels, nos, s.nol_b, s.nop)
-        write_file(path, 'Entropy_b.csv', entropy_b)
-        write_file(path, 'Trace_square_B.csv', tr_sqr_b)
+        entropy_b, tr_sqr_b = vn_entropy_b(psi_t, labels, nos_ab, s.nol_b,
+                                           s.nop)
+        write_file(path, 'Entropy_B{}.csv'.format(t_data), entropy_b)
+        write_file(path, 'Trace_Square_B{}.csv'.format(t_data), tr_sqr_b)
+        print('Von-Neumann Entropy done!')
     vn_time2 = time()
     status(vn_time2 - vn_time1)
 
-    plotting(entropy_b, tr_sqr_b, avg_a, avg_b, path, timesteps)
+    # Generate images
+    show_images = False
+    image_name, titles, y_labels, x_labels, y_limits = s.plotting_metadata()
+    path_images = path + 'TimeEvolutionImages{}/'.format(t_data)
+
+    plot_write(timesteps, entropy_b, titles[0], y_labels[0], x_labels[0],
+               y_limits[0], path_images, image_name[0], show_images)
+    plot_write(timesteps, tr_sqr_b, titles[1], y_labels[1], x_labels[0],
+               y_limits[0], path_images, image_name[1], show_images)
+    plot_write(timesteps, avg_a, titles[2], y_labels[2], x_labels[0],
+               y_limits[2], path_images, image_name[2], show_images)
+    plot_write(timesteps, avg_b, titles[3], y_labels[3], x_labels[0],
+               y_limits[2], path_images, image_name[3], show_images)
+    plot_write(timesteps, avg_b + avg_a, titles[4], y_labels[4], x_labels[0],
+               y_limits[2], path_images, image_name[4], show_images)
 
     tot_time2 = time()
     status(tot_time2 - tot_time1)
@@ -362,9 +446,9 @@ if __name__ == '__main__':
     chosen_estate = [Eigenstates  for which to compute DM's]
     """
     init_values = [2, 6]
-    chosen_e_states = [_ for _ in range(10, 100, 2)]
+    chosen_e_states = [x for x in range(10, 20, 2)]
     sub_lattice_a = np.genfromtxt('a.txt', dtype=int)
     sub_lattice_b = np.genfromtxt('b.txt', dtype=int)
 
-    main_states(init_values, chosen_e_states, sub_lattice_a, sub_lattice_b)
-    # main_time(init_values, 0, 0, 100, 100, sub_lattice_a, sub_lattice_b)
+    # main_states(init_values, chosen_e_states, sub_lattice_a, sub_lattice_b)
+    main_time(init_values, 0, 0, 100, 20, sub_lattice_a, sub_lattice_b)
