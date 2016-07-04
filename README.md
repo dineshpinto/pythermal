@@ -1,41 +1,40 @@
 PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 ---------------------------------------------------------------------------
-PyThermal v2.0.0
+PyThermal v2.1.0
 
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
 
-*Project Mentor: Dr. A. Gupta*   
-*Project Students: A. Kumar, D. Pinto and M. Ghosh*
+*Project Mentor - Dr. A. Gupta*   
+*Project Students - A. Kumar, D. Pinto and M. Ghosh*
 
-## Task List and Issues
+## Current Status
+PyThermal has been branched. The [cython](https://github.com/dkpinto/PyThermal/tree/cython) aims to significantly improve performance. Currently in beta.
 
-See [Open issues](https://github.com/dkpinto/PyThermal/issues) for details
+[Open issues](https://github.com/dkpinto/PyThermal/issues) has further details.
 
-PyThermal also has a branch written in [cython](https://github.com/dkpinto/PyThermal/tree/cython). It is currently in beta.
 
 ## Programmers Notes 
 
 *Documentation by D. Pinto*
 
-The code is centered around the main function, from which the entire program can be controlled. It derives data from a
-class which is used to store (and process) initial values. 
+The code is centered around the main functions (main_time() & main_states()). From which the entire program can be controlled. It derives data from a class which is used to store (and process) initial values. 
 
 The source code consists of:
 
-1. main.py - Overall control of program, program execution begins and ends here.
-2. routines.py - Set of 19 functions for simulating the hard-core bosons on a 2D lattice.
-3. output.py - Set of 8 functions to control Input/Output for files (csv) and images (png).
-4. about.py - Set of 4 functions to check dependencies and test OpenBLAS, NumPy and SciPy. 
-5. gui.py (Alpha) - Set of 3 functions forming a graphical interface for PyThermal (in Alpha).
+1. main.py - Overall control of program, program execution begins and ends here
+2. routines.py - Set of 19 functions for simulating the hard-core bosons on a 2D lattice
+3. output.py - Set of 8 functions to control Input/Output for files (csv) and images (png)
+4. about.py - Set of 4 functions to check hardware, dependencies and test OpenBLAS, NumPy and SciPy
+5. gui.py (Alpha) - Set of 3 functions forming a graphical interface for PyThermal
 
 This code requires the following modules:
 
-1. Numpy & Scipy (Recommended build against Fortran OpenBLAS libraries for parallel processing)
+1. NumPy & SciPy (Recommended build against Fortran OpenBLAS libraries for parallel processing)
 2. Matplotlib 
 3. Multiprocessing
-4. tqdm
-5. Tkinter(Py2) or tkinter(Py3)
+4. Tqdm
+5. Tkinter(Py2) or tkinter(Py3) (for graphical interface)
 
 Execute without graphical interface: `python3 main.py`
 
@@ -55,7 +54,7 @@ or
 
 ## Previous build(s)
 
-Future changelogs will be shifted to [commit logs](https://github.com/dkpinto/pythermal/commits/master) 
+All further changelogs are shifted to [commit logs](https://github.com/dkpinto/pythermal/commits/master).
 
 ### Changelog (21/1/2015)
 1. Function eigenstates() rewritten to account for missing lattice sites, site deletion controlled by [lat_del_pos]
@@ -141,5 +140,3 @@ Future changelogs will be shifted to [commit logs](https://github.com/dkpinto/py
 42. Von Neumann entropy output returned as 'real'
 43. Function **write_file()** for saving to disk
 44. Writing output made more verbose
-
-Changelogs shifted to [commit logs](https://github.com/dkpinto/pythermal/commits/master) 
