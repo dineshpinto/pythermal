@@ -2,7 +2,7 @@
 #
 # PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
-# St. Stephen's Centre for Theoretical Physics, New Delhi
+# St. Stephen's Centre for Theoretical Physics, St. Stephen's College, Delhi
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -30,24 +30,23 @@ from routines import *
 
 
 __author__ = "Thermalization and Quantum Entanglement Project Group, SSCTP"
-__version__ = "v2.1.0"
+__version__ = "v2.2.0"
 
 
 class System:
-    def __init__(self, initial_value, lattice_a=None, lattice_b=None):
+    def __init__(self, initial_values, lattice_a, lattice_b):
         """
-        Stores metadata about the system.
-        :param initial_value: List of initial state values of the system
-        :param lattice_a: Lattice sites in A (only used when manually
-        defining lattice)
-        :param lattice_b: Lattice sites in B (only used when manually
-        defining lattice)
+        Generates metadata about the system.
+
+        :param initial_values: List of initial state values of the system
+        :param lattice_a: Lattice sites in A
+        :param lattice_b: Lattice sites in B
         """
         # No of particles
-        self.nop = int(initial_value[0])
+        self.nop = int(initial_values[0])
 
         # Dimensionality of lattice
-        self.n_dim = int(initial_value[1])
+        self.n_dim = int(initial_values[1])
 
         # Whole lattice
         self.lattice = np.concatenate((lattice_a, lattice_b))
@@ -67,8 +66,8 @@ class System:
         The naming convection is as follows:
         P[Total no. of particles]
         D[Dimensionality of lattice]
-        A[No. of particles in A]
-        B[No. of particles in B]
+        A[No. of sites in A]
+        B[No. of sites in B]
 
         :return: Path for storing program output
         """
@@ -145,11 +144,11 @@ class System:
 
 def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
     """
-    Contains functions to find the density matrix of a subsystem in its
-    energy basis and compare the diagonal/off-diagonal elements.
+    Contains function calls to determine the density matrix of a
+    subsystem in its energy basis and compare the diagonal/off-diagonal
+    elements.
     Uses time() module to time execution of various functions and output
     to standard output.
-
 
     :param chosen_eigenstates: Eigenstates for which to compute DM's
     :param initial_values: List of initial values for system
@@ -297,8 +296,8 @@ def main_states(initial_values, chosen_eigenstates, lattice_a, lattice_b):
 def main_time(initial_values, chosen_eigenstate, t_initial, t_final, t_steps,
               lattice_a, lattice_b):
     """
-    Contains functions to time evolve the entire system (both
-    sub-lattices) starting in an initial state where all particles are in
+    Contains functions to time evolve the entire system (both sub-lattices)
+    starting in an initial state where all particles are in
     one sub-lattice. Possible issues.
 
     :param initial_values: List of initial values for system
@@ -349,14 +348,16 @@ def main_time(initial_values, chosen_eigenstate, t_initial, t_final, t_steps,
 
     # Eigenvalues and Eigenvectors
     e_time1 = time()
-    try:
-        eigenvalues_ab = read_file(path, 'Eigenvalues_AB.csv')
-        eigenvectors_ab = read_file(path, 'Eigenvectors_AB.csv', dtype=complex)
-    except IOError:
-        print('Diagonalizing...')
-        eigenvalues_ab, eigenvectors_ab = diagonalize(hamiltonian)
-        write_file(path, 'Eigenvalues_AB.csv', eigenvalues_ab)
-        write_file(path, 'Eigenvectors_AB.csv', eigenvectors_ab)
+
+    # Eigenvalues and Eigenvectors of whole lattice
+    # try:
+    #     eigenvalues_ab = read_file(path, 'Eigenvalues_AB.csv')
+    #     eigenvectors_ab = read_file(path, 'Eigenvectors_AB.csv', dtype=complex)
+    # except IOError:
+    #     print('Diagonalizing...')
+    #     eigenvalues_ab, eigenvectors_ab = diagonalize(hamiltonian)
+    #     write_file(path, 'Eigenvalues_AB.csv', eigenvalues_ab)
+    #     write_file(path, 'Eigenvectors_AB.csv', eigenvectors_ab)
 
     # Eigenvalues and Eigenvectors of A
     try:
@@ -443,12 +444,17 @@ def main_time(initial_values, chosen_eigenstate, t_initial, t_final, t_steps,
 if __name__ == '__main__':
     """
     init_values = [Total no. of particles(nop), Dimension of lattice(ndims)]
-    chosen_estate = [Eigenstates  for which to compute DM's]
+    chosen_estate = [Eigenstates  for which to compute Density Matrices]
     """
     init_values = [2, 6]
-    chosen_e_states = [x for x in range(10, 20, 2)]
-    sub_lattice_a = np.genfromtxt('a.txt', dtype=int)
-    sub_lattice_b = np.genfromtxt('b.txt', dtype=int)
+    chosen_e_states = [10, 12, 14, 16, 18]
+    sub_lattice_a = np.genfromtxt('sublattice_a.txt', dtype=int)
+    sub_lattice_b = np.genfromtxt('sublattice_b.txt', dtype=int)
 
-    # main_states(init_values, chosen_e_states, sub_lattice_a, sub_lattice_b)
+    # To execute code pertaining to the formation of density matrices
+    # for chosen eigenstates
+    main_states(init_values, chosen_e_states, sub_lattice_a, sub_lattice_b)
+
+    # To execute code pertaining to the variation of states under
+    # time evolution
     main_time(init_values, 0, 0, 100, 20, sub_lattice_a, sub_lattice_b)

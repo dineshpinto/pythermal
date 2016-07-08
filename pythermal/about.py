@@ -2,7 +2,7 @@
 #
 # PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
-# St. Stephen's Centre for Theoretical Physics, New Delhi
+# St. Stephen's Centre for Theoretical Physics, St. Stephen's College, Delhi
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh

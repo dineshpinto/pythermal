@@ -2,7 +2,7 @@
 #
 # PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
-# St. Stephen's Centre for Theoretical Physics, New Delhi
+# St. Stephen's Centre for Theoretical Physics, St. Stephen's College, Delhi
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -24,7 +24,7 @@ def status(time_taken=0.0):
     """
     Prints current status (execution time) of program execution.
     Note: Times returned from here are not true measures of algorithm speed.
-    For rigorous testing use timeit.
+    For rigorous function time testing use the timeit module.
 
     :param time_taken: Block execution time
     """
@@ -39,7 +39,7 @@ def status(time_taken=0.0):
 
 def warning(*objects):
     """
-    Handles non-fatal warnings.
+    Handles non-fatal warnings. Output to stderr.
 
     :param objects: Objects
     """
@@ -50,8 +50,7 @@ def write_file(path, filename, data=None, fmt='%.18e'):
     """
     Checks if output directory exists, if not, creates it.
     Writes arrays/lists to the disk. Performs IO using NumPy.
-
-    Possible switch in future to pandas (dependant code must be unaffected).
+    Possible switch in future to the more robust Pandas (dependant code must be unaffected).
 
     :param path: Folder path to write to
     :param filename: Name of file (include extension)
@@ -61,8 +60,8 @@ def write_file(path, filename, data=None, fmt='%.18e'):
     if not os.path.exists(path):
         try:
             os.makedirs(path)
+        # Catches race condition
         except OSError:
-            # Catches race condition
             pass
 
     print("Writing to {}".format(path + filename))
@@ -93,8 +92,7 @@ def write_image(path, filename):
 def read_file(path, filename, dtype=np.float64):
     """
     Reads data from files stored locally.Performs IO using NumPy.
-
-    Possible switch in future to pandas (dependant code must be unaffected).
+    Possible switch in future to the more robust Pandas (dependant code must be unaffected).
 
     :param path: Path to folder
     :param filename: Name of file
@@ -117,7 +115,7 @@ def read_file(path, filename, dtype=np.float64):
 def plot_write(x, y, title=None, y_label=None, x_label=None, y_limit=None,
                path=None, filename=None, checkbox=None):
     """
-    Generate graphs using MatPlotLib and save to hard disk.
+    Generate graphs using MatPlotLib. Uses write_image() to save to hard disk.
     Checkbox can be used to control plot display during execution.
 
     :param x: x axis
@@ -142,10 +140,12 @@ def plot_write(x, y, title=None, y_label=None, x_label=None, y_limit=None,
 
     plt.plot(x, y, 'bo', markersize=4)
 
-    if checkbox:
-        plt.show()
-
+    # Choose same folder if path not specified
     if path is None:
         path = ''
 
     write_image(path, filename)
+
+    # Checkbox to display images after execution
+    if checkbox:
+        plt.show()

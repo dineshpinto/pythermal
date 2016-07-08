@@ -1,8 +1,8 @@
 # This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
 #
-# PyThermal - Time evolving hard-core bosons on a 2D crystal lattice
+# PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
-# St. Stephen's Centre for Theoretical Physics, New Delhi
+# St. Stephen's Centre for Theoretical Physics, St. Stephen's College, Delhi
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -63,8 +63,8 @@ def fetch(values, values2):
 
     if values2[2].get():
         try:
-            print('A = ', np.genfromtxt('a.txt', dtype=np.int32))
-            print('B = ', np.genfromtxt('b.txt', dtype=np.int32))
+            print('A = ', np.genfromtxt('sublattice_a.txt', dtype=np.int32))
+            print('B = ', np.genfromtxt('sublattice_b.txt', dtype=np.int32))
         except IOError as e:
             print(e, traceback.format_exc())
             pass
@@ -78,8 +78,6 @@ def graphical_interface(base):
     :return: List of entries
 
     """
-    # Variables for checkboxes
-    var1, var2, var3 = tk.IntVar(), tk.IntVar(), tk.IntVar()
     initial_values = []
     optional_values = []
 
@@ -94,18 +92,6 @@ def graphical_interface(base):
         label.pack(side=tk.LEFT, expand=True)
         entry.pack(side=tk.RIGHT, expand=True)
         initial_values.append(entry)
-
-    # chk = ttk.Checkbutton(base, text=fields2[0], variable=var1)
-    # chk.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
-    # optional_values.append(var1)
-    #
-    # chk2 = ttk.Checkbutton(base, text=fields2[1], variable=var2)
-    # chk2.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
-    # optional_values.append(var2)
-    #
-    # chk = ttk.Checkbutton(base, text=fields2[2], variable=var3)
-    # chk.pack(side=tk.TOP, fill=tk.BOTH, padx=8, pady=8, expand=True)
-    # optional_values.append(var3)
 
     for field in fields2:
         var = tk.IntVar()
@@ -128,8 +114,8 @@ def execute(initial_values, optional_values):
     optional_values = [float(e.get()) for e in optional_values]
 
     if optional_values[2]:
-        lat_a = np.genfromtxt('a.txt', dtype=np.int32)
-        lat_b = np.genfromtxt('b.txt', dtype=np.int32)
+        lat_a = np.genfromtxt('sublattice_a.txt', dtype=np.int32)
+        lat_b = np.genfromtxt('sublattice_b.txt', dtype=np.int32)
     else:
         lat_a, lat_b = None, None
 

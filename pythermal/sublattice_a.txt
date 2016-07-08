@@ -1,0 +1,35 @@
+# This file is a part of PyThermal. https://github.com/dkpinto/PyThermal
+#
+# PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
+# Thermalization and Quantum Entanglement Project Group
+# St. Stephen's Centre for Theoretical Physics, St. Stephen's College, Delhi
+#
+# Project Mentor: Dr. A. Gupta
+# Project Students: A. Kumar, D. Pinto and M. Ghosh
+#
+#   Lattice
+#   b   b   b   b   o   o
+#   o   b   b   b   o   a
+#   o   o   b   o   a   a
+#   a   o   a   a   a   a
+#   a   a   a   a   a   a
+#   o   a   a   a   o   o
+#
+# Lattice sites in sub-lattice A
+12
+17
+18
+19
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+32
+33
+34

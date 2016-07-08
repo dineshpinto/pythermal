@@ -2,7 +2,7 @@
 #
 # PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 # Thermalization and Quantum Entanglement Project Group
-# St. Stephen's Centre for Theoretical Physics, New Delhi
+# St. Stephen's Centre for Theoretical Physics, St. Stephen's College, Delhi
 #
 # Project Mentor: Dr. A. Gupta
 # Project Students: A. Kumar, D. Pinto and M. Ghosh
@@ -48,6 +48,7 @@ def position_states(lat, nop, del_pos=None):
     if del_pos is None:
         pos_states = np.array(list(it.combinations(lat, nop)), dtype=np.int32)
     else:
+        del_pos = np.array(del_pos)
         lat_del = np.delete(lat, del_pos - 1)
         pos_states = np.array(list(it.combinations(lat_del, nop)),
                               dtype=np.int32)
@@ -76,7 +77,7 @@ def _hamiltonian_(start, stop, nos, ndims, nop, pos_states):
     """
     for j in tqdm(range(start, stop)):
         for k in range(nos):
-            # Find common elements, sum and number
+            # Find common elements and their size
             c = np.intersect1d(pos_states[j], pos_states[k])
             c_size = np.size(c)
 
@@ -87,18 +88,14 @@ def _hamiltonian_(start, stop, nos, ndims, nop, pos_states):
 
                 # Differ by one element
                 if abs(j_sum - k_sum) == ndims:
-                    # Differ by dimension
+                    # Differ by dimension of lattice
                     ham[j, k] = 1
                 elif (k_sum - j_sum) == 1 and not (j_sum - c_sum) % ndims == 0:
-                    # Right/Left edge
+                    # Sites next to each other and not at edge
                     ham[j, k] = 1
                 elif (j_sum - k_sum) == 1 and not (j_sum - c_sum) % ndims == 1:
-                    # Right/Left edge
+                    # Sites next to each other and not at edge
                     ham[j, k] = 1
-                else:
-                    ham[j, k] = 0
-            else:
-                ham[j, k] = 0
 
 
 def distribute(n_items, n_processes, i):
@@ -115,7 +112,7 @@ def distribute(n_items, n_processes, i):
     start = i * items_per_process
 
     if i == n_processes - 1:
-        # For last process, appends all remaining items to last core
+        # For last process, appends all remaining tasks to last core
         stop = n_items
     else:
         stop = items_per_process * (i + 1)
@@ -141,7 +138,9 @@ def hamiltonian_parallel(lattice, ndims, nop):
     # The Array is declared globally within this function
     # The Array is a part of shared memory for various processes
     global ham
+    # Create wrapper for ctype array
     ham_base = mp.Array(ctypes.c_int8, nos * nos)
+    # Extract object from wrapper and cast as numpy.ndarray
     ham = np.ctypeslib.as_array(ham_base.get_obj())
     ham = ham.reshape(nos, nos)
 
@@ -149,6 +148,7 @@ def hamiltonian_parallel(lattice, ndims, nop):
     n_processes = mp.cpu_count()
     process_list = []
 
+    # Define and create processes
     for i in range(n_processes):
         start, stop = distribute(nos, n_processes, i)
         args = (start, stop, nos, ndims, nop, pos_states)
@@ -156,6 +156,7 @@ def hamiltonian_parallel(lattice, ndims, nop):
         process_list.append(process)
         process.start()
 
+    # Join processes together
     for processes in process_list:
         processes.join()
 
@@ -167,9 +168,8 @@ def diagonalize(h):
     Calculates eigenvectors and eigenvalues used Pade algorithm (see SciPy
     documentation).
 
-    For thread control, pass 'OPENBLAS_NUM_THREADS' = '##'. Link to
-    lower level OpenBLAS (Basic Linear Algebra Subroutines) written in
-    Fortran for parallel processing.
+    Control threads using OpenMP. Link to lower level OpenBLAS (Basic Linear
+    Algebra Subroutines) written in Fortran for parallel processing.
 
     :param h: Matrix
     :return: Real array of eigenvalues
@@ -213,8 +213,10 @@ def sum_ncr(n, k):
 
 def relabel(e_states, nop, nol_b, lat_a):
     """
-    Relabels states.
-
+    The state is |\psi>AB = \Sigma_{i, n, \mu} a_i_n \mu |i_n\mu>
+    where the product state is written as |i_n\mu>.
+    Refer to "The Density Matrix using Relabelled States.pdf"
+     
     :param lat_a: Sub-lattice B
     :param e_states: Eigenstates
     :param nop: No. of particles
@@ -247,7 +249,9 @@ def relabel(e_states, nop, nol_b, lat_a):
 
 def rho_a_pbasis(label, e_vec, nos, nol_a, nop):
     """
-    Calculates density matrix for sub-lattice B.
+    Calculates density matrix for sub-lattice A. Error checks density matrix
+    (trace should be 1.0). Warning raised if trace differs by 1(+-)0.1.
+
 
     :param label: Relabelled states
     :param e_vec: Eigenvectors
@@ -323,9 +327,8 @@ def h_block_diagonal(lat_b, n_dim, nop):
 
 
 def transform_basis(rho_pbasis, e_vecs_bd):
-    # :TODO: Use transformation matrix for speed
     """
-    Transforms rho in position basis to rho in energy basis.
+    Transforms DM from position basis to DM in energy basis.
 
     :param rho_pbasis: Rho in position basis
     :param e_vecs_bd: Eigenvectors of block diagonal hamiltonian
@@ -337,9 +340,6 @@ def transform_basis(rho_pbasis, e_vecs_bd):
         for j in range(rho_pbasis.shape[1]):
             rho_ebasis[i, j] = \
                 np.vdot(e_vecs_bd[:, i], np.dot(rho_pbasis, e_vecs_bd[:, j]))
-
-    if not np.allclose(np.transpose(np.conjugate(rho_ebasis)), rho_ebasis):
-        print("Transformation matrix is not symmetric")
 
     return rho_ebasis
 
@@ -361,8 +361,6 @@ def naive_thermal(rho):
 
     return max_diag, max_offdiag
 
-
-# From pythermal-master
 
 def initial_sublattice_state(e_vec, label, nos, nop, e_vec_num):
     """
@@ -409,7 +407,7 @@ def vn_entropy_a(psi_t, label, nos, nol_a, nop):
     Also calculates trace of square of density matrix (measure of
     entanglement).
     Uses a filter to suppress 'WARNING: The logm input matrix may be nearly
-    singular'. Wraps loop in tqdm for progress bar.
+    singular'. 
 
     :param psi_t: Psi(t)
     :param label: Relabelled states
