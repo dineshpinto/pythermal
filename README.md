@@ -1,6 +1,6 @@
 PyThermal - Thermal equilibrium of hard-core bosons on a 2D crystal lattice
 ---------------------------------------------------------------------------
-PyThermal v2.1.0
+PyThermal v2.2.0
 
 
 **Thermalization and Quantum Entanglement Project Group, St. Stephen's Centre for Theoretical Physics**
